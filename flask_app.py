@@ -24,7 +24,7 @@ os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 GROQ_API_KEY = 'gsk_填入你的key'
 NGROK_TOKEN  = '填入你的ngrok_token'
 MY_EMAIL     = 'sherry940501@gmail.com'
-NGROK_URL    = 'https://implode-blighted-fling.ngrok-free.dev'
+NGROK_URL = 'https://phishing-detector-n8rv.onrender.com'
 SCOPES       = ['https://www.googleapis.com/auth/gmail.readonly']
 
 # ── 白名單：已知安全的寄件者網域 ────────────────────────────
@@ -41,7 +41,7 @@ WHITELIST_DOMAINS = [
 SKIP_SUBJECTS = ['[警告]', '[正常]', 'AI 釣魚偵測報告', 'AI 釣魚信件偵測報告']
 
 # ── Google OAuth 憑證 ───────────────────────────────────────
-CRED_DATA = {"web":{"client_id":"727861534469-72ihfsri6r9kpnu56n7541qb2e4ngomk.apps.googleusercontent.com","project_id":"phishing-detector-494720","auth_uri":"https://accounts.google.com/o/oauth2/auth","token_uri":"https://oauth2.googleapis.com/token","auth_provider_x509_cert_url":"https://www.googleapis.com/oauth2/v1/certs","client_secret":"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","redirect_uris":["https://implode-blighted-fling.ngrok-free.dev/callback"]}}
+CRED_DATA = {"web":{"client_id":"727861534469-72ihfsri6r9kpnu56n7541qb2e4ngomk.apps.googleusercontent.com","project_id":"phishing-detector-494720","auth_uri":"https://accounts.google.com/o/oauth2/auth","token_uri":"https://oauth2.googleapis.com/token","auth_provider_x509_cert_url":"https://www.googleapis.com/oauth2/v1/certs","client_secret":"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","redirect_uris":["https://phishing-detector-n8rv.onrender.com/callback"]}}
 
 # ── 初始化 ──────────────────────────────────────────────────
 with open('credentials.json', 'w') as f:
