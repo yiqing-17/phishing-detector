@@ -452,7 +452,7 @@ def callback():
             redirect_uri=f'{NGROK_URL}/callback',
             state=_state_store.get('current', ''))
         auth_resp = request.url.replace('http://', 'https://')
-       code_verifier = _state_store.get('code_verifier', '')
+        code_verifier = _state_store.get('code_verifier', '')
         flow.fetch_token(
             authorization_response=auth_resp,
             code_verifier=code_verifier
