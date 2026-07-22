@@ -788,7 +788,6 @@ RESULT_HTML = """<!DOCTYPE html>
     </div>
 </body>
 </html>"""
-
 # ── Flask App ────────────────────────────────────────────────
 app = Flask(__name__)
 app.secret_key = 'phishing2024'
