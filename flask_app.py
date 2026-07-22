@@ -423,10 +423,24 @@ def index():
 
 @app.route('/login')
 def login():
+    import secrets, hashlib, base64 as _b64
+
+    code_verifier = secrets.token_urlsafe(64)
+    code_challenge = _b64.urlsafe_b64encode(
+        hashlib.sha256(code_verifier.encode()).digest()
+    ).rstrip(b'=').decode()
+
+    _state_store['code_verifier'] = code_verifier
+
     flow = Flow.from_client_secrets_file(
         'credentials.json', scopes=SCOPES,
         redirect_uri=f'{NGROK_URL}/callback')
-    auth_url, state = flow.authorization_url(prompt='consent', access_type='offline')
+    auth_url, state = flow.authorization_url(
+        prompt='consent',
+        access_type='offline',
+        code_challenge=code_challenge,
+        code_challenge_method='S256'
+    )
     _state_store['current'] = state
     return redirect(auth_url)
 
@@ -438,7 +452,11 @@ def callback():
             redirect_uri=f'{NGROK_URL}/callback',
             state=_state_store.get('current', ''))
         auth_resp = request.url.replace('http://', 'https://')
-        flow.fetch_token(authorization_response=auth_resp)
+       code_verifier = _state_store.get('code_verifier', '')
+        flow.fetch_token(
+            authorization_response=auth_resp,
+            code_verifier=code_verifier
+        )
         creds = flow.credentials
         _creds_store['current'] = {
             'token': creds.token, 'refresh_token': creds.refresh_token,
