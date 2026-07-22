@@ -10,3 +10,4 @@ scikit-learn
 pyngrok
 requests
 gunicorn
+jieba
