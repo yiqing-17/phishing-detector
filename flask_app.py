@@ -225,21 +225,24 @@ HOME_HTML = """<!DOCTYPE html>
     <title>AI 釣魚信件偵測系統</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            font-family: 'Inter', 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
-            background-color: #0b0f19;
-            color: #e2e8f0;
+            font-family: 'Inter', 'Noto Sans TC', -apple-system, sans-serif;
+            background-color: #07090e;
+            color: #d1d5db;
             min-height: 100vh;
             line-height: 1.5;
+            background-image: 
+                radial-gradient(at 50% 0%, rgba(56, 189, 248, 0.08) 0px, transparent 70%),
+                radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.05) 0px, transparent 50%);
         }
         .header {
-            background: rgba(15, 23, 42, 0.85);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid #1e293b;
-            padding: 16px 32px;
+            background: rgba(7, 9, 14, 0.8);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 16px 36px;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -250,37 +253,41 @@ HOME_HTML = """<!DOCTYPE html>
         .header h1 {
             font-size: 18px;
             font-weight: 700;
-            color: #f8fafc;
+            color: #ffffff;
+            letter-spacing: -0.01em;
             display: flex;
             align-items: center;
             gap: 10px;
         }
         .badge {
-            background: rgba(56, 189, 248, 0.1);
+            background: rgba(56, 189, 248, 0.08);
             color: #38bdf8;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 600;
-            padding: 4px 12px;
-            border-radius: 9999px;
+            padding: 4px 10px;
+            border-radius: 6px;
             border: 1px solid rgba(56, 189, 248, 0.25);
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: 0.05em;
         }
         .container {
-            max-width: 900px;
+            max-width: 880px;
             margin: 0 auto;
-            padding: 60px 24px;
+            padding: 64px 24px;
             text-align: center;
         }
         h2 {
-            font-size: 36px;
+            font-size: 38px;
             font-weight: 700;
-            color: #ffffff;
+            color: #f9fafb;
             margin-bottom: 16px;
             letter-spacing: -0.02em;
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
         }
         .sub {
-            font-size: 16px;
-            color: #94a3b8;
-            max-width: 520px;
+            font-size: 15px;
+            color: #9ca3af;
+            max-width: 500px;
             margin: 0 auto 36px;
             line-height: 1.6;
         }
@@ -288,62 +295,64 @@ HOME_HTML = """<!DOCTYPE html>
             display: inline-flex;
             align-items: center;
             gap: 12px;
-            background: #ffffff;
-            color: #0f172a;
-            font-size: 15px;
+            background: #f9fafb;
+            color: #030712;
+            font-size: 14px;
             font-weight: 600;
             padding: 14px 28px;
-            border-radius: 10px;
+            border-radius: 8px;
             text-decoration: none;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.15);
         }
         .btn:hover {
-            background: #f1f5f9;
+            background: #ffffff;
             transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
         }
         .features {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 20px;
-            margin-top: 56px;
+            gap: 16px;
+            margin-top: 60px;
             text-align: left;
         }
         .feat {
-            background: #111827;
-            border: 1px solid #1f2937;
-            border-radius: 16px;
-            padding: 28px 24px;
+            background: rgba(15, 23, 42, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 24px;
             text-align: center;
-            transition: border-color 0.2s;
+            transition: all 0.2s;
         }
         .feat:hover {
-            border-color: #374151;
+            border-color: rgba(56, 189, 248, 0.3);
+            background: rgba(15, 23, 42, 0.6);
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.05);
         }
         .feat .icon {
-            font-size: 28px;
+            font-size: 26px;
             margin-bottom: 12px;
         }
         .feat h3 {
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 600;
             color: #f3f4f6;
             margin-bottom: 6px;
         }
         .feat p {
-            font-size: 13px;
+            font-size: 12px;
             color: #9ca3af;
-            line-height: 1.6;
+            line-height: 1.5;
         }
         .whitelist-note {
-            background: rgba(16, 185, 129, 0.08);
-            border: 1px solid rgba(16, 185, 129, 0.25);
-            border-radius: 12px;
-            padding: 16px 20px;
+            background: rgba(16, 185, 129, 0.04);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            border-radius: 10px;
+            padding: 14px 20px;
             margin-top: 40px;
-            font-size: 13px;
-            color: #a7f3d0;
+            font-size: 12px;
+            color: #6ee7b7;
             text-align: left;
             line-height: 1.6;
         }
@@ -355,13 +364,13 @@ HOME_HTML = """<!DOCTYPE html>
 <body>
     <div class="header">
         <h1>🛡️ AI 釣魚信件偵測系統</h1>
-        <span class="badge">畢業專題</span>
+        <span class="badge">PROJ-2026</span>
     </div>
     <div class="container">
         <h2>一鍵掃描你的 Gmail</h2>
         <p class="sub">授權後系統自動掃描最新 15 封信件，用 AI 識別釣魚攻擊並產生詳細分析報告。</p>
         <a href="/login" class="btn">
-            <svg width="20" height="20" viewBox="0 0 48 48">
+            <svg width="18" height="18" viewBox="0 0 48 48">
                 <path fill="#4285F4" d="M45.12 24.5c0-1.56-.14-3.06-.4-4.5H24v8.51h11.84c-.51 2.75-2.06 5.08-4.39 6.64l7.08 5.51C42.45 36.27 45.12 30.87 45.12 24.5z"/>
                 <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
                 <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.08-5.51c-2.13 1.45-4.84 2.3-8.81 2.3-6.72 0-12.43-4.54-14.47-10.64l-7.98 6.19C5.22 42.79 14.04 48 24 48z"/>
@@ -387,7 +396,7 @@ HOME_HTML = """<!DOCTYPE html>
             </div>
         </div>
         <div class="whitelist-note">
-            <strong>✅ 白名單已啟用：</strong>
+            <strong>✅ 白名單機制已啟用：</strong>
             SKIMS、lululemon、Alo Yoga、玉山銀行、Google 等已知安全寄件者將直接標記為安全，不進行 AI 分析。
         </div>
     </div>
@@ -402,46 +411,50 @@ LOADING_HTML = """<!DOCTYPE html>
     <title>掃描中...</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Noto+Sans+TC:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            font-family: 'Inter', 'Noto Sans TC', -apple-system, sans-serif;
-            background-color: #0b0f19;
-            color: #e2e8f0;
+            font-family: 'Inter', -apple-system, sans-serif;
+            background-color: #07090e;
+            color: #d1d5db;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-direction: column;
             gap: 20px;
+            background-image: radial-gradient(at 50% 50%, rgba(56, 189, 248, 0.06) 0px, transparent 60%);
         }
         .spinner {
-            width: 56px;
-            height: 56px;
-            border: 4px solid #1e293b;
-            border-top: 4px solid #38bdf8;
+            width: 52px;
+            height: 52px;
+            border: 3px solid rgba(255, 255, 255, 0.08);
+            border-top: 3px solid #38bdf8;
             border-radius: 50%;
-            animation: spin 1s cubic-bezier(0.55, 0.15, 0.45, 0.85) infinite;
+            animation: spin 0.8s cubic-bezier(0.55, 0.15, 0.45, 0.85) infinite;
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.2);
         }
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
         h2 {
-            font-size: 22px;
+            font-size: 20px;
             font-weight: 600;
-            color: #f8fafc;
+            color: #f9fafb;
+            letter-spacing: -0.01em;
         }
         p {
-            font-size: 14px;
-            color: #94a3b8;
+            font-size: 13px;
+            color: #6b7280;
+            font-family: 'JetBrains Mono', monospace;
         }
     </style>
 </head>
 <body>
     <div class="spinner"></div>
-    <h2>正在掃描你的 Gmail...</h2>
-    <p>三層 AI 分析引擎運作中，請稍候</p>
+    <h2>正在掃描您的 Gmail...</h2>
+    <p>> 三層 AI 分析引擎運作中，請稍候</p>
 </body>
 </html>"""
 
@@ -453,21 +466,22 @@ RESULT_HTML = """<!DOCTYPE html>
     <title>掃描結果 — AI 釣魚信件偵測系統</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            font-family: 'Inter', 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
-            background-color: #0b0f19;
-            color: #e2e8f0;
+            font-family: 'Inter', 'Noto Sans TC', -apple-system, sans-serif;
+            background-color: #07090e;
+            color: #d1d5db;
             min-height: 100vh;
             line-height: 1.5;
+            background-image: radial-gradient(at 50% 0%, rgba(56, 189, 248, 0.05) 0px, transparent 60%);
         }
         .header {
-            background: rgba(15, 23, 42, 0.85);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid #1e293b;
-            padding: 16px 32px;
+            background: rgba(7, 9, 14, 0.8);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 16px 36px;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -478,7 +492,7 @@ RESULT_HTML = """<!DOCTYPE html>
         .header h1 {
             font-size: 18px;
             font-weight: 700;
-            color: #f8fafc;
+            color: #ffffff;
         }
         .header-right {
             display: flex;
@@ -486,42 +500,43 @@ RESULT_HTML = """<!DOCTYPE html>
             gap: 12px;
         }
         .scan-time {
-            font-size: 12px;
-            color: #94a3b8;
+            font-size: 11px;
+            color: #6b7280;
             font-family: 'JetBrains Mono', monospace;
         }
         .container {
-            max-width: 900px;
+            max-width: 880px;
             margin: 0 auto;
-            padding: 32px 20px 60px;
+            padding: 32px 24px 60px;
         }
         .back {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            background: #1e293b;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.03);
             color: #38bdf8;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 500;
-            padding: 8px 16px;
-            border-radius: 8px;
+            padding: 8px 14px;
+            border-radius: 6px;
             text-decoration: none;
-            border: 1px solid #334155;
+            border: 1px solid rgba(56, 189, 248, 0.2);
             margin-bottom: 24px;
             transition: all 0.2s;
+            font-family: 'JetBrains Mono', monospace;
         }
         .back:hover {
-            background: #334155;
-            color: #7dd3fc;
+            background: rgba(56, 189, 248, 0.1);
+            border-color: rgba(56, 189, 248, 0.4);
         }
         .summary {
-            background: #111827;
-            border: 1px solid #1f2937;
-            border-radius: 16px;
-            padding: 24px 32px;
+            background: rgba(15, 23, 42, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 20px 24px;
             margin-bottom: 32px;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
             gap: 16px;
             align-items: center;
         }
@@ -529,24 +544,25 @@ RESULT_HTML = """<!DOCTYPE html>
             text-align: center;
         }
         .stat .num {
-            font-size: 32px;
+            font-size: 28px;
             font-weight: 700;
             line-height: 1.2;
+            font-family: 'JetBrains Mono', monospace;
         }
         .stat .lbl {
-            font-size: 12px;
-            color: #9ca3af;
+            font-size: 11px;
+            color: #6b7280;
             margin-top: 4px;
             font-weight: 500;
         }
-        .high .num { color: #f87171; }
-        .med .num { color: #fbbf24; }
-        .low .num { color: #34d399; }
+        .high .num { color: #ff4d4d; text-shadow: 0 0 12px rgba(255, 77, 77, 0.3); }
+        .med .num { color: #fbbf24; text-shadow: 0 0 12px rgba(251, 191, 36, 0.2); }
+        .low .num { color: #34d399; text-shadow: 0 0 12px rgba(52, 211, 153, 0.2); }
         .total .num { color: #38bdf8; }
-        .skip .num { color: #64748b; }
+        .skip .num { color: #4b5563; }
 
         .sec-title {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 600;
             color: #f3f4f6;
             margin: 32px 0 16px;
@@ -555,61 +571,73 @@ RESULT_HTML = """<!DOCTYPE html>
             gap: 8px;
         }
         .card {
-            background: #111827;
-            border: 1px solid #1f2937;
-            border-radius: 12px;
-            padding: 20px 24px;
-            margin-bottom: 14px;
+            background: rgba(15, 23, 42, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 10px;
+            padding: 18px 20px;
+            margin-bottom: 12px;
             position: relative;
-            transition: border-color 0.2s;
+            transition: all 0.2s;
         }
         .card:hover {
-            border-color: #374151;
+            background: rgba(15, 23, 42, 0.5);
         }
-        .card.h { border-left: 4px solid #ef4444; }
-        .card.m { border-left: 4px solid #f59e0b; }
-        .card.l { border-left: 4px solid #10b981; }
-        .card.w { border-left: 4px solid #64748b; opacity: 0.75; }
+        .card.h {
+            border-left: 3px solid #ff4d4d;
+            box-shadow: inset 4px 0 15px -4px rgba(255, 77, 77, 0.15);
+        }
+        .card.m {
+            border-left: 3px solid #fbbf24;
+            box-shadow: inset 4px 0 15px -4px rgba(251, 191, 36, 0.1);
+        }
+        .card.l {
+            border-left: 3px solid #34d399;
+        }
+        .card.w {
+            border-left: 3px solid #4b5563;
+            opacity: 0.6;
+        }
 
         .top {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
             gap: 16px;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
         .subj {
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 600;
             color: #f9fafb;
             line-height: 1.4;
         }
         .from {
-            font-size: 13px;
-            color: #9ca3af;
-            margin-top: 4px;
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 3px;
         }
         .rb {
-            font-size: 11px;
-            font-weight: 700;
-            padding: 4px 10px;
-            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 4px;
             white-space: nowrap;
+            font-family: 'JetBrains Mono', monospace;
             letter-spacing: 0.05em;
         }
-        .bh { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
-        .bm { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
-        .bl { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
-        .bw { background: rgba(100, 116, 139, 0.15); color: #94a3b8; border: 1px solid rgba(100, 116, 139, 0.3); }
+        .bh { background: rgba(255, 77, 77, 0.12); color: #ff4d4d; border: 1px solid rgba(255, 77, 77, 0.3); }
+        .bm { background: rgba(251, 191, 36, 0.12); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.3); }
+        .bl { background: rgba(52, 211, 153, 0.12); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.3); }
+        .bw { background: rgba(75, 85, 99, 0.2); color: #9ca3af; border: 1px solid rgba(75, 85, 99, 0.3); }
 
         .exp {
             font-size: 13px;
-            color: #cbd5e1;
-            margin-top: 10px;
+            color: #9ca3af;
+            margin-top: 8px;
             line-height: 1.6;
         }
         .act {
-            font-size: 13px;
+            font-size: 12px;
             color: #38bdf8;
             margin-top: 10px;
             font-weight: 500;
@@ -618,41 +646,42 @@ RESULT_HTML = """<!DOCTYPE html>
             gap: 6px;
         }
         .tags {
-            margin-top: 12px;
+            margin-top: 10px;
             display: flex;
             flex-wrap: wrap;
             gap: 6px;
         }
         .tag {
             font-size: 11px;
-            color: #f59e0b;
-            background: rgba(245, 158, 11, 0.1);
-            padding: 3px 8px;
+            color: #fbbf24;
+            background: rgba(251, 191, 36, 0.08);
+            padding: 2px 7px;
             border-radius: 4px;
-            border: 1px solid rgba(245, 158, 11, 0.2);
+            border: 1px solid rgba(251, 191, 36, 0.2);
+            font-family: 'JetBrains Mono', monospace;
         }
         .sc {
             font-size: 11px;
-            color: #64748b;
-            margin-top: 12px;
+            color: #4b5563;
+            margin-top: 10px;
             font-family: 'JetBrains Mono', monospace;
         }
         .ir {
-            background: rgba(16, 185, 129, 0.05);
-            border: 1px solid rgba(16, 185, 129, 0.2);
-            border-radius: 8px;
-            padding: 14px 16px;
-            margin-top: 14px;
+            background: rgba(52, 211, 153, 0.03);
+            border: 1px solid rgba(52, 211, 153, 0.2);
+            border-radius: 6px;
+            padding: 12px 14px;
+            margin-top: 12px;
         }
         .ir-t {
             font-size: 12px;
             font-weight: 600;
             color: #34d399;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
         }
         .ir-id {
             font-size: 11px;
-            color: #94a3b8;
+            color: #6b7280;
             font-family: 'JetBrains Mono', monospace;
         }
         .ir-b {
@@ -665,9 +694,9 @@ RESULT_HTML = """<!DOCTYPE html>
             margin-top: 8px;
         }
         .ir-action {
-            font-size: 12px;
+            font-size: 11px;
             color: #6ee7b7;
-            margin-top: 4px;
+            margin-top: 3px;
         }
     </style>
 </head>
@@ -675,11 +704,11 @@ RESULT_HTML = """<!DOCTYPE html>
     <div class="header">
         <h1>🛡️ AI 釣魚信件偵測系統</h1>
         <div class="header-right">
-            <span class="scan-time">掃描時間：{{scan_time}}</span>
+            <span class="scan-time">SCAN_TIME: {{scan_time}}</span>
         </div>
     </div>
     <div class="container">
-        <a href="/" class="back">← 重新掃描</a>
+        <a href="/" class="back">← RESCAN</a>
 
         <div class="summary">
             <div class="stat total"><div class="num">{{total}}</div><div class="lbl">掃描封數</div></div>
@@ -714,7 +743,7 @@ RESULT_HTML = """<!DOCTYPE html>
             {% if e.ir_id %}
             <div class="ir">
                 <div class="ir-t">📄 IR 事件通報報告已自動產生</div>
-                <div class="ir-id">{{e.ir_id}} | 嚴重等級: {{e.ir_severity}}</div>
+                <div class="ir-id">{{e.ir_id}} | SEVERITY: {{e.ir_severity}}</div>
                 <div class="ir-b">{{e.ir_summary}}</div>
                 {% if e.ir_actions %}
                 <div class="ir-actions">
@@ -779,7 +808,7 @@ RESULT_HTML = """<!DOCTYPE html>
                     <div class="subj">{{e.subject}}</div>
                     <div class="from">{{e.sender}}</div>
                 </div>
-                <span class="rb bw">白名單</span>
+                <span class="rb bw">WHITELIST</span>
             </div>
         </div>
         {% endfor %}
