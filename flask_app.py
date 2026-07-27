@@ -41,7 +41,7 @@ CRED_DATA = {"web":{"client_id":"727861534469-72ihfsri6r9kpnu56n7541qb2e4ngomk.a
 with open('credentials.json', 'w') as f:
     json.dump(CRED_DATA, f)
 
-# ── CSS 共用樣式 (全站統一風格：極簡深藍黑主題 + 響應式 + 自訂捲軸) ───────────────────
+# ── COMMON_CSS ────────────────────────────────────────────────
 COMMON_CSS = """
 <style>
 :root {
@@ -118,7 +118,7 @@ body {
 </style>
 """
 
-# ── 首頁 HTML (支援手機版 RWD 與超連結保護) ───────────────────
+# ── HOME_HTML ────────────────────────────────────────────────
 HOME_HTML = COMMON_CSS + """
 <style>
 html, body {
@@ -305,40 +305,49 @@ html, body {
 </div>
 """
 
-# ── Loading HTML (加入即時 Step 同步與 Error 容錯處理) ─────────────────
+# ── LOADING_HTML ─────────────────────────────────────────────
 LOADING_HTML = COMMON_CSS + """
 <style>
-.loading-wrap { display: flex; flex-direction: column; align-items: center;
-                justify-content: center; min-height: calc(100vh - 57px); gap: 24px; }
-.spinner { width: 44px; height: 44px; border: 3px solid var(--border-subtle);
-           border-top: 3px solid var(--blue); border-radius: 50%;
-           animation: spin 0.9s linear infinite; }
+.loading-wrap { 
+  display: flex; 
+  flex-direction: column; 
+  align-items: center;
+  justify-content: center; 
+  min-height: calc(100vh - 60px); 
+  gap: 28px; 
+}
+.spinner { 
+  width: 44px; 
+  height: 44px; 
+  border: 3px solid var(--border-subtle);
+  border-top: 3px solid var(--blue); 
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite; 
+}
 @keyframes spin { to { transform: rotate(360deg); } }
 .loading-title { font-size: 17px; font-weight: 600; color: var(--text-main); }
-.steps { display: flex; flex-direction: column; gap: 10px; }
+.steps { display: flex; flex-direction: column; gap: 12px; }
 .step { font-size: 13px; color: var(--text-dim); display: flex; align-items: center; gap: 10px; transition: all 0.3s; }
 .step.active { color: var(--blue); font-weight: 500; }
 .step-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border-subtle); flex-shrink: 0; }
 .step.active .step-dot { background: var(--blue); box-shadow: 0 0 8px var(--blue); }
 </style>
+
 <script>
-let curStep = 0;
-const checkStatus = () => {
-  fetch('/scan_status').then(r => r.json()).then(d => {
-    if (d.step !== undefined) {
-      const steps = document.querySelectorAll('.step');
-      steps.forEach((s, idx) => {
-        if (idx <= d.step) s.classList.add('active');
-      });
-    }
-    if (d.done) {
-      window.location.href = '/result/' + d.scan_id;
+document.addEventListener('DOMContentLoaded', () => {
+  const steps = document.querySelectorAll('.step');
+  let currentStep = 0;
+  
+  // 自動按時間間隔推進 Loading 步驟
+  const interval = setInterval(() => {
+    currentStep++;
+    if (currentStep < steps.length) {
+      steps[currentStep].classList.add('active');
     } else {
-      setTimeout(checkStatus, 1000);
+      clearInterval(interval);
     }
-  }).catch(() => setTimeout(checkStatus, 2000));
-};
-document.addEventListener('DOMContentLoaded', checkStatus);
+  }, 2000);
+});
 </script>
 
 <div class="hdr">
@@ -348,6 +357,7 @@ document.addEventListener('DOMContentLoaded', checkStatus);
   </div>
   <span class="proj-tag">SCANNING...</span>
 </div>
+
 <div class="loading-wrap">
   <div class="spinner"></div>
   <div class="loading-title">正在掃描你的 Gmail...</div>
@@ -361,7 +371,7 @@ document.addEventListener('DOMContentLoaded', checkStatus);
 </div>
 """
 
-# ── 結果頁 HTML (新增：XSS 轉義保護 + 雙欄/單欄 RWD 響應式切換 + 長文字折行) ───────────────────
+# ── RESULT_HTML ──────────────────────────────────────────────
 RESULT_HTML = COMMON_CSS + """
 <style>
 .summary { display: flex; border-bottom: 1px solid var(--border-subtle); background: rgba(15, 23, 42, 0.3); flex-wrap: wrap; }
@@ -443,6 +453,7 @@ RESULT_HTML = COMMON_CSS + """
   .right { padding: 20px; }
 }
 </style>
+
 <script>
 const emailData = PLACEHOLDER_DATA;
 
@@ -456,9 +467,10 @@ function escHtml(str) {
     .replace(/'/g, "&#039;");
 }
 
-function showDetail(idx) {
+function showDetail(idx, el) {
   const d = emailData[idx];
   if (!d) return;
+  
   const panel = document.getElementById('right-panel');
   let badgeClass = d.level === 'high' ? 'badge-high' : d.level === 'medium' ? 'badge-med' : d.level === 'low' ? 'badge-low' : 'badge-wl';
   let badgeText = d.level === 'high' ? '🚨 高風險' : d.level === 'medium' ? '⚠️ 中風險' : d.level === 'low' ? '✅ 安全' : '🔒 白名單';
@@ -489,13 +501,22 @@ function showDetail(idx) {
     ${irHtml}
   `;
 
-  document.querySelectorAll('.email-item').forEach((el, i) => {
-    el.classList.toggle('active', i === idx);
-  });
+  // 清除全部卡片的 active 狀態
+  document.querySelectorAll('.email-item').forEach(item => item.classList.remove('active'));
+  
+  // 若有直接傳入被點擊的元素點，則綁定該元素，否則綁定畫面上的第一封卡片
+  if (el) {
+    el.classList.add('active');
+  } else {
+    const firstItem = document.querySelector('.email-item');
+    if (firstItem) firstItem.classList.add('active');
+  }
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-  if (emailData.length > 0) showDetail(0);
+  if (emailData && emailData.length > 0) {
+    showDetail(0, null);
+  }
 });
 </script>
 
@@ -532,7 +553,7 @@ window.addEventListener('DOMContentLoaded', () => {
 </div>
 """
 
-# ── 歷史記錄 HTML ────────────────────────────────────────────
+# ── HISTORY_HTML ─────────────────────────────────────────────
 HISTORY_HTML = COMMON_CSS + """
 <style>
 .container { max-width: 860px; margin: 0 auto; padding: 40px 20px; }
@@ -591,7 +612,7 @@ tr:hover td { background: var(--bg-hover); }
 </div>
 """
 
-# ── 白名單 HTML ──────────────────────────────────────────────
+# ── WHITELIST_HTML ───────────────────────────────────────────
 WHITELIST_HTML = COMMON_CSS + """
 <style>
 .container { max-width: 680px; margin: 0 auto; padding: 40px 20px; }
@@ -621,6 +642,7 @@ WHITELIST_HTML = COMMON_CSS + """
            transition: all 0.2s ease; flex-shrink: 0; }
 .del-btn:hover { background: rgba(239, 68, 68, 0.2); }
 </style>
+
 <script>
 function addDomain() {
   const input = document.getElementById('domain-input');
@@ -635,6 +657,7 @@ function addDomain() {
     else alert(d.error || '新增失敗');
   });
 }
+
 function deleteDomain(domain) {
   if (!confirm('確定要刪除 ' + domain + '？')) return;
   fetch('/whitelist/delete', {
@@ -645,6 +668,7 @@ function deleteDomain(domain) {
     if (d.success) location.reload();
   });
 }
+
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('domain-input').addEventListener('keydown', e => {
     if (e.key === 'Enter') addDomain();
