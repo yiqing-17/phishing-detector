@@ -79,33 +79,91 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 </style>
 """
 
-# ── 首頁 HTML ────────────────────────────────────────────────
+# ── 首頁 HTML (純 UI 優化：不改動任何 Python 邏輯) ─────────────
 HOME_HTML = COMMON_CSS + """
 <style>
-.hero { max-width: 560px; margin: 0 auto; padding: 80px 20px; text-align: center; }
-.hero-icon { width: 64px; height: 64px; background: linear-gradient(135deg, var(--gold-dim), var(--gold));
-             border-radius: 16px; display: flex; align-items: center; justify-content: center;
-             font-size: 30px; margin: 0 auto 28px; }
-.hero h2 { font-size: 32px; font-weight: 500; color: var(--text-main); margin-bottom: 12px;
-           letter-spacing: -0.02em; }
-.hero-sub { font-size: 15px; color: var(--text-muted); line-height: 1.7; margin-bottom: 36px; }
-.google-btn { display: inline-flex; align-items: center; gap: 10px; background: var(--bg-card);
-              color: var(--text-main); font-size: 14px; font-weight: 500; padding: 13px 28px;
-              border-radius: 8px; text-decoration: none; border: 0.5px solid var(--border-gold);
-              transition: all 0.2s; letter-spacing: 0.01em; }
-.google-btn:hover { background: var(--bg-hover); border-color: var(--gold); transform: translateY(-1px); }
-.divider { width: 1px; height: 14px; background: var(--border-subtle); }
-.features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 56px; }
-.feat { background: var(--bg-card); border: 0.5px solid var(--border-subtle);
-        border-radius: 10px; padding: 20px; text-align: left; }
-.feat-icon { font-size: 20px; margin-bottom: 10px; }
-.feat h3 { font-size: 12px; font-weight: 500; color: var(--text-main); margin-bottom: 4px;
-           letter-spacing: 0.02em; text-transform: uppercase; }
-.feat p { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
-.wl-note { background: var(--bg-card); border: 0.5px solid var(--border-gold);
-           border-left: 2px solid var(--gold-dim); border-radius: 8px; padding: 12px 16px;
-           margin-top: 24px; font-size: 12px; color: var(--text-muted); text-align: left; }
+.hero-wrapper {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 80px 32px 60px 32px;
+  text-align: center;
+}
+.hero-icon {
+  width: 80px; height: 80px; 
+  background: linear-gradient(135deg, var(--gold-dim), var(--gold));
+  border-radius: var(--radius-lg, 16px); 
+  display: flex; align-items: center; justify-content: center;
+  font-size: 40px; 
+  margin: 0 auto 36px; 
+  box-shadow: 0 0 36px rgba(212, 175, 55, 0.25);
+}
+.hero-wrapper h2 { 
+  font-size: 40px; 
+  font-weight: 700; 
+  color: var(--text-main); 
+  margin-bottom: 20px; 
+  letter-spacing: -0.02em; 
+  line-height: 1.3;
+}
+.hero-sub { 
+  font-size: 16px; 
+  color: var(--text-muted); 
+  line-height: 1.8; 
+  margin: 0 auto 48px auto; 
+  max-width: 640px;
+}
+.google-btn {
+  display: inline-flex; align-items: center; gap: 14px; background: var(--bg-card);
+  color: var(--text-main); font-size: 15px; font-weight: 600; padding: 16px 36px;
+  border-radius: var(--radius-md, 8px); text-decoration: none; border: 1px solid var(--border-gold);
+  transition: all 0.25s ease; box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+}
+.google-btn:hover { 
+  background: var(--bg-hover); 
+  border-color: var(--gold); 
+  transform: translateY(-2px); 
+  box-shadow: 0 10px 32px rgba(212, 175, 55, 0.2); 
+}
+.divider-v { width: 1px; height: 18px; background: var(--border-subtle); }
+
+.features { 
+  display: grid; 
+  grid-template-columns: repeat(3, 1fr); 
+  gap: 24px; 
+  margin-top: 72px; 
+}
+.feat {
+  background: var(--bg-card); 
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md, 8px); 
+  padding: 32px 24px; 
+  text-align: left; 
+  transition: all 0.2s;
+}
+.feat:hover { border-color: var(--border-gold); transform: translateY(-2px); }
+.feat-icon { font-size: 28px; margin-bottom: 16px; }
+.feat h3 { font-size: 15px; font-weight: 600; color: var(--text-main); margin-bottom: 10px; letter-spacing: 0.01em; }
+.feat p { font-size: 13px; color: var(--text-muted); line-height: 1.7; }
+
+.wl-note {
+  background: var(--bg-card); 
+  border: 1px solid var(--border-gold);
+  border-left: 4px solid var(--gold); 
+  border-radius: var(--radius-md, 8px); 
+  padding: 20px 24px;
+  margin-top: 36px; 
+  font-size: 13.5px; 
+  color: var(--text-muted); 
+  text-align: left; 
+  line-height: 1.7;
+}
 .wl-note strong { color: var(--gold); }
+
+@media (max-width: 768px) {
+  .features { grid-template-columns: 1fr; }
+  .hero-wrapper h2 { font-size: 30px; }
+  .hero-wrapper { padding: 40px 20px; }
+}
 </style>
 
 <div class="hdr">
@@ -117,37 +175,36 @@ HOME_HTML = COMMON_CSS + """
     <a href="/history">掃描記錄</a>
     <a href="/whitelist">白名單設定</a>
   </div>
-  <span class="gold-tag">CAPSTONE</span>
 </div>
 
-<div class="hero">
+<div class="hero-wrapper">
   <div class="hero-icon">🛡️</div>
   <h2>一鍵掃描你的 Gmail</h2>
-  <p class="hero-sub">授權後系統自動掃描最新 15 封信件，<br>用三層 AI 引擎識別釣魚攻擊並產生事件通報報告。</p>
+  <p class="hero-sub">授權後系統自動讀取最新 15 封信件，<br>運用三層 AI 引擎多維度偵測潛在釣魚威脅並自動通報。</p>
+  
   <a href="/login" class="google-btn">
-    <svg width="18" height="18" viewBox="0 0 48 48">
+    <svg width="22" height="22" viewBox="0 0 48 48">
       <path fill="#4285F4" d="M45.12 24.5c0-1.56-.14-3.06-.4-4.5H24v8.51h11.84c-.51 2.75-2.06 5.08-4.39 6.64l7.08 5.51C42.45 36.27 45.12 30.87 45.12 24.5z"/>
       <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
       <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.08-5.51c-2.13 1.45-4.84 2.3-8.81 2.3-6.72 0-12.43-4.54-14.47-10.64l-7.98 6.19C5.22 42.79 14.04 48 24 48z"/>
       <path fill="#EA4335" d="M24 4.8L6.4 19.2V43.2h10.4V28.8h14.4v14.4H41.6V19.2z"/>
     </svg>
-    <div class="divider"></div>
+    <div class="divider-v"></div>
     使用 Google 帳號授權掃描
   </a>
 
   <div class="features">
-    <div class="feat"><div class="feat-icon">🔍</div><h3>三層 AI 分析</h3><p>規則引擎 + ML 分類器 + LLaMA 3.3 深度語意分析</p></div>
-    <div class="feat"><div class="feat-icon">🌐</div><h3>HTML 多模態</h3><p>偵測像素追蹤、偽裝連結、隱藏元素等進階手法</p></div>
-    <div class="feat"><div class="feat-icon">📄</div><h3>IR 事件報告</h3><p>高風險信件自動產生標準格式資安事件通報</p></div>
+    <div class="feat"><div class="feat-icon">🔍</div><h3>三層 AI 分析引擎</h3><p>結合精準規則庫 + ML 機率模型 + LLaMA 3.3 深度語意推理。</p></div>
+    <div class="feat"><div class="feat-icon">🌐</div><h3>HTML 多模態解析</h3><p>深度剖析像素追蹤、隱藏釣魚連結與偽裝品牌元素。</p></div>
+    <div class="feat"><div class="feat-icon">📄</div><h3>IR 事件報告通報</h3><p>自動生成標準化資安事件通報，即時評估影響層面與應對策略。</p></div>
   </div>
 
   <div class="wl-note">
-    <strong>白名單已啟用 —</strong>
-    SKIMS、lululemon、Alo Yoga、玉山銀行、Google 等已知安全寄件者直接標記為安全，可在「白名單設定」自訂。
+    <strong>💡 白名單防護機制 —</strong>
+    知名品牌（如 SKIMS、lululemon、玉山銀行、Google 等）與自訂信任網域將自動標記為安全，可至「白名單設定」彈性管理。
   </div>
 </div>
 """
-
 # ── Loading HTML ─────────────────────────────────────────────
 LOADING_HTML = COMMON_CSS + """
 <style>
