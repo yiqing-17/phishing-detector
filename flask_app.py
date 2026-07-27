@@ -21,7 +21,7 @@ from google.oauth2.credentials import Credentials
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
 # ── 設定區 ───────────────────────────────────────────────────
-GROQ_API_KEY = 'gsk_填入你的key'
+GROQ_API_KEY = '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'
 MY_EMAIL     = 'sherry940501@gmail.com'
 BASE_URL     = 'https://phishing-detector-n8rv.onrender.com'
 SCOPES       = ['https://www.googleapis.com/auth/gmail.readonly']
