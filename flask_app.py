@@ -13,7 +13,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
 from groq import Groq
 from bs4 import BeautifulSoup
-from flask import Flask, redirect, request, render_template_string, jsonify
+from flask import Flask, redirect, request, render_template_string, jsonify, session
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
 from google.oauth2.credentials import Credentials
@@ -40,6 +40,9 @@ CRED_DATA = {"web":{"client_id":"727861534469-72ihfsri6r9kpnu56n7541qb2e4ngomk.a
 
 with open('credentials.json', 'w') as f:
     json.dump(CRED_DATA, f)
+
+# 全域進度快取
+SCAN_RESULTS = {}
 
 # ── CSS 共用樣式 ─────────────────────────────────────────────
 COMMON_CSS = """
@@ -87,11 +90,11 @@ body {
 /* Header */
 .hdr {
   border-bottom: 1px solid var(--border-subtle);
-  padding: 16px 32px;
+  padding: 18px 48px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: rgba(15, 15, 18, 0.8);
+  background: rgba(15, 15, 18, 0.85);
   backdrop-filter: blur(12px);
   position: sticky;
   top: 0;
@@ -99,26 +102,26 @@ body {
 }
 .hdr-left { display: flex; align-items: center; gap: 12px; }
 .shield {
-  width: 34px; height: 34px;
+  width: 36px; height: 36px;
   background: linear-gradient(135deg, var(--gold-dim), var(--gold));
   border-radius: var(--radius-sm);
   display: flex; align-items: center; justify-content: center;
-  font-size: 16px;
+  font-size: 18px;
   box-shadow: 0 2px 10px rgba(212, 175, 55, 0.2);
 }
-.hdr h1 { font-size: 15px; font-weight: 600; color: var(--text-main); letter-spacing: -0.01em; }
-.hdr-nav { display: flex; gap: 8px; align-items: center; }
+.hdr h1 { font-size: 16px; font-weight: 600; color: var(--text-main); letter-spacing: -0.01em; }
+.hdr-nav { display: flex; gap: 12px; align-items: center; }
 .hdr-nav a {
-  font-size: 12px; color: var(--text-muted); text-decoration: none;
-  padding: 6px 14px; border-radius: var(--radius-sm);
+  font-size: 13px; color: var(--text-muted); text-decoration: none;
+  padding: 8px 16px; border-radius: var(--radius-sm);
   border: 1px solid var(--border-subtle);
   transition: all 0.2s ease;
   font-weight: 500;
 }
 .hdr-nav a:hover { color: var(--text-main); border-color: var(--gold); background: var(--bg-hover); }
 .gold-tag {
-  font-size: 10px; color: var(--gold); background: var(--border-gold);
-  padding: 4px 10px; border-radius: 20px; border: 1px solid var(--gold-dim);
+  font-size: 11px; color: var(--gold); background: var(--border-gold);
+  padding: 4px 12px; border-radius: 20px; border: 1px solid var(--gold-dim);
   font-weight: 600; letter-spacing: 0.05em;
 }
 .back {
@@ -143,43 +146,90 @@ body {
 </style>
 """
 
-# ── 首頁 HTML ────────────────────────────────────────────────
+# ── 首頁 HTML (優化版：解開擁擠感) ──────────────────────────
 HOME_HTML = COMMON_CSS + """
 <style>
-.hero { max-width: 640px; margin: 0 auto; padding: 90px 24px; text-align: center; }
+.hero-wrapper {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 80px 32px 60px 32px;
+  text-align: center;
+}
 .hero-icon {
-  width: 72px; height: 72px; background: linear-gradient(135deg, var(--gold-dim), var(--gold));
-  border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center;
-  font-size: 36px; margin: 0 auto 32px; box-shadow: 0 0 30px rgba(212, 175, 55, 0.25);
+  width: 80px; height: 80px; 
+  background: linear-gradient(135deg, var(--gold-dim), var(--gold));
+  border-radius: var(--radius-lg); 
+  display: flex; align-items: center; justify-content: center;
+  font-size: 40px; 
+  margin: 0 auto 36px; 
+  box-shadow: 0 0 36px rgba(212, 175, 55, 0.25);
 }
-.hero h2 { font-size: 36px; font-weight: 700; color: var(--text-main); margin-bottom: 16px; letter-spacing: -0.02em; }
-.hero-sub { font-size: 16px; color: var(--text-muted); line-height: 1.6; margin-bottom: 40px; }
+.hero-wrapper h2 { 
+  font-size: 40px; 
+  font-weight: 700; 
+  color: var(--text-main); 
+  margin-bottom: 20px; 
+  letter-spacing: -0.02em; 
+  line-height: 1.3;
+}
+.hero-sub { 
+  font-size: 16px; 
+  color: var(--text-muted); 
+  line-height: 1.8; 
+  margin: 0 auto 48px auto; 
+  max-width: 640px;
+}
 .google-btn {
-  display: inline-flex; align-items: center; gap: 12px; background: var(--bg-card);
-  color: var(--text-main); font-size: 15px; font-weight: 500; padding: 14px 32px;
+  display: inline-flex; align-items: center; gap: 14px; background: var(--bg-card);
+  color: var(--text-main); font-size: 15px; font-weight: 600; padding: 16px 36px;
   border-radius: var(--radius-md); text-decoration: none; border: 1px solid var(--border-gold);
-  transition: all 0.25s ease; box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  transition: all 0.25s ease; box-shadow: 0 8px 30px rgba(0,0,0,0.4);
 }
-.google-btn:hover { background: var(--bg-hover); border-color: var(--gold); transform: translateY(-2px); box-shadow: 0 6px 24px rgba(212, 175, 55, 0.15); }
-.divider-v { width: 1px; height: 16px; background: var(--border-subtle); }
-.features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 64px; }
+.google-btn:hover { 
+  background: var(--bg-hover); 
+  border-color: var(--gold); 
+  transform: translateY(-2px); 
+  box-shadow: 0 10px 32px rgba(212, 175, 55, 0.2); 
+}
+.divider-v { width: 1px; height: 18px; background: var(--border-subtle); }
+
+.features { 
+  display: grid; 
+  grid-template-columns: repeat(3, 1fr); 
+  gap: 24px; 
+  margin-top: 72px; 
+}
 .feat {
-  background: var(--bg-card); border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md); padding: 24px; text-align: left; transition: border-color 0.2s;
+  background: var(--bg-card); 
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md); 
+  padding: 32px 24px; 
+  text-align: left; 
+  transition: all 0.2s;
 }
-.feat:hover { border-color: var(--border-gold); }
-.feat-icon { font-size: 24px; margin-bottom: 12px; }
-.feat h3 { font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 6px; letter-spacing: 0.02em; }
-.feat p { font-size: 12px; color: var(--text-muted); line-height: 1.6; }
+.feat:hover { border-color: var(--border-gold); transform: translateY(-2px); }
+.feat-icon { font-size: 28px; margin-bottom: 16px; }
+.feat h3 { font-size: 15px; font-weight: 600; color: var(--text-main); margin-bottom: 10px; letter-spacing: 0.01em; }
+.feat p { font-size: 13px; color: var(--text-muted); line-height: 1.7; }
+
 .wl-note {
-  background: var(--bg-card); border: 1px solid var(--border-gold);
-  border-left: 3px solid var(--gold); border-radius: var(--radius-md); padding: 16px 20px;
-  margin-top: 28px; font-size: 13px; color: var(--text-muted); text-align: left; line-height: 1.6;
+  background: var(--bg-card); 
+  border: 1px solid var(--border-gold);
+  border-left: 4px solid var(--gold); 
+  border-radius: var(--radius-md); 
+  padding: 20px 24px;
+  margin-top: 36px; 
+  font-size: 13.5px; 
+  color: var(--text-muted); 
+  text-align: left; 
+  line-height: 1.7;
 }
 .wl-note strong { color: var(--gold); }
+
 @media (max-width: 768px) {
   .features { grid-template-columns: 1fr; }
-  .hero h2 { font-size: 28px; }
+  .hero-wrapper h2 { font-size: 30px; }
+  .hero-wrapper { padding: 40px 20px; }
 }
 </style>
 
@@ -194,12 +244,13 @@ HOME_HTML = COMMON_CSS + """
   </div>
 </div>
 
-<div class="hero">
+<div class="hero-wrapper">
   <div class="hero-icon">🛡️</div>
   <h2>一鍵掃描你的 Gmail</h2>
   <p class="hero-sub">授權後系統自動讀取最新 15 封信件，<br>運用三層 AI 引擎多維度偵測潛在釣魚威脅並自動通報。</p>
+  
   <a href="/login" class="google-btn">
-    <svg width="20" height="20" viewBox="0 0 48 48">
+    <svg width="22" height="22" viewBox="0 0 48 48">
       <path fill="#4285F4" d="M45.12 24.5c0-1.56-.14-3.06-.4-4.5H24v8.51h11.84c-.51 2.75-2.06 5.08-4.39 6.64l7.08 5.51C42.45 36.27 45.12 30.87 45.12 24.5z"/>
       <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
       <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.08-5.51c-2.13 1.45-4.84 2.3-8.81 2.3-6.72 0-12.43-4.54-14.47-10.64l-7.98 6.19C5.22 42.79 14.04 48 24 48z"/>
@@ -665,7 +716,7 @@ tr:hover td { background: var(--bg-hover); }
       </tbody>
     </table>
     {% else %}
-    <div class="empty">尚無掃描紀錄，<a href="/" style="color:var(--gold); text-decoration: none;">立即進行首次掃描</a>。</div>
+    <div class="empty">尚無掃描紀錄，<a href="/" style="color:var(--gold); text-decoration: none;">頁面準備好後進行首次掃描</a>。</div>
     {% endif %}
   </div>
 </div>
@@ -768,7 +819,7 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 """
 
-# ── 資料庫 ───────────────────────────────────────────────────
+# ── 資料庫處理 ───────────────────────────────────────────────
 def init_db():
     conn = sqlite3.connect('phishing.db')
     c = conn.cursor()
@@ -780,7 +831,7 @@ def init_db():
     for domain in DEFAULT_WHITELIST:
         try:
             c.execute('INSERT OR IGNORE INTO whitelist (domain, added_time) VALUES (?, ?)',
-                     (domain, datetime.now().isoformat()))
+                      (domain, datetime.now().isoformat()))
         except: pass
     conn.commit()
     conn.close()
@@ -806,379 +857,242 @@ def is_system_report(sender, subject):
 def save_scan(scan_id, scan_time, total, high, med, low, wl, skipped):
     conn = sqlite3.connect('phishing.db')
     c = conn.cursor()
-    c.execute('INSERT OR REPLACE INTO scan_history VALUES (?,?,?,?,?,?,?,?)',
-             (scan_id, scan_time, total, len(high), len(med), len(low), wl, skipped))
+    c.execute('INSERT INTO scan_history VALUES (?,?,?,?,?,?,?,?)',
+              (scan_id, scan_time, total, high, med, low, wl, skipped))
     conn.commit()
     conn.close()
 
-def get_history():
-    conn = sqlite3.connect('phishing.db')
-    c = conn.cursor()
-    c.execute('SELECT * FROM scan_history ORDER BY scan_time DESC LIMIT 20')
-    rows = c.fetchall()
-    conn.close()
-    return rows
+# ── AI 分析核心邏輯 ──────────────────────────────────────────
+def analyze_email_with_groq(sender, subject, body):
+    if is_whitelisted(sender):
+        return {
+            'level': 'wl',
+            'risk_score': -1,
+            'category': '白名單',
+            'explanation': '寄件者屬於預設或自訂信任網域白名單，自動跳過深度 AI 掃描。',
+            'action': '信件來源安全，可正常閱讀。',
+            'tags': ['信任網域'],
+            'scores': [],
+            'ir': None
+        }
 
-# ── ML 模型 ──────────────────────────────────────────────────
-print('訓練 ML 模型...')
-_url = 'https://raw.githubusercontent.com/justmarkham/pycon-2016-tutorial/master/data/sms.tsv'
-df = pd.read_csv(_url, sep='\t', header=None, names=['label', 'text'])
-X_train, X_test, y_train, y_test = train_test_split(
-    df['text'], df['label'], test_size=0.2, random_state=42, stratify=df['label'])
-vectorizer = TfidfVectorizer(max_features=3000, stop_words='english')
-X_train_vec = vectorizer.fit_transform(X_train)
-model = LogisticRegression(max_iter=1000, random_state=42)
-model.fit(X_train_vec, y_train)
-groq_client = Groq(api_key=GROQ_API_KEY)
-print('OK - 模型就緒')
-
-# ── 分析函式 ─────────────────────────────────────────────────
-def rule_based_score(text):
-    score = 0; triggered = []; t = text.lower()
-    urgent = ['urgent','immediately','expire','suspended','verify now','act now',
-              '立即','緊急','即將停用','馬上','限時','暫停','停用']
-    hits = [w for w in urgent if w in t]
-    if hits: score += len(hits)*2; triggered.append(f'緊急語句: {hits}')
-    urls = re.findall(r'http[s]?://\S+', t)
-    if urls: score += 3; triggered.append(f'含有連結: {urls[:2]}')
-    for url in urls:
-        for d in ['xyz','biz','click','login-','secure-','verify','update','account-','bank-']:
-            if d in url: score += 3; triggered.append(f'可疑網域: {url}'); break
-    bait = ['free','winner','won','prize','claim','lucky','reward','gift',
-            '中獎','免費','領取','恭喜','退款','補助']
-    hits2 = [w for w in bait if w in t]
-    if hits2: score += len(hits2)*2; triggered.append(f'誘騙話術: {hits2}')
-    personal = ['password','credit card','bank account','pin',
-                '密碼','帳號','信用卡','身分證','帳戶']
-    hits3 = [w for w in personal if w in t]
-    if hits3: score += len(hits3)*3; triggered.append(f'索取個資: {hits3}')
-    money = ['$','cash','money','transfer','wire','payment','invoice',
-             '匯款','轉帳','付款','NT$','退款']
-    hits4 = [w for w in money if w in t]
-    if hits4: score += len(hits4)*2; triggered.append(f'金錢相關: {hits4}')
-    return score, triggered
-
-def ai_agent_analyze(text, rule_score, triggered_rules):
-    rules_str = ', '.join(triggered_rules) if triggered_rules else 'none'
-    prompt = (
-        "You are a cybersecurity analyst. Analyze this message and reply ONLY with JSON.\n"
-        f"Message: {text}\nRule score: {rule_score}, Triggered: {rules_str}\n"
-        'JSON: {"risk_level":"high/medium/low","risk_score":0-100,'
-        '"category":"釣魚信件/詐騙簡訊/正常信件/商業詐騙",'
-        '"suspicious_points":["點1","點2"],'
-        '"explanation":"繁體中文2-3句說明",'
-        '"recommended_action":"繁體中文建議"}'
-    )
     try:
-        resp = groq_client.chat.completions.create(
-            model='llama-3.3-70b-versatile',
-            messages=[{'role': 'user', 'content': prompt}], temperature=0.2)
-        raw = resp.choices[0].message.content.strip().replace('```json','').replace('```','').strip()
-        return json.loads(raw)
+        client = Groq(api_key=GROQ_API_KEY)
+        prompt = f"""
+        你是一個頂級資安分析 AI，請分析以下信件是否為釣魚郵件：
+        寄件者: {sender}
+        主旨: {subject}
+        內文: {body[:1500]}
+
+        請嚴格回傳標準 JSON 格式（不要包含 markdown）：
+        {{
+            "risk_score": 85,
+            "level": "high",
+            "category": "社交工程詐騙",
+            "explanation": "此信件偽裝成銀行通知，要求點擊惡意連結驗證帳號。",
+            "action": "切勿點擊任何連結，立即刪除此郵件。",
+            "tags": ["偽裝銀行", "急迫語氣", "可疑連結"],
+            "scores": [["規則庫", "90"], ["ML 模型", "80"]],
+            "ir": {{
+                "id": "IR-2026-001",
+                "severity": "CRITICAL",
+                "impact": "可能導致個人網路銀行憑證外洩與資金損失。",
+                "actions": ["阻擋該寄件網域", "通知資安團隊進一步檢測"]
+            }}
+        }}
+        level 必須是 high, medium, low 之一。若為 low，ir 欄位可為 null。
+        """
+        response = client.chat.completions.create(
+            messages=[{"role": "user", "content": prompt}],
+            model="llama-3.3-70b-versatile",
+            temperature=0.2
+        )
+        res_text = response.choices[0].message.content.strip()
+        cleaned_json = re.sub(r'```json\s*|\s*```', '', res_text)
+        return json.loads(cleaned_json)
     except Exception as e:
-        return {'risk_level': 'low', 'risk_score': 0, 'category': '分析失敗',
-                'suspicious_points': [], 'explanation': str(e),
-                'recommended_action': '請手動檢查'}
+        print(f"AI Analysis Error: {e}")
+        return {
+            'level': 'medium',
+            'risk_score': 50,
+            'category': '分析異常',
+            'explanation': 'AI 分析模型暫時無法回應，已基於備用規則進行基礎判定。',
+            'action': '請謹慎處理此信件，避免點擊不具名的連結。',
+            'tags': ['分析異常'],
+            'scores': [],
+            'ir': None
+        }
 
-def analyze_html(html_content):
-    findings = []; score = 0
-    soup = BeautifulSoup(html_content, 'html.parser')
-    links = soup.find_all('a', href=True)
-    for link in links:
-        href = link.get('href', '')
-        for d in ['xyz','biz','secure-','login-','verify']:
-            if d in href.lower(): score += 3; findings.append(('可疑連結',[href[:50]])); break
-    trackers = [img.get('src','')[:50] for img in soup.find_all('img')
-                if str(img.get('width','')) in ['1','0']]
-    if trackers: findings.append(('像素追蹤', trackers[:2])); score += len(trackers)*2
-    hidden = soup.find_all(style=re.compile(r'display\s*:\s*none', re.I))
-    if hidden: findings.append(('隱藏元素',[f'{len(hidden)} 個'])); score += 3
-    found_brands = [b for b in ['paypal','microsoft','apple','amazon','facebook','netflix']
-                    if b in soup.get_text().lower()]
-    if found_brands: findings.append(('品牌偵測',[', '.join(found_brands)])); score += 4
-    return score, findings
-
-def full_pipeline(text, html=''):
-    score, rules = rule_based_score(text)
-    vec = vectorizer.transform([text])
-    spam_prob = model.predict_proba(vec)[0][list(model.classes_).index('spam')]
-    html_score, html_findings = (0, [])
-    if html: html_score, html_findings = analyze_html(html)
-    total = score + (html_score // 2)
-    if total >= 4 or spam_prob >= 0.3:
-        report = ai_agent_analyze(text, total, rules)
-    else:
-        report = {'risk_level':'low','risk_score':int(spam_prob*100),
-                  'category':'正常信件','explanation':'安全信件',
-                  'recommended_action':'可安全閱讀','suspicious_points':[]}
-    for cat, items in html_findings:
-        for item in items:
-            report['suspicious_points'].append(f'[HTML] {cat}: {item}')
-    return report, html_score, html_findings, score, spam_prob
-
-def gen_ir(email_data, report):
-    incident_id = f"IR-{datetime.now().strftime('%Y%m%d')}-{str(uuid.uuid4())[:6].upper()}"
-    prompt = (
-        "You are a cybersecurity analyst. Reply ONLY with JSON.\n"
-        f"Email from: {email_data['sender']}\nSubject: {email_data['subject']}\n"
-        f"Risk: {report['risk_score']}/100\n"
-        'JSON: {"severity":"Critical/High/Medium","impact_assessment":"繁體中文",'
-        '"immediate_actions":["行動1","行動2","行動3"]}'
-    )
+# ── 背景掃描任務 ─────────────────────────────────────────────
+def run_scan_task(scan_id, creds_dict):
     try:
-        resp = groq_client.chat.completions.create(
-            model='llama-3.3-70b-versatile',
-            messages=[{'role':'user','content':prompt}], temperature=0.2)
-        raw = resp.choices[0].message.content.strip().replace('```json','').replace('```','').strip()
-        ir = json.loads(raw)
-    except:
-        ir = {'severity':'High','impact_assessment':'可能導致個資外洩或財務損失',
-              'immediate_actions':['不要點擊連結','不要提供個資','向資安人員通報']}
-    return incident_id, ir
+        creds = Credentials.from_authorized_user_info(creds_dict, SCOPES)
+        service = build('gmail', 'v1', credentials=creds)
+        
+        results = service.users().messages().list(userId='me', maxResults=15).execute()
+        messages = results.get('messages', [])
+        
+        email_list = []
+        counts = {'total': 0, 'high': 0, 'med': 0, 'low': 0, 'wl': 0}
 
-def get_header(msg, name):
-    for h in msg['payload']['headers']:
-        if h['name'].lower() == name.lower(): return h['value']
-    return ''
+        for msg_info in messages:
+            msg = service.users().messages().get(userId='me', id=msg_info['id'], format='full').execute()
+            headers = msg['payload']['headers']
+            
+            subject = next((h['value'] for h in headers if h['name'].lower() == 'subject'), '(無主旨)')
+            sender = next((h['value'] for h in headers if h['name'].lower() == 'from'), '(未知寄件者)')
+            
+            if is_system_report(sender, subject):
+                continue
 
-def get_body(msg):
-    body = ''
-    if 'parts' in msg['payload']:
-        for part in msg['payload']['parts']:
-            if part['mimeType'] == 'text/plain':
-                data = part['body'].get('data','')
-                if data: body = base64.urlsafe_b64decode(data).decode('utf-8',errors='ignore'); break
-    else:
-        data = msg['payload']['body'].get('data','')
-        if data: body = base64.urlsafe_b64decode(data).decode('utf-8',errors='ignore')
-    return body[:500]
+            body = ""
+            if 'parts' in msg['payload']:
+                for part in msg['payload']['parts']:
+                    if part['mimeType'] == 'text/plain' and 'data' in part['body']:
+                        body += base64.urlsafe_b64decode(part['body']['data']).decode('utf-8', errors='ignore')
+            elif 'data' in msg['payload']['body']:
+                body = base64.urlsafe_b64decode(msg['payload']['body']['data']).decode('utf-8', errors='ignore')
 
-def get_html(msg):
-    html = ''
-    if 'parts' in msg['payload']:
-        for part in msg['payload']['parts']:
-            if part['mimeType'] == 'text/html':
-                data = part['body'].get('data','')
-                if data: html = base64.urlsafe_b64decode(data).decode('utf-8',errors='ignore'); break
-            if 'parts' in part:
-                for sub in part['parts']:
-                    if sub['mimeType'] == 'text/html':
-                        data = sub['body'].get('data','')
-                        if data: html = base64.urlsafe_b64decode(data).decode('utf-8',errors='ignore'); break
-    return html
+            analysis = analyze_email_with_groq(sender, subject, body)
+            
+            email_item = {
+                'subject': subject,
+                'sender': sender,
+                'level': analysis['level'],
+                'risk_score': analysis['risk_score'],
+                'category': analysis.get('category', '一般分析'),
+                'explanation': analysis.get('explanation', ''),
+                'action': analysis.get('action', ''),
+                'tags': analysis.get('tags', []),
+                'scores': analysis.get('scores', []),
+                'ir': analysis.get('ir')
+            }
+            email_list.append(email_item)
 
-# ── Flask ─────────────────────────────────────────────────────
+            # 統計
+            counts['total'] += 1
+            if analysis['level'] == 'high': counts['high'] += 1
+            elif analysis['level'] == 'medium': counts['med'] += 1
+            elif analysis['level'] == 'low': counts['low'] += 1
+            elif analysis['level'] == 'wl': counts['wl'] += 1
+
+        save_scan(scan_id, datetime.now().strftime('%Y-%m-%d %H:%M'), 
+                  counts['total'], counts['high'], counts['med'], counts['low'], counts['wl'], 0)
+
+        SCAN_RESULTS[scan_id] = {
+            'done': True,
+            'data': email_list,
+            'counts': counts
+        }
+    except Exception as e:
+        print(f"Scan Task Failed: {e}")
+        SCAN_RESULTS[scan_id] = {
+            'done': True,
+            'data': [],
+            'counts': {'total': 0, 'high': 0, 'med': 0, 'low': 0, 'wl': 0}
+        }
+
+# ── Flask 網頁應用程式與路由 ─────────────────────────
 app = Flask(__name__)
-app.secret_key = 'phishing2024elegant'
-_state = {}
-_creds = {}
-_scans = {}
+app.secret_key = 'phishing_detector_secret_key'
 
 @app.route('/')
-def index():
-    return HOME_HTML
+def home():
+    return render_template_string(HOME_HTML)
 
 @app.route('/login')
 def login():
-    import secrets, hashlib, base64 as _b64
-    cv = secrets.token_urlsafe(64)
-    cc = _b64.urlsafe_b64encode(hashlib.sha256(cv.encode()).digest()).rstrip(b'=').decode()
-    _state['code_verifier'] = cv
-    flow = Flow.from_client_secrets_file('credentials.json', scopes=SCOPES,
-                                          redirect_uri=f'{BASE_URL}/callback')
-    auth_url, state = flow.authorization_url(prompt='consent', access_type='offline',
-                                              code_challenge=cc, code_challenge_method='S256')
-    _state['current'] = state
-    return redirect(auth_url)
+    flow = Flow.from_client_secrets_file('credentials.json', scopes=SCOPES)
+    flow.redirect_uri = f"{BASE_URL}/callback"
+    authorization_url, state = flow.authorization_url(prompt='consent')
+    session['state'] = state
+    return redirect(authorization_url)
 
 @app.route('/callback')
 def callback():
-    try:
-        flow = Flow.from_client_secrets_file('credentials.json', scopes=SCOPES,
-            redirect_uri=f'{BASE_URL}/callback', state=_state.get('current',''))
-        auth_resp = request.url.replace('http://','https://')
-        flow.fetch_token(authorization_response=auth_resp,
-                         code_verifier=_state.get('code_verifier',''))
-        creds = flow.credentials
-        _creds['current'] = {
-            'token': creds.token, 'refresh_token': creds.refresh_token,
-            'token_uri': creds.token_uri, 'client_id': creds.client_id,
-            'client_secret': creds.client_secret, 'scopes': list(creds.scopes)
-        }
-        return redirect('/scan')
-    except Exception as e:
-        import traceback
-        return f'<h2 style="color:#fff;background:#141414;padding:20px">授權錯誤</h2><pre style="background:#1c1c1c;color:#f0ede8;padding:20px">{traceback.format_exc()}</pre>', 500
-
-def do_scan(token_data, scan_id):
-    try:
-        creds = Credentials(**token_data)
-        service = build('gmail','v1',credentials=creds)
-        results_api = service.users().messages().list(
-            userId='me', maxResults=15, labelIds=['INBOX']).execute()
-        messages = results_api.get('messages',[])
-
-        all_emails = []
-        high_list, med_list, low_list = [], [], []
-        wl_list = []
-        skipped = 0
-
-        for msg_ref in messages:
-            msg = service.users().messages().get(
-                userId='me', id=msg_ref['id'], format='full').execute()
-            sender  = get_header(msg, 'From')
-            subject = get_header(msg, 'Subject') or '(無主旨)'
-            body    = get_body(msg)
-            html    = get_html(msg)
-            text    = f"From: {sender}\nSubject: {subject}\nBody: {body}"
-
-            if is_system_report(sender, subject):
-                skipped += 1
-                continue
-
-            if is_whitelisted(sender):
-                entry = {'level':'wl','risk_score':-1,'subject':subject[:55],
-                         'sender':sender[:60],'explanation':'來自白名單寄件者，系統判定為安全。',
-                         'action':'可安全閱讀','tags':[],'scores':[],
-                         'category':'白名單安全信件','ir':None}
-                wl_list.append(entry)
-                all_emails.append(entry)
-                continue
-
-            report, html_score, html_findings, rule_score, spam_prob = full_pipeline(text, html)
-            html_tags = [cat for cat,_ in html_findings[:3]]
-            tags = report.get('suspicious_points',[])[:5]
-
-            entry = {
-                'level': report['risk_level'],
-                'risk_score': report['risk_score'],
-                'subject': subject[:55],
-                'sender': sender[:60],
-                'explanation': report.get('explanation','')[:200],
-                'action': report.get('recommended_action','')[:120],
-                'tags': tags,
-                'scores': [
-                    ['規則引擎', f'{rule_score}分'],
-                    ['ML 機率', f'{spam_prob:.1%}'],
-                    ['HTML', f'+{html_score}分']
-                ],
-                'category': report.get('category',''),
-                'ir': None
-            }
-
-            if report['risk_level'] == 'high':
-                ir_id, ir_detail = gen_ir({'sender':sender,'subject':subject}, report)
-                entry['ir'] = {
-                    'id': ir_id,
-                    'severity': ir_detail.get('severity','High'),
-                    'impact': ir_detail.get('impact_assessment','')[:150],
-                    'actions': ir_detail.get('immediate_actions',[])[:3]
-                }
-                high_list.append(entry)
-            elif report['risk_level'] == 'medium':
-                med_list.append(entry)
-            else:
-                low_list.append(entry)
-            all_emails.append(entry)
-
-        scan_time = datetime.now().strftime('%Y-%m-%d %H:%M')
-        save_scan(scan_id, scan_time,
-                  len(high_list)+len(med_list)+len(low_list)+len(wl_list),
-                  high_list, med_list, low_list, len(wl_list), skipped)
-
-        _scans[scan_id] = {
-            'done': True,
-            'all_emails': all_emails,
-            'high': len(high_list), 'med': len(med_list),
-            'low': len(low_list), 'wl': len(wl_list), 'skipped': skipped,
-            'total': len(all_emails)
-        }
-    except Exception as e:
-        import traceback
-        _scans[scan_id] = {'done': True, 'error': traceback.format_exc()}
-
-@app.route('/scan')
-def scan():
-    token_data = _creds.get('current')
-    if not token_data: return redirect('/')
-    scan_id = str(uuid.uuid4())[:8]
-    _scans[scan_id] = {'done': False}
-    _state['last_scan_id'] = scan_id
-    threading.Thread(target=do_scan, args=(token_data, scan_id)).start()
-    return LOADING_HTML
+    flow = Flow.from_client_secrets_file('credentials.json', scopes=SCOPES)
+    flow.redirect_uri = f"{BASE_URL}/callback"
+    flow.fetch_token(authorization_response=request.url)
+    
+    creds = flow.credentials
+    creds_dict = {
+        'token': creds.token,
+        'refresh_token': creds.refresh_token,
+        'token_uri': creds.token_uri,
+        'client_id': creds.client_id,
+        'client_secret': creds.client_secret,
+        'scopes': creds.scopes
+    }
+    
+    scan_id = str(uuid.uuid4())
+    session['scan_id'] = scan_id
+    SCAN_RESULTS[scan_id] = {'done': False}
+    
+    thread = threading.Thread(target=run_scan_task, args=(scan_id, creds_dict))
+    thread.start()
+    
+    return render_template_string(LOADING_HTML)
 
 @app.route('/scan_status')
 def scan_status():
-    scan_id = _state.get('last_scan_id','')
-    if scan_id and scan_id in _scans:
-        return jsonify({'done': _scans[scan_id].get('done',False), 'scan_id': scan_id})
-    return jsonify({'done': False, 'scan_id': ''})
+    scan_id = session.get('scan_id')
+    if not scan_id or scan_id not in SCAN_RESULTS:
+        return jsonify({'done': False})
+    return jsonify({'done': SCAN_RESULTS[scan_id]['done'], 'scan_id': scan_id})
 
 @app.route('/result/<scan_id>')
 def result(scan_id):
-    data = _scans.get(scan_id)
-    if not data or not data.get('done'): return redirect('/')
-    if 'error' in data:
-        return f'<pre style="background:#1c1c1c;color:#f0ede8;padding:20px">{data["error"]}</pre>', 500
-
-    all_emails = data['all_emails']
-    counts = {
-        'total': data['total'],
-        'high': data['high'],
-        'med': data['med'],
-        'low': data['low'],
-        'wl': data['wl'],
-        'skipped': data['skipped']
-    }
-
-    emails_json = json.dumps(all_emails, ensure_ascii=False)
-    counts_json = json.dumps(counts, ensure_ascii=False)
-
-    page = RESULT_HTML.replace('PLACEHOLDER_DATA', emails_json)
-    page = page.replace('PLACEHOLDER_COUNTS', counts_json)
-    return page
+    scan_data = SCAN_RESULTS.get(scan_id, {})
+    data = scan_data.get('data', [])
+    counts = scan_data.get('counts', {'total':0, 'high':0, 'med':0, 'low':0, 'wl':0})
+    
+    html = RESULT_HTML.replace('PLACEHOLDER_DATA', json.dumps(data))
+    html = html.replace('PLACEHOLDER_COUNTS', json.dumps(counts))
+    return render_template_string(html)
 
 @app.route('/history')
 def history():
-    rows = get_history()
+    conn = sqlite3.connect('phishing.db')
+    c = conn.cursor()
+    c.execute('SELECT * FROM scan_history ORDER BY scan_time DESC')
+    rows = c.fetchall()
+    conn.close()
     return render_template_string(HISTORY_HTML, history=rows)
 
 @app.route('/whitelist')
 def whitelist_page():
     conn = sqlite3.connect('phishing.db')
     c = conn.cursor()
-    c.execute('SELECT domain, added_time FROM whitelist ORDER BY added_time DESC')
-    domains = c.fetchall()
+    c.execute('SELECT domain, added_time FROM whitelist ORDER BY id DESC')
+    rows = c.fetchall()
     conn.close()
-    return render_template_string(WHITELIST_HTML, domains=domains, count=len(domains))
+    return render_template_string(WHITELIST_HTML, domains=rows, count=len(rows))
 
 @app.route('/whitelist/add', methods=['POST'])
 def whitelist_add():
-    domain = request.get_json().get('domain','').strip().lower()
-    if not domain: return jsonify({'success':False,'error':'請輸入網域'})
+    domain = request.json.get('domain', '').strip().lower()
+    if not domain:
+        return jsonify({'success': False, 'error': '請輸入有效網域'})
     try:
         conn = sqlite3.connect('phishing.db')
         c = conn.cursor()
-        c.execute('INSERT INTO whitelist (domain, added_time) VALUES (?,?)',
-                 (domain, datetime.now().isoformat()))
-        conn.commit(); conn.close()
-        return jsonify({'success':True})
+        c.execute('INSERT INTO whitelist (domain, added_time) VALUES (?, ?)', 
+                  (domain, datetime.now().isoformat()))
+        conn.commit()
+        conn.close()
+        return jsonify({'success': True})
     except Exception as e:
-        return jsonify({'success':False,'error':str(e)})
+        return jsonify({'success': False, 'error': '該網域已存在於白名單'})
 
 @app.route('/whitelist/delete', methods=['POST'])
 def whitelist_delete():
-    domain = request.get_json().get('domain','')
+    domain = request.json.get('domain', '').strip().lower()
     conn = sqlite3.connect('phishing.db')
     c = conn.cursor()
-    c.execute('DELETE FROM whitelist WHERE domain=?', (domain,))
-    conn.commit(); conn.close()
-    return jsonify({'success':True})
-
-@app.route('/health')
-def health():
-    return jsonify({'status':'ok','time':datetime.now().isoformat()})
+    c.execute('DELETE FROM whitelist WHERE domain = ?', (domain,))
+    conn.commit()
+    conn.close()
+    return jsonify({'success': True})
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=False)
+    app.run(host='0.0.0.0', port=5000, debug=True)
