@@ -1,5 +1,5 @@
 # ============================================================
-# AI 釣魚信件偵測系統 - Flask 網頁版 v3（暗色優雅風格）
+# AI 釣魚信件偵測系統 - Flask 網頁版 v3.1 (UI/UX 全面優化版)
 # ============================================================
 
 import json, os, uuid, threading, base64, re, sqlite3, smtplib
@@ -44,68 +44,143 @@ with open('credentials.json', 'w') as f:
 # ── CSS 共用樣式 ─────────────────────────────────────────────
 COMMON_CSS = """
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap');
+
 :root {
-  --gold: #C9A84C; --gold-light: #E8C97A; --gold-dim: #8A6E2F;
-  --bg-deep: #141414; --bg-card: #1C1C1C; --bg-hover: #242424;
-  --border-subtle: #2A2A2A; --border-gold: #3A3020;
-  --text-main: #F0EDE8; --text-muted: #888070; --text-dim: #555045;
-  --red: #C0392B; --red-bg: #1E1010; --red-border: #3A1010;
-  --orange: #D4874A; --orange-bg: #1E1508; --orange-border: #3A2008;
-  --green: #4A9B6F; --green-bg: #0E1A12; --green-border: #0E2A1A;
-  --blue: #4A7EC0; --blue-bg: #0E1520;
+  --gold: #D4AF37;
+  --gold-light: #F3E5AB;
+  --gold-dim: #7A621E;
+  --bg-deep: #0F0F12;
+  --bg-card: #18181C;
+  --bg-hover: #222228;
+  --border-subtle: #26262E;
+  --border-gold: #3D351D;
+  --text-main: #F4F4F6;
+  --text-muted: #8F8F9E;
+  --text-dim: #5A5A66;
+  --red: #EF4444;
+  --red-bg: rgba(239, 68, 68, 0.1);
+  --red-border: rgba(239, 68, 68, 0.25);
+  --orange: #F97316;
+  --orange-bg: rgba(249, 115, 22, 0.1);
+  --orange-border: rgba(249, 115, 22, 0.25);
+  --green: #10B981;
+  --green-bg: rgba(16, 185, 129, 0.1);
+  --green-border: rgba(16, 185, 129, 0.25);
+  --blue: #3B82F6;
+  --blue-bg: rgba(59, 130, 246, 0.1);
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
 }
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-       background: var(--bg-deep); color: var(--text-main); min-height: 100vh; }
-.hdr { border-bottom: 0.5px solid var(--border-gold); padding: 14px 28px;
-       display: flex; align-items: center; justify-content: space-between; }
-.hdr-left { display: flex; align-items: center; gap: 10px; }
-.shield { width: 30px; height: 30px; background: linear-gradient(135deg, var(--gold-dim), var(--gold));
-          border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 15px; }
-.hdr h1 { font-size: 14px; font-weight: 500; color: var(--text-main); letter-spacing: 0.02em; }
-.hdr-nav { display: flex; gap: 6px; }
-.hdr-nav a { font-size: 11px; color: var(--text-muted); text-decoration: none;
-             padding: 5px 12px; border-radius: 4px; border: 0.5px solid var(--border-subtle);
-             transition: all 0.15s; }
-.hdr-nav a:hover { color: var(--text-main); border-color: var(--gold-dim); }
-.gold-tag { font-size: 10px; color: var(--gold); background: var(--border-gold);
-            padding: 3px 8px; border-radius: 20px; border: 0.5px solid var(--gold-dim);
-            letter-spacing: 0.05em; }
-.back { display: inline-flex; align-items: center; gap: 6px; font-size: 12px;
-        color: var(--text-muted); text-decoration: none; padding: 6px 14px;
-        border-radius: 4px; border: 0.5px solid var(--border-subtle);
-        margin-bottom: 20px; transition: all 0.15s; }
-.back:hover { color: var(--text-main); border-color: var(--gold-dim); }
+body { 
+  font-family: 'Inter', 'Noto Sans TC', -apple-system, sans-serif;
+  background: var(--bg-deep); 
+  color: var(--text-main); 
+  min-height: 100vh;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Header */
+.hdr {
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 16px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(15, 15, 18, 0.8);
+  backdrop-filter: blur(12px);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.hdr-left { display: flex; align-items: center; gap: 12px; }
+.shield {
+  width: 34px; height: 34px;
+  background: linear-gradient(135deg, var(--gold-dim), var(--gold));
+  border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  box-shadow: 0 2px 10px rgba(212, 175, 55, 0.2);
+}
+.hdr h1 { font-size: 15px; font-weight: 600; color: var(--text-main); letter-spacing: -0.01em; }
+.hdr-nav { display: flex; gap: 8px; align-items: center; }
+.hdr-nav a {
+  font-size: 12px; color: var(--text-muted); text-decoration: none;
+  padding: 6px 14px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+.hdr-nav a:hover { color: var(--text-main); border-color: var(--gold); background: var(--bg-hover); }
+.gold-tag {
+  font-size: 10px; color: var(--gold); background: var(--border-gold);
+  padding: 4px 10px; border-radius: 20px; border: 1px solid var(--gold-dim);
+  font-weight: 600; letter-spacing: 0.05em;
+}
+.back {
+  display: inline-flex; align-items: center; gap: 8px; font-size: 13px;
+  color: var(--text-muted); text-decoration: none; padding: 8px 16px;
+  border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);
+  margin-bottom: 24px; transition: all 0.2s; font-weight: 500;
+}
+.back:hover { color: var(--text-main); border-color: var(--gold); background: var(--bg-hover); }
+
+/* Buttons */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 10px 20px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 500;
+  cursor: pointer; transition: all 0.2s; border: none; text-decoration: none;
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--gold), #B89628);
+  color: #000; font-weight: 600;
+}
+.btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
 </style>
 """
 
 # ── 首頁 HTML ────────────────────────────────────────────────
 HOME_HTML = COMMON_CSS + """
 <style>
-.hero { max-width: 560px; margin: 0 auto; padding: 80px 20px; text-align: center; }
-.hero-icon { width: 64px; height: 64px; background: linear-gradient(135deg, var(--gold-dim), var(--gold));
-             border-radius: 16px; display: flex; align-items: center; justify-content: center;
-             font-size: 30px; margin: 0 auto 28px; }
-.hero h2 { font-size: 32px; font-weight: 500; color: var(--text-main); margin-bottom: 12px;
-           letter-spacing: -0.02em; }
-.hero-sub { font-size: 15px; color: var(--text-muted); line-height: 1.7; margin-bottom: 36px; }
-.google-btn { display: inline-flex; align-items: center; gap: 10px; background: var(--bg-card);
-              color: var(--text-main); font-size: 14px; font-weight: 500; padding: 13px 28px;
-              border-radius: 8px; text-decoration: none; border: 0.5px solid var(--border-gold);
-              transition: all 0.2s; letter-spacing: 0.01em; }
-.google-btn:hover { background: var(--bg-hover); border-color: var(--gold); transform: translateY(-1px); }
-.divider { width: 1px; height: 14px; background: var(--border-subtle); }
-.features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 56px; }
-.feat { background: var(--bg-card); border: 0.5px solid var(--border-subtle);
-        border-radius: 10px; padding: 20px; text-align: left; }
-.feat-icon { font-size: 20px; margin-bottom: 10px; }
-.feat h3 { font-size: 12px; font-weight: 500; color: var(--text-main); margin-bottom: 4px;
-           letter-spacing: 0.02em; text-transform: uppercase; }
-.feat p { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
-.wl-note { background: var(--bg-card); border: 0.5px solid var(--border-gold);
-           border-left: 2px solid var(--gold-dim); border-radius: 8px; padding: 12px 16px;
-           margin-top: 24px; font-size: 12px; color: var(--text-muted); text-align: left; }
+.hero { max-width: 640px; margin: 0 auto; padding: 90px 24px; text-align: center; }
+.hero-icon {
+  width: 72px; height: 72px; background: linear-gradient(135deg, var(--gold-dim), var(--gold));
+  border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center;
+  font-size: 36px; margin: 0 auto 32px; box-shadow: 0 0 30px rgba(212, 175, 55, 0.25);
+}
+.hero h2 { font-size: 36px; font-weight: 700; color: var(--text-main); margin-bottom: 16px; letter-spacing: -0.02em; }
+.hero-sub { font-size: 16px; color: var(--text-muted); line-height: 1.6; margin-bottom: 40px; }
+.google-btn {
+  display: inline-flex; align-items: center; gap: 12px; background: var(--bg-card);
+  color: var(--text-main); font-size: 15px; font-weight: 500; padding: 14px 32px;
+  border-radius: var(--radius-md); text-decoration: none; border: 1px solid var(--border-gold);
+  transition: all 0.25s ease; box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+.google-btn:hover { background: var(--bg-hover); border-color: var(--gold); transform: translateY(-2px); box-shadow: 0 6px 24px rgba(212, 175, 55, 0.15); }
+.divider-v { width: 1px; height: 16px; background: var(--border-subtle); }
+.features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 64px; }
+.feat {
+  background: var(--bg-card); border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md); padding: 24px; text-align: left; transition: border-color 0.2s;
+}
+.feat:hover { border-color: var(--border-gold); }
+.feat-icon { font-size: 24px; margin-bottom: 12px; }
+.feat h3 { font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 6px; letter-spacing: 0.02em; }
+.feat p { font-size: 12px; color: var(--text-muted); line-height: 1.6; }
+.wl-note {
+  background: var(--bg-card); border: 1px solid var(--border-gold);
+  border-left: 3px solid var(--gold); border-radius: var(--radius-md); padding: 16px 20px;
+  margin-top: 28px; font-size: 13px; color: var(--text-muted); text-align: left; line-height: 1.6;
+}
 .wl-note strong { color: var(--gold); }
+@media (max-width: 768px) {
+  .features { grid-template-columns: 1fr; }
+  .hero h2 { font-size: 28px; }
+}
 </style>
 
 <div class="hdr">
@@ -117,33 +192,32 @@ HOME_HTML = COMMON_CSS + """
     <a href="/history">掃描記錄</a>
     <a href="/whitelist">白名單設定</a>
   </div>
-  <span class="gold-tag">CAPSTONE</span>
 </div>
 
 <div class="hero">
   <div class="hero-icon">🛡️</div>
   <h2>一鍵掃描你的 Gmail</h2>
-  <p class="hero-sub">授權後系統自動掃描最新 15 封信件，<br>用三層 AI 引擎識別釣魚攻擊並產生事件通報報告。</p>
+  <p class="hero-sub">授權後系統自動讀取最新 15 封信件，<br>運用三層 AI 引擎多維度偵測潛在釣魚威脅並自動通報。</p>
   <a href="/login" class="google-btn">
-    <svg width="18" height="18" viewBox="0 0 48 48">
+    <svg width="20" height="20" viewBox="0 0 48 48">
       <path fill="#4285F4" d="M45.12 24.5c0-1.56-.14-3.06-.4-4.5H24v8.51h11.84c-.51 2.75-2.06 5.08-4.39 6.64l7.08 5.51C42.45 36.27 45.12 30.87 45.12 24.5z"/>
       <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
       <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.08-5.51c-2.13 1.45-4.84 2.3-8.81 2.3-6.72 0-12.43-4.54-14.47-10.64l-7.98 6.19C5.22 42.79 14.04 48 24 48z"/>
       <path fill="#EA4335" d="M24 4.8L6.4 19.2V43.2h10.4V28.8h14.4v14.4H41.6V19.2z"/>
     </svg>
-    <div class="divider"></div>
+    <div class="divider-v"></div>
     使用 Google 帳號授權掃描
   </a>
 
   <div class="features">
-    <div class="feat"><div class="feat-icon">🔍</div><h3>三層 AI 分析</h3><p>規則引擎 + ML 分類器 + LLaMA 3.3 深度語意分析</p></div>
-    <div class="feat"><div class="feat-icon">🌐</div><h3>HTML 多模態</h3><p>偵測像素追蹤、偽裝連結、隱藏元素等進階手法</p></div>
-    <div class="feat"><div class="feat-icon">📄</div><h3>IR 事件報告</h3><p>高風險信件自動產生標準格式資安事件通報</p></div>
+    <div class="feat"><div class="feat-icon">🔍</div><h3>三層 AI 分析引擎</h3><p>結合精準規則庫 + ML 機率模型 + LLaMA 3.3 深度語意推理。</p></div>
+    <div class="feat"><div class="feat-icon">🌐</div><h3>HTML 多模態解析</h3><p>深度剖析像素追蹤、隱藏釣魚連結與偽裝品牌元素。</p></div>
+    <div class="feat"><div class="feat-icon">📄</div><h3>IR 事件報告通報</h3><p>自動生成標準化資安事件通報，即時評估影響層面與應對策略。</p></div>
   </div>
 
   <div class="wl-note">
-    <strong>白名單已啟用 —</strong>
-    SKIMS、lululemon、Alo Yoga、玉山銀行、Google 等已知安全寄件者直接標記為安全，可在「白名單設定」自訂。
+    <strong>💡 白名單防護機制 —</strong>
+    知名品牌（如 SKIMS、lululemon、玉山銀行、Google 等）與自訂信任網域將自動標記為安全，可至「白名單設定」彈性管理。
   </div>
 </div>
 """
@@ -151,34 +225,22 @@ HOME_HTML = COMMON_CSS + """
 # ── Loading HTML ─────────────────────────────────────────────
 LOADING_HTML = COMMON_CSS + """
 <style>
-.loading-wrap { display: flex; flex-direction: column; align-items: center;
-                justify-content: center; min-height: calc(100vh - 57px); gap: 24px; }
-.spinner { width: 48px; height: 48px; border: 2px solid var(--border-subtle);
-           border-top: 2px solid var(--gold); border-radius: 50%;
-           animation: spin 1s linear infinite; }
+.loading-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - 70px); gap: 28px; }
+.spinner {
+  width: 54px; height: 54px; border: 3px solid var(--border-subtle);
+  border-top: 3px solid var(--gold); border-radius: 50%;
+  animation: spin 0.8s cubic-bezier(0.6, 0.2, 0.1, 1) infinite;
+}
 @keyframes spin { to { transform: rotate(360deg); } }
-.loading-title { font-size: 18px; font-weight: 500; color: var(--text-main); }
-.steps { display: flex; flex-direction: column; gap: 8px; }
-.step { font-size: 13px; color: var(--text-dim); display: flex; align-items: center; gap: 8px; }
-.step.active { color: var(--gold); }
-.step-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--border-subtle); flex-shrink: 0; }
-.step.active .step-dot { background: var(--gold); }
+.loading-title { font-size: 20px; font-weight: 600; color: var(--text-main); }
+.steps { display: flex; flex-direction: column; gap: 12px; width: 280px; }
+.step { font-size: 13px; color: var(--text-dim); display: flex; align-items: center; gap: 10px; transition: color 0.3s; }
+.step.active { color: var(--gold); font-weight: 500; }
+.step-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border-subtle); flex-shrink: 0; transition: background 0.3s; }
+.step.active .step-dot { background: var(--gold); box-shadow: 0 0 8px var(--gold); }
+.progress-bar-bg { width: 280px; height: 4px; background: var(--border-subtle); border-radius: 2px; overflow: hidden; }
+.progress-bar { width: 0%; height: 100%; background: var(--gold); transition: width 0.4s ease; }
 </style>
-<script>
-const stepLabels = ['連線 Gmail...','讀取最新信件...','規則引擎分析中...','AI 深度分析中...','產生報告...'];
-let i = 0;
-setInterval(() => {
-  if (i < stepLabels.length) {
-    document.querySelectorAll('.step')[i].classList.add('active');
-    i++;
-  }
-}, 2500);
-setInterval(() => {
-  fetch('/scan_status').then(r => r.json()).then(d => {
-    if (d.done) window.location.href = '/result/' + d.scan_id;
-  });
-}, 1000);
-</script>
 
 <div class="hdr">
   <div class="hdr-left">
@@ -189,186 +251,376 @@ setInterval(() => {
 </div>
 <div class="loading-wrap">
   <div class="spinner"></div>
-  <div class="loading-title">正在掃描你的 Gmail...</div>
+  <div class="loading-title">正在安全掃描你的 Gmail...</div>
+  <div class="progress-bar-bg"><div class="progress-bar" id="pbar"></div></div>
   <div class="steps">
-    <div class="step active"><div class="step-dot"></div>連線 Gmail...</div>
-    <div class="step"><div class="step-dot"></div>讀取最新信件...</div>
-    <div class="step"><div class="step-dot"></div>規則引擎分析中...</div>
-    <div class="step"><div class="step-dot"></div>AI 深度分析中...</div>
-    <div class="step"><div class="step-dot"></div>產生報告...</div>
+    <div class="step active" id="step-0"><div class="step-dot"></div>連線 Gmail API 安全授權...</div>
+    <div class="step" id="step-1"><div class="step-dot"></div>讀取收件匣最新信件...</div>
+    <div class="step" id="step-2"><div class="step-dot"></div>規則與 HTML 多模態分析...</div>
+    <div class="step" id="step-3"><div class="step-dot"></div>LLaMA 3.3 AI 語意推理...</div>
+    <div class="step" id="step-4"><div class="step-dot"></div>彙整風險等級並生成報告...</div>
   </div>
 </div>
+
+<script>
+let stepIdx = 0;
+const pbar = document.getElementById('pbar');
+const interval = setInterval(() => {
+  if (stepIdx < 4) {
+    stepIdx++;
+    document.getElementById(`step-${stepIdx}`).classList.add('active');
+    pbar.style.width = `${(stepIdx + 1) * 20}%`;
+  }
+}, 2200);
+
+setInterval(() => {
+  fetch('/scan_status')
+    .then(r => r.json())
+    .then(d => {
+      if (d.done) {
+        pbar.style.width = '100%';
+        window.location.href = '/result/' + d.scan_id;
+      }
+    });
+}, 1000);
+</script>
 """
 
 # ── 結果頁 HTML ──────────────────────────────────────────────
 RESULT_HTML = COMMON_CSS + """
 <style>
-.summary { display: flex; border-bottom: 0.5px solid var(--border-subtle); }
-.stat { flex: 1; padding: 16px 24px; border-right: 0.5px solid var(--border-subtle); }
+.summary { display: flex; border-bottom: 1px solid var(--border-subtle); background: var(--bg-card); }
+.stat { flex: 1; padding: 20px 24px; border-right: 1px solid var(--border-subtle); text-align: center; }
 .stat:last-child { border-right: none; }
-.stat-num { font-size: 24px; font-weight: 500; margin-bottom: 2px; }
-.stat-lbl { font-size: 10px; color: var(--text-muted); letter-spacing: 0.08em; text-transform: uppercase; }
+.stat-num { font-size: 28px; font-weight: 700; margin-bottom: 2px; }
+.stat-lbl { font-size: 11px; color: var(--text-muted); letter-spacing: 0.05em; font-weight: 500; }
 .s-total .stat-num { color: var(--gold); }
 .s-high  .stat-num { color: var(--red); }
 .s-med   .stat-num { color: var(--orange); }
 .s-low   .stat-num { color: var(--green); }
 .s-wl    .stat-num { color: var(--text-dim); }
-.s-sk    .stat-num { color: var(--text-dim); }
-.main { display: flex; height: calc(100vh - 115px); }
-.left { width: 310px; border-right: 0.5px solid var(--border-subtle); overflow-y: auto; flex-shrink: 0; }
-.list-sec { padding: 10px 18px 6px; font-size: 9px; color: var(--gold-dim);
-            letter-spacing: 0.1em; text-transform: uppercase;
-            border-bottom: 0.5px solid var(--border-subtle); }
-.email-item { padding: 13px 18px; border-bottom: 0.5px solid var(--border-subtle);
-              cursor: pointer; transition: background 0.1s;
-              display: flex; align-items: flex-start; gap: 10px; }
+
+.main { display: flex; height: calc(100vh - 145px); }
+.left { width: 360px; border-right: 1px solid var(--border-subtle); overflow-y: auto; flex-shrink: 0; background: var(--bg-deep); }
+.list-sec {
+  padding: 12px 20px 8px; font-size: 10px; color: var(--gold-dim);
+  letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700;
+  border-bottom: 1px solid var(--border-subtle); background: rgba(0,0,0,0.2);
+}
+.email-item {
+  padding: 16px 20px; border-bottom: 1px solid var(--border-subtle);
+  cursor: pointer; transition: background 0.15s;
+  display: flex; align-items: flex-start; gap: 12px;
+}
 .email-item:hover { background: var(--bg-hover); }
-.email-item.active { background: var(--bg-hover); border-left: 2px solid var(--gold); padding-left: 16px; }
-.risk-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
-.dot-high { background: var(--red); box-shadow: 0 0 5px var(--red); }
+.email-item.active { background: var(--bg-hover); border-left: 3px solid var(--gold); padding-left: 17px; }
+.risk-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 6px; }
+.dot-high { background: var(--red); box-shadow: 0 0 8px var(--red); }
 .dot-med  { background: var(--orange); }
 .dot-low  { background: var(--green); }
 .dot-wl   { background: var(--text-dim); }
 .item-body { flex: 1; min-width: 0; }
-.item-subj { font-size: 12px; color: var(--text-main); white-space: nowrap;
-             overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; font-weight: 500; }
-.item-from { font-size: 11px; color: var(--text-muted); white-space: nowrap;
-             overflow: hidden; text-overflow: ellipsis; }
-.item-score { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
-.right { flex: 1; overflow-y: auto; padding: 28px 32px; }
-.detail-badge { display: inline-flex; align-items: center; gap: 6px;
-                padding: 4px 12px; border-radius: 20px; font-size: 11px;
-                font-weight: 500; margin-bottom: 14px; }
-.badge-high { background: var(--red-bg); color: var(--red); border: 0.5px solid var(--red-border); }
-.badge-med  { background: var(--orange-bg); color: var(--orange); border: 0.5px solid var(--orange-border); }
-.badge-low  { background: var(--green-bg); color: var(--green); border: 0.5px solid var(--green-border); }
-.badge-wl   { background: var(--bg-card); color: var(--text-dim); border: 0.5px solid var(--border-subtle); }
-.detail-subj { font-size: 20px; font-weight: 500; color: var(--text-main);
-               margin-bottom: 5px; letter-spacing: -0.01em; line-height: 1.3; }
-.detail-from { font-size: 12px; color: var(--text-muted); margin-bottom: 22px; }
-.gold-line { width: 28px; height: 1px; background: var(--gold); opacity: 0.35; margin: 18px 0 14px; }
-.sec-label { font-size: 9px; color: var(--gold-dim); letter-spacing: 0.1em;
-             text-transform: uppercase; margin-bottom: 8px; }
-.detail-text { font-size: 13px; color: var(--text-main); line-height: 1.7; }
-.tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
-.htag { font-size: 11px; color: var(--orange); background: var(--orange-bg);
-        padding: 3px 8px; border-radius: 4px; border: 0.5px solid var(--orange-border); }
-.score-row { display: flex; gap: 20px; margin-top: 10px; }
-.score-item { font-size: 11px; color: var(--text-muted); }
-.score-item span { color: var(--text-main); font-weight: 500; }
-.divider { height: 0.5px; background: var(--border-subtle); margin: 18px 0; }
-.recommend { font-size: 13px; color: var(--text-main); background: var(--bg-card);
-             border: 0.5px solid var(--border-subtle); border-radius: 6px;
-             padding: 12px 16px; line-height: 1.6; }
-.ir-box { background: #0A160A; border: 0.5px solid #1A3A1A;
-          border-left: 2px solid var(--green); border-radius: 8px;
-          padding: 14px 18px; margin-top: 18px; }
-.ir-label { font-size: 9px; color: var(--green); letter-spacing: 0.1em;
-            text-transform: uppercase; margin-bottom: 6px; }
-.ir-id { font-size: 11px; color: var(--text-dim); font-family: monospace; margin-bottom: 6px; }
-.ir-impact { font-size: 12px; color: #7EC87E; line-height: 1.6; }
-.ir-actions { margin-top: 10px; display: flex; flex-direction: column; gap: 4px; }
-.ir-action { font-size: 12px; color: #64A8E8; }
-.empty-detail { display: flex; align-items: center; justify-content: center;
-                height: 100%; color: var(--text-dim); font-size: 13px;
-                flex-direction: column; gap: 10px; }
-.empty-icon { font-size: 32px; opacity: 0.3; }
-</style>
-<script>
-const emailData = PLACEHOLDER_DATA;
+.item-subj { font-size: 13px; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; font-weight: 500; }
+.item-from { font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.item-score { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
 
-function showDetail(idx) {
-  const d = emailData[idx];
-  if (!d) return;
-  const panel = document.getElementById('right-panel');
-  let badgeClass = d.level === 'high' ? 'badge-high' : d.level === 'medium' ? 'badge-med' : d.level === 'low' ? 'badge-low' : 'badge-wl';
-  let badgeText = d.level === 'high' ? '🚨 高風險' : d.level === 'medium' ? '⚠️ 中風險' : d.level === 'low' ? '✅ 安全' : '🔒 白名單';
-  let scoreStr = d.risk_score >= 0 ? ` &nbsp;·&nbsp; ${d.risk_score} / 100` : '';
-
-  let tagsHtml = d.tags && d.tags.length ? `<div class="tag-row">${d.tags.map(t=>`<span class="htag">${t}</span>`).join('')}</div>` : '';
-  let scoresHtml = d.scores ? `<div class="score-row">${d.scores.map(s=>`<div class="score-item">${s[0]} <span>${s[1]}</span></div>`).join('')}</div>` : '';
-  let irHtml = d.ir ? `
-    <div class="ir-box">
-      <div class="ir-label">IR 事件通報報告已自動產生</div>
-      <div class="ir-id">${d.ir.id} &nbsp;|&nbsp; 嚴重等級：${d.ir.severity}</div>
-      <div class="ir-impact">${d.ir.impact}</div>
-      ${d.ir.actions && d.ir.actions.length ? `<div class="ir-actions">${d.ir.actions.map(a=>`<div class="ir-action">• ${a}</div>`).join('')}</div>` : ''}
-    </div>` : '';
-
-  panel.innerHTML = `
-    <span class="detail-badge ${badgeClass}">${badgeText}${scoreStr}</span>
-    <div class="detail-subj">${d.subject}</div>
-    <div class="detail-from">來自：${d.sender}</div>
-    <div class="gold-line"></div>
-    <div class="sec-label">AI 分析說明</div>
-    <div class="detail-text">${d.explanation || '—'}</div>
-    ${tagsHtml}
-    ${scoresHtml}
-    <div class="divider"></div>
-    <div class="sec-label">建議行動</div>
-    <div class="recommend">${d.action || '—'}</div>
-    ${irHtml}
-  `;
-
-  document.querySelectorAll('.email-item').forEach((el, i) => {
-    el.classList.toggle('active', i === idx);
-  });
+.right { flex: 1; overflow-y: auto; padding: 36px 40px; background: var(--bg-card); }
+.detail-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 12px; border-radius: 20px; font-size: 12px;
+  font-weight: 600; margin-bottom: 16px;
 }
+.badge-high { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
+.badge-med  { background: var(--orange-bg); color: var(--orange); border: 1px solid var(--orange-border); }
+.badge-low  { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+.badge-wl   { background: var(--bg-deep); color: var(--text-dim); border: 1px solid var(--border-subtle); }
 
-window.addEventListener('DOMContentLoaded', () => {
-  if (emailData.length > 0) showDetail(0);
-});
-</script>
+.detail-subj { font-size: 22px; font-weight: 600; color: var(--text-main); margin-bottom: 8px; line-height: 1.4; }
+.detail-from { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; }
+.sec-label { font-size: 11px; color: var(--gold); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 10px; font-weight: 600; }
+.detail-text { font-size: 14px; color: var(--text-main); line-height: 1.7; background: var(--bg-deep); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); }
+
+.tag-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.htag { font-size: 11px; color: var(--orange); background: var(--orange-bg); padding: 4px 10px; border-radius: 4px; border: 1px solid var(--orange-border); }
+
+.score-row { display: flex; gap: 16px; margin-top: 16px; }
+.score-item { font-size: 12px; color: var(--text-muted); background: var(--bg-deep); padding: 8px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); }
+.score-item span { color: var(--text-main); font-weight: 600; margin-left: 4px; }
+
+.divider { height: 1px; background: var(--border-subtle); margin: 24px 0; }
+.recommend { font-size: 14px; color: var(--text-main); background: var(--bg-deep); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 16px; line-height: 1.6; }
+
+.ir-box {
+  background: rgba(16, 185, 129, 0.05); border: 1px solid var(--green-border);
+  border-left: 4px solid var(--green); border-radius: var(--radius-md);
+  padding: 20px; margin-top: 24px; position: relative;
+}
+.ir-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.ir-label { font-size: 11px; color: var(--green); letter-spacing: 0.08em; font-weight: 700; text-transform: uppercase; }
+.ir-id { font-size: 12px; color: var(--text-muted); font-family: monospace; }
+.ir-impact { font-size: 13px; color: var(--text-main); line-height: 1.6; margin-bottom: 12px; }
+.ir-actions { display: flex; flex-direction: column; gap: 6px; }
+.ir-action { font-size: 12px; color: #60A5FA; display: flex; align-items: center; gap: 6px; }
+
+.btn-copy { position: absolute; right: 16px; top: 16px; font-size: 11px; padding: 4px 10px; background: var(--bg-card); color: var(--text-muted); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); cursor: pointer; }
+.btn-copy:hover { color: var(--text-main); border-color: var(--gold); }
+
+.empty-detail { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-dim); font-size: 14px; flex-direction: column; gap: 12px; }
+.empty-icon { font-size: 48px; opacity: 0.3; }
+
+@media (max-width: 900px) {
+  .main { flex-direction: column; height: auto; }
+  .left { width: 100%; height: 300px; }
+  .right { padding: 24px; }
+}
+</style>
 
 <div class="hdr">
   <div class="hdr-left">
     <div class="shield">🛡️</div>
-    <h1>AI 釣魚信件偵測系統 — 掃描結果</h1>
+    <h1>AI 釣魚信件偵測系統 — 分析報告</h1>
   </div>
   <div class="hdr-nav">
-    <a href="/history">掃描記錄</a>
-    <a href="/whitelist">白名單設定</a>
+    <a href="/history">歷史紀錄</a>
+    <a href="/whitelist">白名單</a>
     <a href="/">重新掃描</a>
   </div>
-  <span class="gold-tag">CAPSTONE</span>
 </div>
 
 <div class="summary">
-  <div class="stat s-total"><div class="stat-num">TOTAL_COUNT</div><div class="stat-lbl">掃描封數</div></div>
-  <div class="stat s-high"><div class="stat-num">HIGH_COUNT</div><div class="stat-lbl">高風險</div></div>
-  <div class="stat s-med"><div class="stat-num">MED_COUNT</div><div class="stat-lbl">中風險</div></div>
-  <div class="stat s-low"><div class="stat-num">LOW_COUNT</div><div class="stat-lbl">安全</div></div>
-  <div class="stat s-wl"><div class="stat-num">WL_COUNT</div><div class="stat-lbl">白名單</div></div>
-  <div class="stat s-sk"><div class="stat-num">SK_COUNT</div><div class="stat-lbl">略過</div></div>
+  <div class="stat s-total"><div class="stat-num" id="cnt-total">0</div><div class="stat-lbl">掃描總數</div></div>
+  <div class="stat s-high"><div class="stat-num" id="cnt-high">0</div><div class="stat-lbl">高風險</div></div>
+  <div class="stat s-med"><div class="stat-num" id="cnt-med">0</div><div class="stat-lbl">中風險</div></div>
+  <div class="stat s-low"><div class="stat-num" id="cnt-low">0</div><div class="stat-lbl">安全</div></div>
+  <div class="stat s-wl"><div class="stat-num" id="cnt-wl">0</div><div class="stat-lbl">白名單</div></div>
 </div>
 
 <div class="main">
-  <div class="left" id="left-panel">LIST_PLACEHOLDER</div>
+  <div class="left" id="left-panel"></div>
   <div class="right" id="right-panel">
     <div class="empty-detail">
       <div class="empty-icon">🛡️</div>
-      <div>點擊左側信件查看詳細分析</div>
+      <div>請點擊左側信件檢視詳細 AI 分析與報告</div>
     </div>
   </div>
 </div>
+
+<script>
+const rawData = PLACEHOLDER_DATA;
+const counts = PLACEHOLDER_COUNTS;
+
+document.getElementById('cnt-total').textContent = counts.total;
+document.getElementById('cnt-high').textContent  = counts.high;
+document.getElementById('cnt-med').textContent   = counts.med;
+document.getElementById('cnt-low').textContent   = counts.low;
+document.getElementById('cnt-wl').textContent    = counts.wl;
+
+function renderLeftList() {
+  const left = document.getElementById('left-panel');
+  left.innerHTML = '';
+
+  const groups = [
+    { key: 'high', label: '高風險信件' },
+    { key: 'medium', label: '中風險信件' },
+    { key: 'low', label: '安全信件' },
+    { key: 'wl', label: '白名單信件' }
+  ];
+
+  groups.forEach(g => {
+    const items = rawData.filter(e => e.level === g.key);
+    if (items.length === 0) return;
+
+    const secHeader = document.createElement('div');
+    secHeader.className = 'list-sec';
+    secHeader.textContent = g.label;
+    left.appendChild(secHeader);
+
+    items.forEach(item => {
+      const globalIdx = rawData.indexOf(item);
+      const div = document.createElement('div');
+      div.className = 'email-item';
+      div.dataset.index = globalIdx;
+
+      const dotClass = { high:'dot-high', medium:'dot-med', low:'dot-low', wl:'dot-wl' }[item.level] || 'dot-wl';
+      const scoreTxt = item.risk_score >= 0 ? `${item.risk_score}/100 · ${item.category}` : '白名單 · 免掃描';
+
+      div.innerHTML = `
+        <div class="risk-dot ${dotClass}"></div>
+        <div class="item-body">
+          <div class="item-subj"></div>
+          <div class="item-from"></div>
+          <div class="item-score"></div>
+        </div>
+      `;
+
+      div.querySelector('.item-subj').textContent = item.subject;
+      div.querySelector('.item-from').textContent = item.sender;
+      div.querySelector('.item-score').textContent = scoreTxt;
+
+      div.onclick = () => showDetail(globalIdx);
+      left.appendChild(div);
+    });
+  });
+}
+
+function showDetail(idx) {
+  const d = rawData[idx];
+  if (!d) return;
+
+  document.querySelectorAll('.email-item').forEach(el => {
+    el.classList.toggle('active', parseInt(el.dataset.index) === idx);
+  });
+
+  const panel = document.getElementById('right-panel');
+  panel.innerHTML = '';
+
+  // Badge
+  const badge = document.createElement('span');
+  const badgeMap = {
+    high: ['badge-high', '🚨 高風險'],
+    medium: ['badge-med', '⚠️ 中風險'],
+    low: ['badge-low', '✅ 安全'],
+    wl: ['badge-wl', '🔒 白名單']
+  };
+  const [bClass, bTxt] = badgeMap[d.level] || badgeMap.wl;
+  badge.className = `detail-badge ${bClass}`;
+  badge.textContent = d.risk_score >= 0 ? `${bTxt} · 風險分數 ${d.risk_score}/100` : bTxt;
+  panel.appendChild(badge);
+
+  // Subject & From
+  const subj = document.createElement('div');
+  subj.className = 'detail-subj';
+  subj.textContent = d.subject;
+  panel.appendChild(subj);
+
+  const from = document.createElement('div');
+  from.className = 'detail-from';
+  from.textContent = `寄件者：${d.sender}`;
+  panel.appendChild(from);
+
+  // Explanation
+  const expLabel = document.createElement('div');
+  expLabel.className = 'sec-label';
+  expLabel.textContent = 'AI 語意分析說明';
+  panel.appendChild(expLabel);
+
+  const expText = document.createElement('div');
+  expText.className = 'detail-text';
+  expText.textContent = d.explanation || '（無說明）';
+  panel.appendChild(expText);
+
+  // Tags
+  if (d.tags && d.tags.length > 0) {
+    const tagRow = document.createElement('div');
+    tagRow.className = 'tag-row';
+    d.tags.forEach(t => {
+      const span = document.createElement('span');
+      span.className = 'htag';
+      span.textContent = t;
+      tagRow.appendChild(span);
+    });
+    panel.appendChild(tagRow);
+  }
+
+  // Scores
+  if (d.scores && d.scores.length > 0) {
+    const scoreRow = document.createElement('div');
+    scoreRow.className = 'score-row';
+    d.scores.forEach(s => {
+      const item = document.createElement('div');
+      item.className = 'score-item';
+      item.textContent = `${s[0]}: `;
+      const val = document.createElement('span');
+      val.textContent = s[1];
+      item.appendChild(val);
+      scoreRow.appendChild(item);
+    });
+    panel.appendChild(scoreRow);
+  }
+
+  // Divider
+  const div1 = document.createElement('div');
+  div1.className = 'divider';
+  panel.appendChild(div1);
+
+  // Recommendation
+  const recLabel = document.createElement('div');
+  recLabel.className = 'sec-label';
+  recLabel.textContent = '處置建議';
+  panel.appendChild(recLabel);
+
+  const recText = document.createElement('div');
+  recText.className = 'recommend';
+  recText.textContent = d.action || '（無建議）';
+  panel.appendChild(recText);
+
+  // IR Report
+  if (d.ir) {
+    const irBox = document.createElement('div');
+    irBox.className = 'ir-box';
+    
+    const irHeader = document.createElement('div');
+    irHeader.className = 'ir-header';
+    irHeader.innerHTML = `
+      <div class="ir-label">🛡️ IR 通報報告已生成</div>
+      <div class="ir-id">${d.ir.id} | 嚴重程度：${d.ir.severity}</div>
+    `;
+
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'btn-copy';
+    copyBtn.textContent = '複製 IR 摘要';
+    copyBtn.onclick = () => {
+      const textToCopy = `[${d.ir.id}] 風險: ${d.ir.severity}\n寄件者: ${d.sender}\n影響評估: ${d.ir.impact}`;
+      navigator.clipboard.writeText(textToCopy);
+      copyBtn.textContent = '已複製！';
+      setTimeout(() => copyBtn.textContent = '複製 IR 摘要', 2000);
+    };
+    irBox.appendChild(copyBtn);
+    irBox.appendChild(irHeader);
+
+    const impact = document.createElement('div');
+    impact.className = 'ir-impact';
+    impact.textContent = d.ir.impact;
+    irBox.appendChild(impact);
+
+    if (d.ir.actions && d.ir.actions.length > 0) {
+      const actionsDiv = document.createElement('div');
+      actionsDiv.className = 'ir-actions';
+      d.ir.actions.forEach(act => {
+        const aItem = document.createElement('div');
+        aItem.className = 'ir-action';
+        aItem.textContent = `• ${act}`;
+        actionsDiv.appendChild(aItem);
+      });
+      irBox.appendChild(actionsDiv);
+    }
+    panel.appendChild(irBox);
+  }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  renderLeftList();
+  if (rawData.length > 0) showDetail(0);
+});
+</script>
 """
 
 # ── 歷史記錄 HTML ────────────────────────────────────────────
 HISTORY_HTML = COMMON_CSS + """
 <style>
-.container { max-width: 860px; margin: 0 auto; padding: 32px 20px; }
-.page-title { font-size: 16px; font-weight: 500; color: var(--text-main); margin-bottom: 20px; }
-table { width: 100%; border-collapse: collapse; }
-thead tr { border-bottom: 0.5px solid var(--border-gold); }
-th { padding: 10px 16px; font-size: 10px; color: var(--gold-dim); letter-spacing: 0.08em;
-     text-transform: uppercase; text-align: left; font-weight: 400; }
-td { padding: 12px 16px; font-size: 13px; color: var(--text-main);
-     border-bottom: 0.5px solid var(--border-subtle); }
+.container { max-width: 900px; margin: 0 auto; padding: 40px 24px; }
+.page-title { font-size: 20px; font-weight: 600; color: var(--text-main); margin-bottom: 24px; }
+.table-card { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); overflow: hidden; }
+table { width: 100%; border-collapse: collapse; text-align: left; }
+thead tr { background: var(--bg-deep); border-bottom: 1px solid var(--border-subtle); }
+th { padding: 14px 20px; font-size: 11px; color: var(--gold); letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; }
+td { padding: 16px 20px; font-size: 13px; color: var(--text-main); border-bottom: 1px solid var(--border-subtle); }
+tr:last-child td { border-bottom: none; }
 tr:hover td { background: var(--bg-hover); }
-.cell-high { color: var(--red); font-weight: 500; }
+.cell-high { color: var(--red); font-weight: 600; }
 .cell-med { color: var(--orange); }
 .cell-low { color: var(--green); }
-.empty { padding: 60px; text-align: center; color: var(--text-dim); font-size: 13px; }
+.empty { padding: 60px; text-align: center; color: var(--text-dim); font-size: 14px; }
 </style>
 
 <div class="hdr">
@@ -380,87 +632,75 @@ tr:hover td { background: var(--bg-hover); }
     <a href="/">首頁</a>
     <a href="/whitelist">白名單設定</a>
   </div>
-  <span class="gold-tag">CAPSTONE</span>
 </div>
 
 <div class="container">
   <a href="/" class="back">← 返回首頁</a>
-  <div class="page-title">掃描記錄</div>
-  {% if history %}
-  <table>
-    <thead><tr><th>掃描時間</th><th>總計</th><th>高風險</th><th>中風險</th><th>安全</th><th>白名單</th></tr></thead>
-    <tbody>
-    {% for h in history %}
-    <tr>
-      <td>{{h[1]}}</td>
-      <td>{{h[2]}}</td>
-      <td class="cell-high">{{h[3]}}</td>
-      <td class="cell-med">{{h[4]}}</td>
-      <td class="cell-low">{{h[5]}}</td>
-      <td style="color:var(--text-dim)">{{h[6]}}</td>
-    </tr>
-    {% endfor %}
-    </tbody>
-  </table>
-  {% else %}
-  <div class="empty">還沒有掃描記錄，<a href="/" style="color:var(--gold)">開始掃描</a>！</div>
-  {% endif %}
+  <div class="page-title">掃描歷史紀錄</div>
+  
+  <div class="table-card">
+    {% if history %}
+    <table>
+      <thead>
+        <tr>
+          <th>掃描時間</th>
+          <th>總計</th>
+          <th>高風險</th>
+          <th>中風險</th>
+          <th>安全</th>
+          <th>白名單</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for h in history %}
+      <tr>
+        <td style="font-family: monospace;">{{h[1]}}</td>
+        <td><strong>{{h[2]}}</strong></td>
+        <td class="cell-high">{{h[3]}}</td>
+        <td class="cell-med">{{h[4]}}</td>
+        <td class="cell-low">{{h[5]}}</td>
+        <td style="color:var(--text-dim)">{{h[6]}}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty">尚無掃描紀錄，<a href="/" style="color:var(--gold); text-decoration: none;">立即進行首次掃描</a>。</div>
+    {% endif %}
+  </div>
 </div>
 """
 
 # ── 白名單 HTML ──────────────────────────────────────────────
 WHITELIST_HTML = COMMON_CSS + """
 <style>
-.container { max-width: 680px; margin: 0 auto; padding: 32px 20px; }
-.page-title { font-size: 16px; font-weight: 500; color: var(--text-main); margin-bottom: 6px; }
-.page-sub { font-size: 12px; color: var(--text-muted); margin-bottom: 24px; }
-.add-row { display: flex; gap: 8px; margin-bottom: 28px; }
-.add-row input { flex: 1; background: var(--bg-card); border: 0.5px solid var(--border-subtle);
-                 border-radius: 6px; padding: 10px 14px; color: var(--text-main);
-                 font-size: 13px; outline: none; transition: border-color 0.15s; }
-.add-row input::placeholder { color: var(--text-dim); }
-.add-row input:focus { border-color: var(--gold-dim); }
-.add-btn { background: var(--border-gold); color: var(--gold); border: 0.5px solid var(--gold-dim);
-           border-radius: 6px; padding: 10px 20px; font-size: 13px; cursor: pointer;
-           transition: all 0.15s; white-space: nowrap; }
-.add-btn:hover { background: #4A3A18; }
-.sec-label { font-size: 9px; color: var(--gold-dim); letter-spacing: 0.1em;
-             text-transform: uppercase; margin-bottom: 12px; }
-.domain-item { display: flex; justify-content: space-between; align-items: center;
-               background: var(--bg-card); border: 0.5px solid var(--border-subtle);
-               border-radius: 8px; padding: 12px 16px; margin-bottom: 8px;
-               transition: border-color 0.15s; }
+.container { max-width: 680px; margin: 0 auto; padding: 40px 24px; }
+.page-title { font-size: 20px; font-weight: 600; color: var(--text-main); margin-bottom: 8px; }
+.page-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 28px; }
+.add-row { display: flex; gap: 12px; margin-bottom: 32px; }
+.add-row input {
+  flex: 1; background: var(--bg-card); border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm); padding: 12px 16px; color: var(--text-main);
+  font-size: 14px; outline: none; transition: border-color 0.2s;
+}
+.add-row input:focus { border-color: var(--gold); }
+.sec-label { font-size: 11px; color: var(--gold); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 14px; font-weight: 600; }
+.domain-item {
+  display: flex; justify-content: space-between; align-items: center;
+  background: var(--bg-card); border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md); padding: 14px 20px; margin-bottom: 10px;
+  transition: border-color 0.2s;
+}
 .domain-item:hover { border-color: var(--border-gold); }
-.domain-name { font-size: 13px; color: var(--text-main); font-family: monospace; }
+.domain-name { font-size: 14px; color: var(--text-main); font-family: monospace; font-weight: 500; }
 .domain-time { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
-.del-btn { background: var(--red-bg); color: var(--red); border: 0.5px solid var(--red-border);
-           border-radius: 4px; padding: 4px 12px; font-size: 11px; cursor: pointer;
-           transition: all 0.15s; }
-.del-btn:hover { background: #2D1515; }
+.del-btn {
+  background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border);
+  border-radius: var(--radius-sm); padding: 6px 14px; font-size: 12px; cursor: pointer;
+  transition: all 0.2s; font-weight: 500;
+}
+.del-btn:hover { background: rgba(239, 68, 68, 0.2); }
 </style>
-<script>
-function addDomain() {
-  const domain = document.getElementById('domain-input').value.trim();
-  if (!domain) return alert('請輸入網域');
-  fetch('/whitelist/add', {method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({domain})}).then(r => r.json()).then(d => {
-    if (d.success) location.reload();
-    else alert(d.error || '新增失敗');
-  });
-}
-function deleteDomain(domain) {
-  if (!confirm('確定要刪除 ' + domain + '？')) return;
-  fetch('/whitelist/delete', {method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({domain})}).then(r => r.json()).then(d => {
-    if (d.success) location.reload();
-  });
-}
-document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('domain-input').addEventListener('keydown', e => {
-    if (e.key === 'Enter') addDomain();
-  });
-});
-</script>
 
 <div class="hdr">
   <div class="hdr-left">
@@ -471,20 +711,19 @@ document.addEventListener('DOMContentLoaded', () => {
     <a href="/">首頁</a>
     <a href="/history">掃描記錄</a>
   </div>
-  <span class="gold-tag">CAPSTONE</span>
 </div>
 
 <div class="container">
   <a href="/" class="back">← 返回首頁</a>
-  <div class="page-title">白名單設定</div>
-  <p class="page-sub">加入白名單後，來自該網域的信件將直接標記為安全，不進行 AI 分析。</p>
+  <div class="page-title">信任網域白名單</div>
+  <p class="page-sub">列於白名單中的網域將被視為安全來源，系統將自動跳過 AI 深度分析。</p>
 
   <div class="add-row">
-    <input type="text" id="domain-input" placeholder="輸入網域，例如：example.com">
-    <button class="add-btn" onclick="addDomain()">新增</button>
+    <input type="text" id="domain-input" placeholder="輸入網域，例如: example.com">
+    <button class="btn btn-primary" onclick="addDomain()">新增網域</button>
   </div>
 
-  <div class="sec-label">目前白名單（{{count}} 個）</div>
+  <div class="sec-label">目前啟用白名單（{{count}} 個）</div>
   {% for d in domains %}
   <div class="domain-item">
     <div>
@@ -495,6 +734,38 @@ document.addEventListener('DOMContentLoaded', () => {
   </div>
   {% endfor %}
 </div>
+
+<script>
+function addDomain() {
+  const domain = document.getElementById('domain-input').value.trim();
+  if (!domain) return alert('請輸入網域');
+  fetch('/whitelist/add', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ domain })
+  }).then(r => r.json()).then(d => {
+    if (d.success) location.reload();
+    else alert(d.error || '新增失敗');
+  });
+}
+
+function deleteDomain(domain) {
+  if (!confirm(`確定要將 ${domain} 從白名單移除嗎？`)) return;
+  fetch('/whitelist/delete', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ domain })
+  }).then(r => r.json()).then(d => {
+    if (d.success) location.reload();
+  });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('domain-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') addDomain();
+  });
+});
+</script>
 """
 
 # ── 資料庫 ───────────────────────────────────────────────────
@@ -851,42 +1122,20 @@ def result(scan_id):
         return f'<pre style="background:#1c1c1c;color:#f0ede8;padding:20px">{data["error"]}</pre>', 500
 
     all_emails = data['all_emails']
+    counts = {
+        'total': data['total'],
+        'high': data['high'],
+        'med': data['med'],
+        'low': data['low'],
+        'wl': data['wl'],
+        'skipped': data['skipped']
+    }
 
-    # 建立左側列表 HTML
-    def make_item(e, idx):
-        dot = {'high':'dot-high','medium':'dot-med','low':'dot-low','wl':'dot-wl'}.get(e['level'],'dot-wl')
-        score_text = f"{e['risk_score']}/100 · {e['category']}" if e['risk_score'] >= 0 else '白名單 · 略過分析'
-        return (f'<div class="email-item" onclick="showDetail({idx})">'
-                f'<div class="risk-dot {dot}"></div>'
-                f'<div class="item-body">'
-                f'<div class="item-subj">{e["subject"]}</div>'
-                f'<div class="item-from">{e["sender"]}</div>'
-                f'<div class="item-score">{score_text}</div>'
-                f'</div></div>')
-
-    high_items  = [make_item(e,i) for i,e in enumerate(all_emails) if e['level']=='high']
-    med_items   = [make_item(e,i) for i,e in enumerate(all_emails) if e['level']=='medium']
-    low_items   = [make_item(e,i) for i,e in enumerate(all_emails) if e['level']=='low']
-    wl_items    = [make_item(e,i) for i,e in enumerate(all_emails) if e['level']=='wl']
-
-    list_html = ''
-    if high_items:  list_html += '<div class="list-sec">高風險</div>' + ''.join(high_items)
-    if med_items:   list_html += '<div class="list-sec">中風險</div>' + ''.join(med_items)
-    if low_items:   list_html += '<div class="list-sec">安全</div>' + ''.join(low_items)
-    if wl_items:    list_html += '<div class="list-sec">白名單</div>' + ''.join(wl_items)
-
-    # 把資料注入 JS
-    import html as html_lib
     emails_json = json.dumps(all_emails, ensure_ascii=False)
+    counts_json = json.dumps(counts, ensure_ascii=False)
 
-    page = RESULT_HTML.replace('LIST_PLACEHOLDER', list_html)
-    page = page.replace('PLACEHOLDER_DATA', emails_json)
-    page = page.replace('TOTAL_COUNT', str(data['total']))
-    page = page.replace('HIGH_COUNT',  str(data['high']))
-    page = page.replace('MED_COUNT',   str(data['med']))
-    page = page.replace('LOW_COUNT',   str(data['low']))
-    page = page.replace('WL_COUNT',    str(data['wl']))
-    page = page.replace('SK_COUNT',    str(data['skipped']))
+    page = RESULT_HTML.replace('PLACEHOLDER_DATA', emails_json)
+    page = page.replace('PLACEHOLDER_COUNTS', counts_json)
     return page
 
 @app.route('/history')
