@@ -41,7 +41,7 @@ CRED_DATA = {"web":{"client_id":"727861534469-72ihfsri6r9kpnu56n7541qb2e4ngomk.a
 with open('credentials.json', 'w') as f:
     json.dump(CRED_DATA, f)
 
-# ── CSS 共用樣式 (全站統一風格：極簡深藍黑主題) ───────────────────
+# ── CSS 共用樣式 (全站統一風格：極簡深藍黑主題 + 自訂精緻微型捲軸) ───────────────────
 COMMON_CSS = """
 <style>
 :root {
@@ -58,12 +58,35 @@ COMMON_CSS = """
   --green: #10b981; --green-bg: rgba(16, 185, 129, 0.1); --green-border: rgba(16, 185, 129, 0.25);
   --blue: #3b82f6; --blue-bg: rgba(59, 130, 246, 0.1);
 }
-* { box-sizing: border-box; margin: 0; padding: 0; }
+* { 
+  box-sizing: border-box; 
+  margin: 0; 
+  padding: 0; 
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+}
 body { 
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background: var(--bg-main); 
   color: var(--text-main); 
   min-height: 100vh; 
+}
+
+/* ── 全站自訂精緻捲軸樣式 (Webkit Custom Scrollbars) ── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 99px;
+  transition: background 0.2s ease;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.28);
 }
 
 /* 全站統一導航列 */
@@ -338,7 +361,7 @@ setInterval(() => {
 </div>
 """
 
-# ── 結果頁 HTML ──────────────────────────────────────────────
+# ── 結果頁 HTML (修正點擊與高亮同步邏輯) ─────────────────────
 RESULT_HTML = COMMON_CSS + """
 <style>
 .summary { display: flex; border-bottom: 1px solid var(--border-subtle); background: rgba(15, 23, 42, 0.3); }
@@ -358,11 +381,13 @@ RESULT_HTML = COMMON_CSS + """
 .list-sec { padding: 12px 18px 8px; font-size: 10px; color: var(--text-dim);
             letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600;
             border-bottom: 1px solid var(--border-subtle); }
+
 .email-item { padding: 14px 18px; border-bottom: 1px solid var(--border-subtle);
-              cursor: pointer; transition: background 0.15s ease;
-              display: flex; align-items: flex-start; gap: 10px; }
+              cursor: pointer; transition: all 0.15s ease;
+              display: flex; align-items: flex-start; gap: 10px; border-left: 3px solid transparent; }
 .email-item:hover { background: var(--bg-hover); }
-.email-item.active { background: var(--bg-hover); border-left: 3px solid var(--blue); padding-left: 15px; }
+.email-item.active { background: var(--bg-hover); border-left-color: var(--blue); }
+
 .risk-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
 .dot-high { background: var(--red); box-shadow: 0 0 6px var(--red); }
 .dot-med  { background: var(--orange); }
@@ -414,12 +439,25 @@ RESULT_HTML = COMMON_CSS + """
                 flex-direction: column; gap: 10px; }
 .empty-icon { font-size: 32px; opacity: 0.4; }
 </style>
+
 <script>
 const emailData = PLACEHOLDER_DATA;
 
-function showDetail(idx) {
+function showDetail(idx, element) {
   const d = emailData[idx];
   if (!d) return;
+
+  // 切換左側清單高亮選取狀態
+  document.querySelectorAll('.email-item').forEach(el => el.classList.remove('active'));
+  if (element) {
+    element.classList.add('active');
+  } else {
+    // 若沒有傳入 element，預設為對應 index 的第一個元素
+    const target = document.querySelector(`.email-item[data-idx="${idx}"]`);
+    if (target) target.classList.add('active');
+  }
+
+  // 渲染右側詳細面板內容
   const panel = document.getElementById('right-panel');
   let badgeClass = d.level === 'high' ? 'badge-high' : d.level === 'medium' ? 'badge-med' : d.level === 'low' ? 'badge-low' : 'badge-wl';
   let badgeText = d.level === 'high' ? '🚨 高風險' : d.level === 'medium' ? '⚠️ 中風險' : d.level === 'low' ? '✅ 安全' : '🔒 白名單';
@@ -449,14 +487,12 @@ function showDetail(idx) {
     <div class="recommend">${d.action || '—'}</div>
     ${irHtml}
   `;
-
-  document.querySelectorAll('.email-item').forEach((el, i) => {
-    el.classList.toggle('active', i === idx);
-  });
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-  if (emailData.length > 0) showDetail(0);
+  if (Array.isArray(emailData) && emailData.length > 0) {
+    showDetail(0);
+  }
 });
 </script>
 
