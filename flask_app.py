@@ -41,7 +41,7 @@ CRED_DATA = {"web":{"client_id":"727861534469-72ihfsri6r9kpnu56n7541qb2e4ngomk.a
 with open('credentials.json', 'w') as f:
     json.dump(CRED_DATA, f)
 
-# ── CSS 共用樣式 (全站統一風格：極簡深藍黑主題) ───────────────────
+# ── CSS 共用樣式 (全站統一風格：極簡深藍黑主題 + 響應式 + 自訂捲軸) ───────────────────
 COMMON_CSS = """
 <style>
 :root {
@@ -65,6 +65,12 @@ body {
   color: var(--text-main); 
   min-height: 100vh; 
 }
+
+/* 漸變深色自訂捲軸 */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-main); }
+::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.25); }
 
 /* 全站統一導航列 */
 .hdr { 
@@ -104,10 +110,15 @@ body {
   margin-bottom: 20px; transition: all 0.2s ease; 
 }
 .back:hover { color: var(--text-main); border-color: var(--border-accent); background: var(--bg-hover); }
+
+@media (max-width: 640px) {
+  .hdr { padding: 12px 16px; }
+  .proj-tag { display: none; }
+}
 </style>
 """
 
-# ── 首頁 HTML (單頁固定 100vh 滿版，無滾輪) ───────────────────
+# ── 首頁 HTML (支援手機版 RWD 與超連結保護) ───────────────────
 HOME_HTML = COMMON_CSS + """
 <style>
 html, body {
@@ -231,6 +242,14 @@ html, body {
   box-sizing: border-box;
 }
 .banner-icon { font-size: 13px; flex-shrink: 0; }
+
+@media (max-width: 768px) {
+  html, body { height: auto; overflow: auto !important; }
+  .landing-container { height: auto; min-height: 100vh; }
+  .main-content { padding: 40px 20px; }
+  .title { font-size: 26px; }
+  .features-grid { grid-template-columns: 1fr; gap: 12px; }
+}
 </style>
 
 <div class="landing-container">
@@ -286,7 +305,7 @@ html, body {
 </div>
 """
 
-# ── Loading HTML ─────────────────────────────────────────────
+# ── Loading HTML (加入即時 Step 同步與 Error 容錯處理) ─────────────────
 LOADING_HTML = COMMON_CSS + """
 <style>
 .loading-wrap { display: flex; flex-direction: column; align-items: center;
@@ -297,25 +316,29 @@ LOADING_HTML = COMMON_CSS + """
 @keyframes spin { to { transform: rotate(360deg); } }
 .loading-title { font-size: 17px; font-weight: 600; color: var(--text-main); }
 .steps { display: flex; flex-direction: column; gap: 10px; }
-.step { font-size: 13px; color: var(--text-dim); display: flex; align-items: center; gap: 10px; }
+.step { font-size: 13px; color: var(--text-dim); display: flex; align-items: center; gap: 10px; transition: all 0.3s; }
 .step.active { color: var(--blue); font-weight: 500; }
 .step-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border-subtle); flex-shrink: 0; }
 .step.active .step-dot { background: var(--blue); box-shadow: 0 0 8px var(--blue); }
 </style>
 <script>
-const stepLabels = ['連線 Gmail...','讀取最新信件...','規則引擎分析中...','AI 深度分析中...','產生報告...'];
-let i = 0;
-setInterval(() => {
-  if (i < stepLabels.length) {
-    document.querySelectorAll('.step')[i].classList.add('active');
-    i++;
-  }
-}, 2500);
-setInterval(() => {
+let curStep = 0;
+const checkStatus = () => {
   fetch('/scan_status').then(r => r.json()).then(d => {
-    if (d.done) window.location.href = '/result/' + d.scan_id;
-  });
-}, 1000);
+    if (d.step !== undefined) {
+      const steps = document.querySelectorAll('.step');
+      steps.forEach((s, idx) => {
+        if (idx <= d.step) s.classList.add('active');
+      });
+    }
+    if (d.done) {
+      window.location.href = '/result/' + d.scan_id;
+    } else {
+      setTimeout(checkStatus, 1000);
+    }
+  }).catch(() => setTimeout(checkStatus, 2000));
+};
+document.addEventListener('DOMContentLoaded', checkStatus);
 </script>
 
 <div class="hdr">
@@ -338,11 +361,11 @@ setInterval(() => {
 </div>
 """
 
-# ── 結果頁 HTML ──────────────────────────────────────────────
+# ── 結果頁 HTML (新增：XSS 轉義保護 + 雙欄/單欄 RWD 響應式切換 + 長文字折行) ───────────────────
 RESULT_HTML = COMMON_CSS + """
 <style>
-.summary { display: flex; border-bottom: 1px solid var(--border-subtle); background: rgba(15, 23, 42, 0.3); }
-.stat { flex: 1; padding: 14px 24px; border-right: 1px solid var(--border-subtle); }
+.summary { display: flex; border-bottom: 1px solid var(--border-subtle); background: rgba(15, 23, 42, 0.3); flex-wrap: wrap; }
+.stat { flex: 1; min-width: 110px; padding: 14px 24px; border-right: 1px solid var(--border-subtle); }
 .stat:last-child { border-right: none; }
 .stat-num { font-size: 22px; font-weight: 700; margin-bottom: 2px; }
 .stat-lbl { font-size: 11px; color: var(--text-dim); letter-spacing: 0.05em; text-transform: uppercase; }
@@ -353,7 +376,7 @@ RESULT_HTML = COMMON_CSS + """
 .s-wl    .stat-num { color: var(--text-muted); }
 .s-sk    .stat-num { color: var(--text-dim); }
 
-.main { display: flex; height: calc(100vh - 120px); }
+.main { display: flex; height: calc(100vh - 120px); overflow: hidden; }
 .left { width: 320px; border-right: 1px solid var(--border-subtle); overflow-y: auto; flex-shrink: 0; }
 .list-sec { padding: 12px 18px 8px; font-size: 10px; color: var(--text-dim);
             letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600;
@@ -375,7 +398,7 @@ RESULT_HTML = COMMON_CSS + """
               overflow: hidden; text-overflow: ellipsis; }
 .item-score { font-size: 10px; color: var(--text-dim); margin-top: 3px; }
 
-.right { flex: 1; overflow-y: auto; padding: 28px 36px; }
+.right { flex: 1; overflow-y: auto; padding: 28px 36px; word-break: break-word; }
 .detail-badge { display: inline-flex; align-items: center; gap: 6px;
                 padding: 4px 12px; border-radius: 20px; font-size: 11px;
                 font-weight: 600; margin-bottom: 14px; }
@@ -385,21 +408,21 @@ RESULT_HTML = COMMON_CSS + """
 .badge-wl   { background: var(--bg-card); color: var(--text-muted); border: 1px solid var(--border-subtle); }
 .detail-subj { font-size: 20px; font-weight: 700; color: #ffffff;
                 margin-bottom: 6px; letter-spacing: -0.3px; line-height: 1.3; }
-.detail-from { font-size: 12px; color: var(--text-muted); margin-bottom: 22px; }
+.detail-from { font-size: 12px; color: var(--text-muted); margin-bottom: 22px; word-break: break-all; }
 .gold-line { width: 100%; height: 1px; background: var(--border-subtle); margin: 18px 0; }
 .sec-label { font-size: 10px; color: var(--text-dim); letter-spacing: 0.08em;
              text-transform: uppercase; margin-bottom: 8px; font-weight: 600; }
-.detail-text { font-size: 13.5px; color: #e2e8f0; line-height: 1.7; }
+.detail-text { font-size: 13.5px; color: #e2e8f0; line-height: 1.7; white-space: pre-wrap; }
 .tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
 .htag { font-size: 11px; color: var(--orange); background: var(--orange-bg);
         padding: 3px 8px; border-radius: 4px; border: 1px solid var(--orange-border); }
-.score-row { display: flex; gap: 20px; margin-top: 12px; }
+.score-row { display: flex; flex-wrap: wrap; gap: 20px; margin-top: 12px; }
 .score-item { font-size: 12px; color: var(--text-muted); }
 .score-item span { color: var(--text-main); font-weight: 600; }
 .divider { height: 1px; background: var(--border-subtle); margin: 20px 0; }
 .recommend { font-size: 13px; color: var(--text-main); background: var(--bg-card);
              border: 1px solid var(--border-subtle); border-radius: 8px;
-             padding: 14px 18px; line-height: 1.6; }
+             padding: 14px 18px; line-height: 1.6; white-space: pre-wrap; }
 .ir-box { background: rgba(16, 185, 129, 0.05); border: 1px solid var(--green-border);
           border-left: 3px solid var(--green); border-radius: 8px;
           padding: 16px 20px; margin-top: 20px; }
@@ -413,9 +436,25 @@ RESULT_HTML = COMMON_CSS + """
                 height: 100%; color: var(--text-dim); font-size: 13px;
                 flex-direction: column; gap: 10px; }
 .empty-icon { font-size: 32px; opacity: 0.4; }
+
+@media (max-width: 768px) {
+  .main { flex-direction: column; height: auto; overflow: visible; }
+  .left { width: 100%; max-height: 300px; border-right: none; border-bottom: 1px solid var(--border-subtle); }
+  .right { padding: 20px; }
+}
 </style>
 <script>
 const emailData = PLACEHOLDER_DATA;
+
+function escHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
 
 function showDetail(idx) {
   const d = emailData[idx];
@@ -423,30 +462,30 @@ function showDetail(idx) {
   const panel = document.getElementById('right-panel');
   let badgeClass = d.level === 'high' ? 'badge-high' : d.level === 'medium' ? 'badge-med' : d.level === 'low' ? 'badge-low' : 'badge-wl';
   let badgeText = d.level === 'high' ? '🚨 高風險' : d.level === 'medium' ? '⚠️ 中風險' : d.level === 'low' ? '✅ 安全' : '🔒 白名單';
-  let scoreStr = d.risk_score >= 0 ? ` &nbsp;·&nbsp; ${d.risk_score} / 100` : '';
+  let scoreStr = d.risk_score >= 0 ? ` &nbsp;·&nbsp; ${escHtml(d.risk_score)} / 100` : '';
 
-  let tagsHtml = d.tags && d.tags.length ? `<div class="tag-row">${d.tags.map(t=>`<span class="htag">${t}</span>`).join('')}</div>` : '';
-  let scoresHtml = d.scores ? `<div class="score-row">${d.scores.map(s=>`<div class="score-item">${s[0]} <span>${s[1]}</span></div>`).join('')}</div>` : '';
+  let tagsHtml = d.tags && d.tags.length ? `<div class="tag-row">${d.tags.map(t=>`<span class="htag">${escHtml(t)}</span>`).join('')}</div>` : '';
+  let scoresHtml = d.scores ? `<div class="score-row">${d.scores.map(s=>`<div class="score-item">${escHtml(s[0])} <span>${escHtml(s[1])}</span></div>`).join('')}</div>` : '';
   let irHtml = d.ir ? `
     <div class="ir-box">
       <div class="ir-label">IR 事件通報報告已自動產生</div>
-      <div class="ir-id">${d.ir.id} &nbsp;|&nbsp; 嚴重等級：${d.ir.severity}</div>
-      <div class="ir-impact">${d.ir.impact}</div>
-      ${d.ir.actions && d.ir.actions.length ? `<div class="ir-actions">${d.ir.actions.map(a=>`<div class="ir-action">• ${a}</div>`).join('')}</div>` : ''}
+      <div class="ir-id">${escHtml(d.ir.id)} &nbsp;|&nbsp; 嚴重等級：${escHtml(d.ir.severity)}</div>
+      <div class="ir-impact">${escHtml(d.ir.impact)}</div>
+      ${d.ir.actions && d.ir.actions.length ? `<div class="ir-actions">${d.ir.actions.map(a=>`<div class="ir-action">• ${escHtml(a)}</div>`).join('')}</div>` : ''}
     </div>` : '';
 
   panel.innerHTML = `
     <span class="detail-badge ${badgeClass}">${badgeText}${scoreStr}</span>
-    <div class="detail-subj">${d.subject}</div>
-    <div class="detail-from">來自：${d.sender}</div>
+    <div class="detail-subj">${escHtml(d.subject)}</div>
+    <div class="detail-from">來自：${escHtml(d.sender)}</div>
     <div class="gold-line"></div>
     <div class="sec-label">AI 分析說明</div>
-    <div class="detail-text">${d.explanation || '—'}</div>
+    <div class="detail-text">${escHtml(d.explanation) || '—'}</div>
     ${tagsHtml}
     ${scoresHtml}
     <div class="divider"></div>
     <div class="sec-label">建議行動</div>
-    <div class="recommend">${d.action || '—'}</div>
+    <div class="recommend">${escHtml(d.action) || '—'}</div>
     ${irHtml}
   `;
 
@@ -498,12 +537,13 @@ HISTORY_HTML = COMMON_CSS + """
 <style>
 .container { max-width: 860px; margin: 0 auto; padding: 40px 20px; }
 .page-title { font-size: 18px; font-weight: 600; color: var(--text-main); margin-bottom: 24px; }
+.table-wrap { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; background: var(--bg-card); border-radius: 10px; border: 1px solid var(--border-subtle); overflow: hidden; }
 thead tr { border-bottom: 1px solid var(--border-subtle); background: rgba(255, 255, 255, 0.02); }
 th { padding: 14px 18px; font-size: 11px; color: var(--text-dim); letter-spacing: 0.05em;
-     text-transform: uppercase; text-align: left; font-weight: 600; }
+     text-transform: uppercase; text-align: left; font-weight: 600; white-space: nowrap; }
 td { padding: 14px 18px; font-size: 13px; color: var(--text-main);
-     border-bottom: 1px solid var(--border-subtle); }
+     border-bottom: 1px solid var(--border-subtle); white-space: nowrap; }
 tr:last-child td { border-bottom: none; }
 tr:hover td { background: var(--bg-hover); }
 .cell-high { color: var(--red); font-weight: 600; }
@@ -528,21 +568,23 @@ tr:hover td { background: var(--bg-hover); }
   <a href="/" class="back">← 返回首頁</a>
   <div class="page-title">掃描記錄</div>
   {% if history %}
-  <table>
-    <thead><tr><th>掃描時間</th><th>總計</th><th>高風險</th><th>中風險</th><th>安全</th><th>白名單</th></tr></thead>
-    <tbody>
-    {% for h in history %}
-    <tr>
-      <td>{{h[1]}}</td>
-      <td>{{h[2]}}</td>
-      <td class="cell-high">{{h[3]}}</td>
-      <td class="cell-med">{{h[4]}}</td>
-      <td class="cell-low">{{h[5]}}</td>
-      <td style="color:var(--text-dim)">{{h[6]}}</td>
-    </tr>
-    {% endfor %}
-    </tbody>
-  </table>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>掃描時間</th><th>總計</th><th>高風險</th><th>中風險</th><th>安全</th><th>白名單</th></tr></thead>
+      <tbody>
+      {% for h in history %}
+      <tr>
+        <td>{{h[1]}}</td>
+        <td>{{h[2]}}</td>
+        <td class="cell-high">{{h[3]}}</td>
+        <td class="cell-med">{{h[4]}}</td>
+        <td class="cell-low">{{h[5]}}</td>
+        <td style="color:var(--text-dim)">{{h[6]}}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
   {% else %}
   <div class="empty">還沒有掃描記錄，<a href="/" style="color:var(--blue); text-decoration:none;">開始掃描</a>！</div>
   {% endif %}
@@ -572,27 +614,34 @@ WHITELIST_HTML = COMMON_CSS + """
                border-radius: 8px; padding: 14px 18px; margin-bottom: 10px;
                transition: border-color 0.2s; }
 .domain-item:hover { border-color: var(--border-accent); }
-.domain-name { font-size: 13.5px; color: var(--text-main); font-family: monospace; font-weight: 500; }
+.domain-name { font-size: 13.5px; color: var(--text-main); font-family: monospace; font-weight: 500; word-break: break-all; }
 .domain-time { font-size: 11px; color: var(--text-dim); margin-top: 3px; }
 .del-btn { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border);
            border-radius: 6px; padding: 5px 12px; font-size: 12px; cursor: pointer;
-           transition: all 0.2s ease; }
+           transition: all 0.2s ease; flex-shrink: 0; }
 .del-btn:hover { background: rgba(239, 68, 68, 0.2); }
 </style>
 <script>
 function addDomain() {
-  const domain = document.getElementById('domain-input').value.trim();
+  const input = document.getElementById('domain-input');
+  const domain = input.value.trim();
   if (!domain) return alert('請輸入網域');
-  fetch('/whitelist/add', {method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({domain})}).then(r => r.json()).then(d => {
+  fetch('/whitelist/add', {
+    method: 'POST', 
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({domain})
+  }).then(r => r.json()).then(d => {
     if (d.success) location.reload();
     else alert(d.error || '新增失敗');
   });
 }
 function deleteDomain(domain) {
   if (!confirm('確定要刪除 ' + domain + '？')) return;
-  fetch('/whitelist/delete', {method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({domain})}).then(r => r.json()).then(d => {
+  fetch('/whitelist/delete', {
+    method: 'POST', 
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({domain})
+  }).then(r => r.json()).then(d => {
     if (d.success) location.reload();
   });
 }
