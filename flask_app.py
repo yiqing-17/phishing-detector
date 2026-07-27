@@ -41,48 +41,75 @@ CRED_DATA = {"web":{"client_id":"727861534469-72ihfsri6r9kpnu56n7541qb2e4ngomk.a
 with open('credentials.json', 'w') as f:
     json.dump(CRED_DATA, f)
 
-# ── CSS 共用樣式 ─────────────────────────────────────────────
+# ── CSS 共用樣式 (全站統一風格：極簡深藍黑主題) ───────────────────
 COMMON_CSS = """
 <style>
 :root {
-  --gold: #C9A84C; --gold-light: #E8C97A; --gold-dim: #8A6E2F;
-  --bg-deep: #141414; --bg-card: #1C1C1C; --bg-hover: #242424;
-  --border-subtle: #2A2A2A; --border-gold: #3A3020;
-  --text-main: #F0EDE8; --text-muted: #888070; --text-dim: #555045;
-  --red: #C0392B; --red-bg: #1E1010; --red-border: #3A1010;
-  --orange: #D4874A; --orange-bg: #1E1508; --orange-border: #3A2008;
-  --green: #4A9B6F; --green-bg: #0E1A12; --green-border: #0E2A1A;
-  --blue: #4A7EC0; --blue-bg: #0E1520;
+  --bg-main: #0b0d12;
+  --bg-card: rgba(15, 23, 42, 0.5);
+  --bg-hover: rgba(30, 41, 59, 0.6);
+  --border-subtle: rgba(255, 255, 255, 0.07);
+  --border-accent: rgba(255, 255, 255, 0.15);
+  --text-main: #f8fafc;
+  --text-muted: #8a99ad;
+  --text-dim: #64748b;
+  --red: #ef4444; --red-bg: rgba(239, 68, 68, 0.1); --red-border: rgba(239, 68, 68, 0.25);
+  --orange: #f97316; --orange-bg: rgba(249, 115, 22, 0.1); --orange-border: rgba(249, 115, 22, 0.25);
+  --green: #10b981; --green-bg: rgba(16, 185, 129, 0.1); --green-border: rgba(16, 185, 129, 0.25);
+  --blue: #3b82f6; --blue-bg: rgba(59, 130, 246, 0.1);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-       background: var(--bg-deep); color: var(--text-main); min-height: 100vh; }
-.hdr { border-bottom: 0.5px solid var(--border-gold); padding: 14px 28px;
-       display: flex; align-items: center; justify-content: space-between; }
-.hdr-left { display: flex; align-items: center; gap: 10px; }
-.shield { width: 30px; height: 30px; background: linear-gradient(135deg, var(--gold-dim), var(--gold));
-          border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 15px; }
-.hdr h1 { font-size: 14px; font-weight: 500; color: var(--text-main); letter-spacing: 0.02em; }
-.hdr-nav { display: flex; gap: 6px; }
-.hdr-nav a { font-size: 11px; color: var(--text-muted); text-decoration: none;
-             padding: 5px 12px; border-radius: 4px; border: 0.5px solid var(--border-subtle);
-             transition: all 0.15s; }
-.hdr-nav a:hover { color: var(--text-main); border-color: var(--gold-dim); }
-.gold-tag { font-size: 10px; color: var(--gold); background: var(--border-gold);
-            padding: 3px 8px; border-radius: 20px; border: 0.5px solid var(--gold-dim);
-            letter-spacing: 0.05em; }
-.back { display: inline-flex; align-items: center; gap: 6px; font-size: 12px;
-        color: var(--text-muted); text-decoration: none; padding: 6px 14px;
-        border-radius: 4px; border: 0.5px solid var(--border-subtle);
-        margin-bottom: 20px; transition: all 0.15s; }
-.back:hover { color: var(--text-main); border-color: var(--gold-dim); }
+body { 
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg-main); 
+  color: var(--text-main); 
+  min-height: 100vh; 
+}
+
+/* 全站統一導航列 */
+.hdr { 
+  border-bottom: 1px solid var(--border-subtle); 
+  padding: 16px 32px;
+  display: flex; 
+  align-items: center; 
+  justify-content: space-between; 
+}
+.hdr-left { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 15px; letter-spacing: 0.3px; }
+.shield-icon { font-size: 16px; display: inline-flex; align-items: center; }
+.hdr h1 { font-size: 15px; font-weight: 600; color: var(--text-main); letter-spacing: 0.3px; }
+.hdr-nav { display: flex; gap: 8px; align-items: center; }
+.hdr-nav a { 
+  font-size: 12px; 
+  color: var(--text-muted); 
+  text-decoration: none;
+  padding: 6px 12px; 
+  border-radius: 6px; 
+  border: 1px solid var(--border-subtle);
+  transition: all 0.2s ease; 
+}
+.hdr-nav a:hover { color: var(--text-main); border-color: var(--border-accent); background: var(--bg-hover); }
+.proj-tag { 
+  background: rgba(255, 255, 255, 0.04); 
+  border: 1px solid var(--border-subtle);
+  color: var(--text-dim); 
+  font-size: 11px; 
+  padding: 4px 10px; 
+  border-radius: 4px; 
+  font-family: monospace; 
+}
+.back { 
+  display: inline-flex; align-items: center; gap: 6px; font-size: 12px;
+  color: var(--text-muted); text-decoration: none; padding: 6px 14px;
+  border-radius: 6px; border: 1px solid var(--border-subtle);
+  margin-bottom: 20px; transition: all 0.2s ease; 
+}
+.back:hover { color: var(--text-main); border-color: var(--border-accent); background: var(--bg-hover); }
 </style>
 """
 
-# ── 首頁 HTML (優化 Icon 比例與 Google Logo 樣式) ─────────────
+# ── 首頁 HTML (單頁固定 100vh 滿版，無滾輪) ───────────────────
 HOME_HTML = COMMON_CSS + """
 <style>
-/* 強制首頁滿版且不出現滾輪 */
 html, body {
   height: 100vh;
   overflow: hidden !important;
@@ -95,43 +122,11 @@ html, body {
   flex-direction: column;
   height: 100vh;
   width: 100vw;
-  background-color: #0b0d12;
+  background-color: var(--bg-main);
   color: #e2e8f0;
   box-sizing: border-box;
 }
 
-/* 頂部導航列 */
-.hdr {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 32px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-}
-.hdr-left {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-weight: 600;
-  font-size: 15px;
-  letter-spacing: 0.3px;
-}
-.shield-icon {
-  font-size: 16px;
-  display: inline-flex;
-  align-items: center;
-}
-.proj-tag {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: #64748b;
-  font-size: 11px;
-  padding: 4px 10px;
-  border-radius: 4px;
-  font-family: monospace;
-}
-
-/* 中央主要內容區塊 */
 .main-content {
   flex: 1;
   display: flex;
@@ -155,14 +150,13 @@ html, body {
 
 .subtitle {
   font-size: 13.5px;
-  color: #8a99ad;
+  color: var(--text-muted);
   line-height: 1.6;
   text-align: center;
   margin-bottom: 32px;
   max-width: 560px;
 }
 
-/* 標準修正版 Google 白底按鈕 */
 .google-btn-white {
   display: inline-flex;
   align-items: center;
@@ -191,7 +185,6 @@ html, body {
   display: block;
 }
 
-/* 3 個功能卡片 (縮小 Icon) */
 .features-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -200,14 +193,14 @@ html, body {
   margin-bottom: 24px;
 }
 .feature-card {
-  background: rgba(15, 23, 42, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
   border-radius: 10px;
   padding: 20px 16px;
   text-align: center;
 }
 .feature-icon {
-  font-size: 18px; /* 縮小至精緻大小 */
+  font-size: 18px;
   margin-bottom: 10px;
   opacity: 0.9;
 }
@@ -219,29 +212,25 @@ html, body {
 }
 .feature-card p {
   font-size: 12px;
-  color: #64748b;
+  color: var(--text-dim);
   line-height: 1.5;
   margin: 0;
 }
 
-/* 底部綠色白名單通知 */
 .whitelist-banner {
   width: 100%;
-  background: rgba(6, 78, 59, 0.12);
-  border: 1px solid rgba(16, 185, 129, 0.22);
+  background: var(--green-bg);
+  border: 1px solid var(--green-border);
   border-radius: 8px;
   padding: 11px 18px;
   font-size: 12px;
-  color: #10b981;
+  color: var(--green);
   display: flex;
   align-items: center;
   gap: 8px;
   box-sizing: border-box;
 }
-.banner-icon {
-  font-size: 13px;
-  flex-shrink: 0;
-}
+.banner-icon { font-size: 13px; flex-shrink: 0; }
 </style>
 
 <div class="landing-container">
@@ -262,7 +251,6 @@ html, body {
     </p>
 
     <a href="/login" class="google-btn-white">
-      <!-- 修正後的官方標準 Google 四色 SVG Logo -->
       <svg class="google-icon-svg" viewBox="0 0 24 24">
         <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
         <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.29v3.15C3.26 21.3 7.31 24 12 24z"/>
@@ -297,21 +285,22 @@ html, body {
   </div>
 </div>
 """
+
 # ── Loading HTML ─────────────────────────────────────────────
 LOADING_HTML = COMMON_CSS + """
 <style>
 .loading-wrap { display: flex; flex-direction: column; align-items: center;
                 justify-content: center; min-height: calc(100vh - 57px); gap: 24px; }
-.spinner { width: 48px; height: 48px; border: 2px solid var(--border-subtle);
-           border-top: 2px solid var(--gold); border-radius: 50%;
-           animation: spin 1s linear infinite; }
+.spinner { width: 44px; height: 44px; border: 3px solid var(--border-subtle);
+           border-top: 3px solid var(--blue); border-radius: 50%;
+           animation: spin 0.9s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
-.loading-title { font-size: 18px; font-weight: 500; color: var(--text-main); }
-.steps { display: flex; flex-direction: column; gap: 8px; }
-.step { font-size: 13px; color: var(--text-dim); display: flex; align-items: center; gap: 8px; }
-.step.active { color: var(--gold); }
-.step-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--border-subtle); flex-shrink: 0; }
-.step.active .step-dot { background: var(--gold); }
+.loading-title { font-size: 17px; font-weight: 600; color: var(--text-main); }
+.steps { display: flex; flex-direction: column; gap: 10px; }
+.step { font-size: 13px; color: var(--text-dim); display: flex; align-items: center; gap: 10px; }
+.step.active { color: var(--blue); font-weight: 500; }
+.step-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border-subtle); flex-shrink: 0; }
+.step.active .step-dot { background: var(--blue); box-shadow: 0 0 8px var(--blue); }
 </style>
 <script>
 const stepLabels = ['連線 Gmail...','讀取最新信件...','規則引擎分析中...','AI 深度分析中...','產生報告...'];
@@ -331,10 +320,10 @@ setInterval(() => {
 
 <div class="hdr">
   <div class="hdr-left">
-    <div class="shield">🛡️</div>
+    <span class="shield-icon">🛡️</span>
     <h1>AI 釣魚信件偵測系統</h1>
   </div>
-  <span class="gold-tag">SCANNING</span>
+  <span class="proj-tag">SCANNING...</span>
 </div>
 <div class="loading-wrap">
   <div class="spinner"></div>
@@ -352,76 +341,78 @@ setInterval(() => {
 # ── 結果頁 HTML ──────────────────────────────────────────────
 RESULT_HTML = COMMON_CSS + """
 <style>
-.summary { display: flex; border-bottom: 0.5px solid var(--border-subtle); }
-.stat { flex: 1; padding: 16px 24px; border-right: 0.5px solid var(--border-subtle); }
+.summary { display: flex; border-bottom: 1px solid var(--border-subtle); background: rgba(15, 23, 42, 0.3); }
+.stat { flex: 1; padding: 14px 24px; border-right: 1px solid var(--border-subtle); }
 .stat:last-child { border-right: none; }
-.stat-num { font-size: 24px; font-weight: 500; margin-bottom: 2px; }
-.stat-lbl { font-size: 10px; color: var(--text-muted); letter-spacing: 0.08em; text-transform: uppercase; }
-.s-total .stat-num { color: var(--gold); }
+.stat-num { font-size: 22px; font-weight: 700; margin-bottom: 2px; }
+.stat-lbl { font-size: 11px; color: var(--text-dim); letter-spacing: 0.05em; text-transform: uppercase; }
+.s-total .stat-num { color: var(--text-main); }
 .s-high  .stat-num { color: var(--red); }
 .s-med   .stat-num { color: var(--orange); }
 .s-low   .stat-num { color: var(--green); }
-.s-wl    .stat-num { color: var(--text-dim); }
+.s-wl    .stat-num { color: var(--text-muted); }
 .s-sk    .stat-num { color: var(--text-dim); }
-.main { display: flex; height: calc(100vh - 115px); }
-.left { width: 310px; border-right: 0.5px solid var(--border-subtle); overflow-y: auto; flex-shrink: 0; }
-.list-sec { padding: 10px 18px 6px; font-size: 9px; color: var(--gold-dim);
-            letter-spacing: 0.1em; text-transform: uppercase;
-            border-bottom: 0.5px solid var(--border-subtle); }
-.email-item { padding: 13px 18px; border-bottom: 0.5px solid var(--border-subtle);
-              cursor: pointer; transition: background 0.1s;
+
+.main { display: flex; height: calc(100vh - 120px); }
+.left { width: 320px; border-right: 1px solid var(--border-subtle); overflow-y: auto; flex-shrink: 0; }
+.list-sec { padding: 12px 18px 8px; font-size: 10px; color: var(--text-dim);
+            letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600;
+            border-bottom: 1px solid var(--border-subtle); }
+.email-item { padding: 14px 18px; border-bottom: 1px solid var(--border-subtle);
+              cursor: pointer; transition: background 0.15s ease;
               display: flex; align-items: flex-start; gap: 10px; }
 .email-item:hover { background: var(--bg-hover); }
-.email-item.active { background: var(--bg-hover); border-left: 2px solid var(--gold); padding-left: 16px; }
-.risk-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
-.dot-high { background: var(--red); box-shadow: 0 0 5px var(--red); }
+.email-item.active { background: var(--bg-hover); border-left: 3px solid var(--blue); padding-left: 15px; }
+.risk-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+.dot-high { background: var(--red); box-shadow: 0 0 6px var(--red); }
 .dot-med  { background: var(--orange); }
 .dot-low  { background: var(--green); }
 .dot-wl   { background: var(--text-dim); }
 .item-body { flex: 1; min-width: 0; }
-.item-subj { font-size: 12px; color: var(--text-main); white-space: nowrap;
-             overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; font-weight: 500; }
+.item-subj { font-size: 13px; color: var(--text-main); white-space: nowrap;
+              overflow: hidden; text-overflow: ellipsis; margin-bottom: 3px; font-weight: 500; }
 .item-from { font-size: 11px; color: var(--text-muted); white-space: nowrap;
-             overflow: hidden; text-overflow: ellipsis; }
-.item-score { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
-.right { flex: 1; overflow-y: auto; padding: 28px 32px; }
+              overflow: hidden; text-overflow: ellipsis; }
+.item-score { font-size: 10px; color: var(--text-dim); margin-top: 3px; }
+
+.right { flex: 1; overflow-y: auto; padding: 28px 36px; }
 .detail-badge { display: inline-flex; align-items: center; gap: 6px;
                 padding: 4px 12px; border-radius: 20px; font-size: 11px;
-                font-weight: 500; margin-bottom: 14px; }
-.badge-high { background: var(--red-bg); color: var(--red); border: 0.5px solid var(--red-border); }
-.badge-med  { background: var(--orange-bg); color: var(--orange); border: 0.5px solid var(--orange-border); }
-.badge-low  { background: var(--green-bg); color: var(--green); border: 0.5px solid var(--green-border); }
-.badge-wl   { background: var(--bg-card); color: var(--text-dim); border: 0.5px solid var(--border-subtle); }
-.detail-subj { font-size: 20px; font-weight: 500; color: var(--text-main);
-               margin-bottom: 5px; letter-spacing: -0.01em; line-height: 1.3; }
+                font-weight: 600; margin-bottom: 14px; }
+.badge-high { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
+.badge-med  { background: var(--orange-bg); color: var(--orange); border: 1px solid var(--orange-border); }
+.badge-low  { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+.badge-wl   { background: var(--bg-card); color: var(--text-muted); border: 1px solid var(--border-subtle); }
+.detail-subj { font-size: 20px; font-weight: 700; color: #ffffff;
+                margin-bottom: 6px; letter-spacing: -0.3px; line-height: 1.3; }
 .detail-from { font-size: 12px; color: var(--text-muted); margin-bottom: 22px; }
-.gold-line { width: 28px; height: 1px; background: var(--gold); opacity: 0.35; margin: 18px 0 14px; }
-.sec-label { font-size: 9px; color: var(--gold-dim); letter-spacing: 0.1em;
-             text-transform: uppercase; margin-bottom: 8px; }
-.detail-text { font-size: 13px; color: var(--text-main); line-height: 1.7; }
-.tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.gold-line { width: 100%; height: 1px; background: var(--border-subtle); margin: 18px 0; }
+.sec-label { font-size: 10px; color: var(--text-dim); letter-spacing: 0.08em;
+             text-transform: uppercase; margin-bottom: 8px; font-weight: 600; }
+.detail-text { font-size: 13.5px; color: #e2e8f0; line-height: 1.7; }
+.tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
 .htag { font-size: 11px; color: var(--orange); background: var(--orange-bg);
-        padding: 3px 8px; border-radius: 4px; border: 0.5px solid var(--orange-border); }
-.score-row { display: flex; gap: 20px; margin-top: 10px; }
-.score-item { font-size: 11px; color: var(--text-muted); }
-.score-item span { color: var(--text-main); font-weight: 500; }
-.divider { height: 0.5px; background: var(--border-subtle); margin: 18px 0; }
+        padding: 3px 8px; border-radius: 4px; border: 1px solid var(--orange-border); }
+.score-row { display: flex; gap: 20px; margin-top: 12px; }
+.score-item { font-size: 12px; color: var(--text-muted); }
+.score-item span { color: var(--text-main); font-weight: 600; }
+.divider { height: 1px; background: var(--border-subtle); margin: 20px 0; }
 .recommend { font-size: 13px; color: var(--text-main); background: var(--bg-card);
-             border: 0.5px solid var(--border-subtle); border-radius: 6px;
-             padding: 12px 16px; line-height: 1.6; }
-.ir-box { background: #0A160A; border: 0.5px solid #1A3A1A;
-          border-left: 2px solid var(--green); border-radius: 8px;
-          padding: 14px 18px; margin-top: 18px; }
-.ir-label { font-size: 9px; color: var(--green); letter-spacing: 0.1em;
-            text-transform: uppercase; margin-bottom: 6px; }
+             border: 1px solid var(--border-subtle); border-radius: 8px;
+             padding: 14px 18px; line-height: 1.6; }
+.ir-box { background: rgba(16, 185, 129, 0.05); border: 1px solid var(--green-border);
+          border-left: 3px solid var(--green); border-radius: 8px;
+          padding: 16px 20px; margin-top: 20px; }
+.ir-label { font-size: 10px; color: var(--green); letter-spacing: 0.08em;
+            text-transform: uppercase; margin-bottom: 6px; font-weight: 600; }
 .ir-id { font-size: 11px; color: var(--text-dim); font-family: monospace; margin-bottom: 6px; }
-.ir-impact { font-size: 12px; color: #7EC87E; line-height: 1.6; }
+.ir-impact { font-size: 12px; color: #a7f3d0; line-height: 1.6; }
 .ir-actions { margin-top: 10px; display: flex; flex-direction: column; gap: 4px; }
-.ir-action { font-size: 12px; color: #64A8E8; }
+.ir-action { font-size: 12px; color: #93c5fd; }
 .empty-detail { display: flex; align-items: center; justify-content: center;
                 height: 100%; color: var(--text-dim); font-size: 13px;
                 flex-direction: column; gap: 10px; }
-.empty-icon { font-size: 32px; opacity: 0.3; }
+.empty-icon { font-size: 32px; opacity: 0.4; }
 </style>
 <script>
 const emailData = PLACEHOLDER_DATA;
@@ -471,7 +462,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 <div class="hdr">
   <div class="hdr-left">
-    <div class="shield">🛡️</div>
+    <span class="shield-icon">🛡️</span>
     <h1>AI 釣魚信件偵測系統 — 掃描結果</h1>
   </div>
   <div class="hdr-nav">
@@ -479,7 +470,7 @@ window.addEventListener('DOMContentLoaded', () => {
     <a href="/whitelist">白名單設定</a>
     <a href="/">重新掃描</a>
   </div>
-  <span class="gold-tag">CAPSTONE</span>
+  <span class="proj-tag">PROJ-2026</span>
 </div>
 
 <div class="summary">
@@ -505,31 +496,32 @@ window.addEventListener('DOMContentLoaded', () => {
 # ── 歷史記錄 HTML ────────────────────────────────────────────
 HISTORY_HTML = COMMON_CSS + """
 <style>
-.container { max-width: 860px; margin: 0 auto; padding: 32px 20px; }
-.page-title { font-size: 16px; font-weight: 500; color: var(--text-main); margin-bottom: 20px; }
-table { width: 100%; border-collapse: collapse; }
-thead tr { border-bottom: 0.5px solid var(--border-gold); }
-th { padding: 10px 16px; font-size: 10px; color: var(--gold-dim); letter-spacing: 0.08em;
-     text-transform: uppercase; text-align: left; font-weight: 400; }
-td { padding: 12px 16px; font-size: 13px; color: var(--text-main);
-     border-bottom: 0.5px solid var(--border-subtle); }
+.container { max-width: 860px; margin: 0 auto; padding: 40px 20px; }
+.page-title { font-size: 18px; font-weight: 600; color: var(--text-main); margin-bottom: 24px; }
+table { width: 100%; border-collapse: collapse; background: var(--bg-card); border-radius: 10px; border: 1px solid var(--border-subtle); overflow: hidden; }
+thead tr { border-bottom: 1px solid var(--border-subtle); background: rgba(255, 255, 255, 0.02); }
+th { padding: 14px 18px; font-size: 11px; color: var(--text-dim); letter-spacing: 0.05em;
+     text-transform: uppercase; text-align: left; font-weight: 600; }
+td { padding: 14px 18px; font-size: 13px; color: var(--text-main);
+     border-bottom: 1px solid var(--border-subtle); }
+tr:last-child td { border-bottom: none; }
 tr:hover td { background: var(--bg-hover); }
-.cell-high { color: var(--red); font-weight: 500; }
+.cell-high { color: var(--red); font-weight: 600; }
 .cell-med { color: var(--orange); }
 .cell-low { color: var(--green); }
-.empty { padding: 60px; text-align: center; color: var(--text-dim); font-size: 13px; }
+.empty { padding: 60px; text-align: center; color: var(--text-dim); font-size: 13px; background: var(--bg-card); border-radius: 10px; border: 1px solid var(--border-subtle); }
 </style>
 
 <div class="hdr">
   <div class="hdr-left">
-    <div class="shield">🛡️</div>
+    <span class="shield-icon">🛡️</span>
     <h1>AI 釣魚信件偵測系統</h1>
   </div>
   <div class="hdr-nav">
     <a href="/">首頁</a>
     <a href="/whitelist">白名單設定</a>
   </div>
-  <span class="gold-tag">CAPSTONE</span>
+  <span class="proj-tag">PROJ-2026</span>
 </div>
 
 <div class="container">
@@ -552,7 +544,7 @@ tr:hover td { background: var(--bg-hover); }
     </tbody>
   </table>
   {% else %}
-  <div class="empty">還沒有掃描記錄，<a href="/" style="color:var(--gold)">開始掃描</a>！</div>
+  <div class="empty">還沒有掃描記錄，<a href="/" style="color:var(--blue); text-decoration:none;">開始掃描</a>！</div>
   {% endif %}
 </div>
 """
@@ -560,32 +552,32 @@ tr:hover td { background: var(--bg-hover); }
 # ── 白名單 HTML ──────────────────────────────────────────────
 WHITELIST_HTML = COMMON_CSS + """
 <style>
-.container { max-width: 680px; margin: 0 auto; padding: 32px 20px; }
-.page-title { font-size: 16px; font-weight: 500; color: var(--text-main); margin-bottom: 6px; }
-.page-sub { font-size: 12px; color: var(--text-muted); margin-bottom: 24px; }
-.add-row { display: flex; gap: 8px; margin-bottom: 28px; }
-.add-row input { flex: 1; background: var(--bg-card); border: 0.5px solid var(--border-subtle);
-                 border-radius: 6px; padding: 10px 14px; color: var(--text-main);
-                 font-size: 13px; outline: none; transition: border-color 0.15s; }
+.container { max-width: 680px; margin: 0 auto; padding: 40px 20px; }
+.page-title { font-size: 18px; font-weight: 600; color: var(--text-main); margin-bottom: 6px; }
+.page-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; line-height: 1.5; }
+.add-row { display: flex; gap: 10px; margin-bottom: 32px; }
+.add-row input { flex: 1; background: var(--bg-card); border: 1px solid var(--border-subtle);
+                 border-radius: 8px; padding: 11px 16px; color: var(--text-main);
+                 font-size: 13.5px; outline: none; transition: border-color 0.2s; }
 .add-row input::placeholder { color: var(--text-dim); }
-.add-row input:focus { border-color: var(--gold-dim); }
-.add-btn { background: var(--border-gold); color: var(--gold); border: 0.5px solid var(--gold-dim);
-           border-radius: 6px; padding: 10px 20px; font-size: 13px; cursor: pointer;
-           transition: all 0.15s; white-space: nowrap; }
-.add-btn:hover { background: #4A3A18; }
-.sec-label { font-size: 9px; color: var(--gold-dim); letter-spacing: 0.1em;
-             text-transform: uppercase; margin-bottom: 12px; }
+.add-row input:focus { border-color: var(--border-accent); }
+.add-btn { background: #ffffff; color: #0f172a; border: none;
+           border-radius: 8px; padding: 11px 22px; font-size: 13.5px; font-weight: 600; cursor: pointer;
+           transition: all 0.2s ease; white-space: nowrap; }
+.add-btn:hover { background: #f8fafc; transform: translateY(-1px); }
+.sec-label { font-size: 11px; color: var(--text-dim); letter-spacing: 0.05em;
+             text-transform: uppercase; margin-bottom: 12px; font-weight: 600; }
 .domain-item { display: flex; justify-content: space-between; align-items: center;
-               background: var(--bg-card); border: 0.5px solid var(--border-subtle);
-               border-radius: 8px; padding: 12px 16px; margin-bottom: 8px;
-               transition: border-color 0.15s; }
-.domain-item:hover { border-color: var(--border-gold); }
-.domain-name { font-size: 13px; color: var(--text-main); font-family: monospace; }
-.domain-time { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
-.del-btn { background: var(--red-bg); color: var(--red); border: 0.5px solid var(--red-border);
-           border-radius: 4px; padding: 4px 12px; font-size: 11px; cursor: pointer;
-           transition: all 0.15s; }
-.del-btn:hover { background: #2D1515; }
+               background: var(--bg-card); border: 1px solid var(--border-subtle);
+               border-radius: 8px; padding: 14px 18px; margin-bottom: 10px;
+               transition: border-color 0.2s; }
+.domain-item:hover { border-color: var(--border-accent); }
+.domain-name { font-size: 13.5px; color: var(--text-main); font-family: monospace; font-weight: 500; }
+.domain-time { font-size: 11px; color: var(--text-dim); margin-top: 3px; }
+.del-btn { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border);
+           border-radius: 6px; padding: 5px 12px; font-size: 12px; cursor: pointer;
+           transition: all 0.2s ease; }
+.del-btn:hover { background: rgba(239, 68, 68, 0.2); }
 </style>
 <script>
 function addDomain() {
@@ -613,14 +605,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
 <div class="hdr">
   <div class="hdr-left">
-    <div class="shield">🛡️</div>
+    <span class="shield-icon">🛡️</span>
     <h1>AI 釣魚信件偵測系統</h1>
   </div>
   <div class="hdr-nav">
     <a href="/">首頁</a>
     <a href="/history">掃描記錄</a>
   </div>
-  <span class="gold-tag">CAPSTONE</span>
+  <span class="proj-tag">PROJ-2026</span>
 </div>
 
 <div class="container">
