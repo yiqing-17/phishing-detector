@@ -18,13 +18,16 @@ from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
 from google.oauth2.credentials import Credentials
 
-os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
-
 # ── 設定區 ───────────────────────────────────────────────────
-GROQ_API_KEY = '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'
-MY_EMAIL     = 'sherry940501@gmail.com'
-BASE_URL     = 'https://phishing-detector-n8rv.onrender.com'
+# 敏感資訊一律由 Render Environment Variables 提供，不寫死在程式碼。
+GROQ_API_KEY = os.environ.get('GROQ_API_KEY', '')
+MY_EMAIL     = os.environ.get('MY_EMAIL', '')
+BASE_URL     = os.environ.get('BASE_URL', 'http://localhost:5000')
 SCOPES       = ['https://www.googleapis.com/auth/gmail.readonly']
+
+# 本機 HTTP 測試才允許 OAuthlib；Render HTTPS 不需要。
+if BASE_URL.startswith('http://'):
+    os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
 DEFAULT_WHITELIST = [
     'skims.com', 'emails.skims.com', 'links.skims.com',
@@ -36,10 +39,26 @@ DEFAULT_WHITELIST = [
 
 SKIP_SUBJECTS = ['[警告]', '[正常]', 'AI 釣魚偵測報告', 'AI 釣魚信件偵測報告']
 
-CRED_DATA = {"web":{"client_id":"727861534469-72ihfsri6r9kpnu56n7541qb2e4ngomk.apps.googleusercontent.com","project_id":"phishing-detector-494720","auth_uri":"https://accounts.google.com/o/oauth2/auth","token_uri":"https://oauth2.googleapis.com/token","auth_provider_x509_cert_url":"https://www.googleapis.com/oauth2/v1/certs","client_secret":"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","redirect_uris":["https://phishing-detector-n8rv.onrender.com/callback"]}}
+GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', '')
+GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET', '')
+GOOGLE_PROJECT_ID = os.environ.get('GOOGLE_PROJECT_ID', 'phishing-detector')
 
-with open('credentials.json', 'w') as f:
-    json.dump(CRED_DATA, f)
+if GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET:
+    CRED_DATA = {
+        "web": {
+            "client_id": GOOGLE_CLIENT_ID,
+            "project_id": GOOGLE_PROJECT_ID,
+            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+            "token_uri": "https://oauth2.googleapis.com/token",
+            "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+            "client_secret": GOOGLE_CLIENT_SECRET,
+            "redirect_uris": [f"{BASE_URL}/callback"]
+        }
+    }
+    with open('credentials.json', 'w', encoding='utf-8') as f:
+        json.dump(CRED_DATA, f)
+else:
+    print('WARNING: GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET 尚未設定，Gmail OAuth 將無法使用。')
 
 # ── CSS 共用樣式 (全站統一風格：極簡深藍黑主題 + 自訂精緻微型捲軸) ───────────────────
 COMMON_CSS = """
@@ -293,7 +312,7 @@ html, body {
     <div class="features-grid">
       <div class="feature-card">
         <div class="feature-icon">🔍</div>
-        <h3>三層 AI 分析</h3>
+        <h3>三層式智慧分析</h3>
         <p>規則引擎 + ML + LLaMA 3.3 深度分析</p>
       </div>
       <div class="feature-card">
@@ -511,6 +530,12 @@ RESULT_HTML = COMMON_CSS + """
 <script>
 const emailData = PLACEHOLDER_DATA;
 
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, c => ({
+    '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
+  }[c]));
+}
+
 function showDetail(idx, element) {
   const d = emailData[idx];
   if (!d) return;
@@ -531,28 +556,28 @@ function showDetail(idx, element) {
   let badgeText = d.level === 'high' ? '🚨 高風險' : d.level === 'medium' ? '⚠️ 中風險' : d.level === 'low' ? '✅ 安全' : '🔒 白名單';
   let scoreStr = d.risk_score >= 0 ? ` &nbsp;·&nbsp; ${d.risk_score} / 100` : '';
 
-  let tagsHtml = d.tags && d.tags.length ? `<div class="tag-row">${d.tags.map(t=>`<span class="htag">${t}</span>`).join('')}</div>` : '';
-  let scoresHtml = d.scores ? `<div class="score-row">${d.scores.map(s=>`<div class="score-item">${s[0]} <span>${s[1]}</span></div>`).join('')}</div>` : '';
+  let tagsHtml = d.tags && d.tags.length ? `<div class="tag-row">${d.tags.map(t=>`<span class="htag">${escapeHtml(t)}</span>`).join('')}</div>` : '';
+  let scoresHtml = d.scores ? `<div class="score-row">${d.scores.map(s=>`<div class="score-item">${escapeHtml(s[0])} <span>${escapeHtml(s[1])}</span></div>`).join('')}</div>` : '';
   let irHtml = d.ir ? `
     <div class="ir-box">
       <div class="ir-label">IR 事件通報報告已自動產生</div>
-      <div class="ir-id">${d.ir.id} &nbsp;|&nbsp; 嚴重等級：${d.ir.severity}</div>
-      <div class="ir-impact">${d.ir.impact}</div>
-      ${d.ir.actions && d.ir.actions.length ? `<div class="ir-actions">${d.ir.actions.map(a=>`<div class="ir-action">• ${a}</div>`).join('')}</div>` : ''}
+      <div class="ir-id">${escapeHtml(d.ir.id)} &nbsp;|&nbsp; 嚴重等級：${escapeHtml(d.ir.severity)}</div>
+      <div class="ir-impact">${escapeHtml(d.ir.impact)}</div>
+      ${d.ir.actions && d.ir.actions.length ? `<div class="ir-actions">${d.ir.actions.map(a=>`<div class="ir-action">• ${escapeHtml(a)}</div>`).join('')}</div>` : ''}
     </div>` : '';
 
   panel.innerHTML = `
     <span class="detail-badge ${badgeClass}">${badgeText}${scoreStr}</span>
-    <div class="detail-subj">${d.subject}</div>
-    <div class="detail-from">來自：${d.sender}</div>
+    <div class="detail-subj">${escapeHtml(d.subject)}</div>
+    <div class="detail-from">來自：${escapeHtml(d.sender)}</div>
     <div class="gold-line"></div>
     <div class="sec-label">AI 分析說明</div>
-    <div class="detail-text">${d.explanation || '—'}</div>
+    <div class="detail-text">${escapeHtml(d.explanation || '—')}</div>
     ${tagsHtml}
     ${scoresHtml}
     <div class="divider"></div>
     <div class="sec-label">建議行動</div>
-    <div class="recommend">${d.action || '—'}</div>
+    <div class="recommend">${escapeHtml(d.action || '—')}</div>
     ${irHtml}
   `;
 }
@@ -768,8 +793,22 @@ def get_whitelist():
     conn.close()
     return domains
 
+def extract_sender_domain(sender):
+    """從 From 標頭取出真正的 email domain。"""
+    m = re.search(r'<([^>]+)>', sender or '')
+    email_addr = (m.group(1) if m else sender or '').strip().lower()
+    if '@' not in email_addr:
+        return ''
+    return email_addr.rsplit('@', 1)[1].strip().rstrip('.')
+
 def is_whitelisted(sender):
-    return any(d in sender.lower() for d in get_whitelist())
+    domain = extract_sender_domain(sender)
+    if not domain:
+        return False
+    return any(
+        domain == d or domain.endswith('.' + d)
+        for d in get_whitelist()
+    )
 
 def is_system_report(sender, subject):
     if any(kw in subject for kw in SKIP_SUBJECTS): return True
@@ -802,40 +841,126 @@ vectorizer = TfidfVectorizer(max_features=3000, stop_words='english')
 X_train_vec = vectorizer.fit_transform(X_train)
 model = LogisticRegression(max_iter=1000, random_state=42)
 model.fit(X_train_vec, y_train)
-groq_client = Groq(api_key=GROQ_API_KEY)
-print('OK - 模型就緒')
+groq_client = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
+print('OK - 模型就緒' if GROQ_API_KEY else 'WARNING - Groq API Key 未設定，將跳過 LLM 深度分析')
 
 # ── 分析函式 ─────────────────────────────────────────────────
+def analyze_url(url):
+    """分析 URL 結構，不連線、不開啟目標網站。"""
+    from urllib.parse import urlparse
+    import ipaddress
+
+    findings = []
+    try:
+        parsed = urlparse(url.strip().rstrip('.,);]'))
+        host = (parsed.hostname or '').lower()
+        if not host:
+            return findings
+
+        try:
+            ipaddress.ip_address(host)
+            findings.append('URL 使用 IP 位址')
+        except ValueError:
+            pass
+
+        if '@' in parsed.netloc:
+            findings.append('URL 含有 @，可能隱藏真正目的地')
+
+        if host.startswith('xn--') or '.xn--' in host:
+            findings.append('網域含有 Punycode')
+
+        suspicious_tlds = ('.xyz', '.top', '.click', '.zip', '.mov', '.work', '.biz')
+        if any(host.endswith(tld) for tld in suspicious_tlds):
+            findings.append('使用較高風險網域後綴')
+
+        if len(url) > 100:
+            findings.append('URL 過長')
+
+        if host.count('.') >= 4:
+            findings.append('子網域層級過深')
+
+        shorteners = {
+            'bit.ly', 'tinyurl.com', 't.co', 'is.gd', 'goo.gl',
+            'ow.ly', 'buff.ly', 'rebrand.ly', 'cutt.ly'
+        }
+        if host in shorteners:
+            findings.append('使用短網址服務')
+
+        suspicious_words = [
+            'login', 'verify', 'secure', 'update', 'account',
+            'password', 'signin', 'confirm', 'wallet'
+        ]
+        if any(w in (host + parsed.path).lower() for w in suspicious_words):
+            findings.append('URL 含有登入或驗證誘導字樣')
+
+    except Exception:
+        findings.append('URL 格式異常')
+
+    return findings
+
+
 def rule_based_score(text):
-    score = 0; triggered = []; t = text.lower()
-    urgent = ['urgent','immediately','expire','suspended','verify now','act now',
-              '立即','緊急','即將停用','馬上','限時','暫停','停用']
+    score = 0
+    triggered = []
+    t = (text or '').lower()
+
+    urgent = [
+        'urgent', 'immediately', 'expire', 'suspended', 'verify now', 'act now',
+        '立即', '緊急', '即將停用', '馬上', '限時', '暫停', '停用'
+    ]
     hits = [w for w in urgent if w in t]
-    if hits: score += len(hits)*2; triggered.append(f'緊急語句: {hits}')
-    urls = re.findall(r'http[s]?://\S+', t)
-    if urls: score += 3; triggered.append(f'含有連結: {urls[:2]}')
-    for url in urls:
-        for d in ['xyz','biz','click','login-','secure-','verify','update','account-','bank-']:
-            if d in url: score += 3; triggered.append(f'可疑網域: {url}'); break
-    bait = ['free','winner','won','prize','claim','lucky','reward','gift',
-            '中獎','免費','領取','恭喜','退款','補助']
+    if hits:
+        score += len(hits) * 2
+        triggered.append(f'緊急語句: {hits}')
+
+    urls = re.findall(r'https?://[^\s<>"\']+', t)
+    if urls:
+        score += min(3 + len(urls), 8)
+        triggered.append(f'含有連結: {urls[:2]}')
+
+        for url in urls[:10]:
+            url_findings = analyze_url(url)
+            if url_findings:
+                score += min(len(url_findings) * 2, 8)
+                triggered.append(f'URL 風險: {url_findings[:4]}')
+
+    bait = [
+        'free', 'winner', 'won', 'prize', 'claim', 'lucky', 'reward', 'gift',
+        '中獎', '免費', '領取', '恭喜', '退款', '補助'
+    ]
     hits2 = [w for w in bait if w in t]
-    if hits2: score += len(hits2)*2; triggered.append(f'誘騙話術: {hits2}')
-    personal = ['password','credit card','bank account','pin',
-                '密碼','帳號','信用卡','身分證','帳戶']
+    if hits2:
+        score += len(hits2) * 2
+        triggered.append(f'誘騙話術: {hits2}')
+
+    personal = [
+        'password', 'credit card', 'bank account', 'pin',
+        '密碼', '帳號', '信用卡', '身分證', '帳戶'
+    ]
     hits3 = [w for w in personal if w in t]
-    if hits3: score += len(hits3)*3; triggered.append(f'索取個資: {hits3}')
-    money = ['$','cash','money','transfer','wire','payment','invoice',
-             '匯款','轉帳','付款','NT$','退款']
+    if hits3:
+        score += len(hits3) * 3
+        triggered.append(f'索取個資: {hits3}')
+
+    money = [
+        '$', 'cash', 'money', 'transfer', 'wire', 'payment', 'invoice',
+        '匯款', '轉帳', '付款', 'NT$', '退款'
+    ]
     hits4 = [w for w in money if w in t]
-    if hits4: score += len(hits4)*2; triggered.append(f'金錢相關: {hits4}')
+    if hits4:
+        score += len(hits4) * 2
+        triggered.append(f'金錢相關: {hits4}')
+
     return score, triggered
+
 
 def ai_agent_analyze(text, rule_score, triggered_rules):
     rules_str = ', '.join(triggered_rules) if triggered_rules else 'none'
     prompt = (
-        "You are a cybersecurity analyst. Analyze this message and reply ONLY with JSON.\n"
-        f"Message: {text}\nRule score: {rule_score}, Triggered: {rules_str}\n"
+        "You are a cybersecurity analyst. Analyze this email and reply ONLY with JSON.\\n"
+        f"Message: {text}\\n"
+        f"Deterministic rule score: {rule_score}, Triggered evidence: {rules_str}\\n"
+        "Do not invent URLs, sender facts, or technical evidence.\\n"
         'JSON: {"risk_level":"high/medium/low","risk_score":0-100,'
         '"category":"釣魚信件/詐騙簡訊/正常信件/商業詐騙",'
         '"suspicious_points":["點1","點2"],'
@@ -843,51 +968,178 @@ def ai_agent_analyze(text, rule_score, triggered_rules):
         '"recommended_action":"繁體中文建議"}'
     )
     try:
+        if not GROQ_API_KEY:
+            raise RuntimeError('GROQ_API_KEY 未設定')
         resp = groq_client.chat.completions.create(
             model='llama-3.3-70b-versatile',
-            messages=[{'role': 'user', 'content': prompt}], temperature=0.2)
-        raw = resp.choices[0].message.content.strip().replace('```json','').replace('```','').strip()
-        return json.loads(raw)
+            messages=[{'role': 'user', 'content': prompt}],
+            temperature=0.2
+        )
+        raw = resp.choices[0].message.content.strip()
+        raw = raw.replace('```json', '').replace('```', '').strip()
+        result = json.loads(raw)
+
+        result['risk_score'] = float(result.get('risk_score', 0))
+        result['suspicious_points'] = result.get('suspicious_points', []) or []
+        return result
     except Exception as e:
-        return {'risk_level': 'low', 'risk_score': 0, 'category': '分析失敗',
-                'suspicious_points': [], 'explanation': str(e),
-                'recommended_action': '請手動檢查'}
+        return {
+            'risk_level': 'unknown',
+            'risk_score': None,
+            'category': '分析失敗',
+            'suspicious_points': [],
+            'explanation': f'AI 深度分析暫時失敗：{e}',
+            'recommended_action': '請依規則與 ML 結果人工檢查，不要直接點擊信件中的連結。'
+        }
+
 
 def analyze_html(html_content):
-    findings = []; score = 0
+    findings = []
+    score = 0
     soup = BeautifulSoup(html_content, 'html.parser')
+
     links = soup.find_all('a', href=True)
     for link in links:
         href = link.get('href', '')
-        for d in ['xyz','biz','secure-','login-','verify']:
-            if d in href.lower(): score += 3; findings.append(('可疑連結',[href[:50]])); break
-    trackers = [img.get('src','')[:50] for img in soup.find_all('img')
-                if str(img.get('width','')) in ['1','0']]
-    if trackers: findings.append(('像素追蹤', trackers[:2])); score += len(trackers)*2
-    hidden = soup.find_all(style=re.compile(r'display\s*:\s*none', re.I))
-    if hidden: findings.append(('隱藏元素',[f'{len(hidden)} 個'])); score += 3
-    found_brands = [b for b in ['paypal','microsoft','apple','amazon','facebook','netflix']
-                    if b in soup.get_text().lower()]
-    if found_brands: findings.append(('品牌偵測',[', '.join(found_brands)])); score += 4
+        text_label = link.get_text(' ', strip=True)
+
+        url_findings = analyze_url(href)
+        if url_findings:
+            score += min(len(url_findings) * 3, 10)
+            findings.append(('URL 結構風險', url_findings[:4]))
+
+        # 顯示文字與實際連結網域不同時提高風險。
+        visible_urls = re.findall(r'https?://[^\s<>"\']+', text_label.lower())
+        if visible_urls:
+            from urllib.parse import urlparse
+            try:
+                visible_host = urlparse(visible_urls[0]).hostname or ''
+                actual_host = urlparse(href).hostname or ''
+                if visible_host and actual_host and visible_host.lower() != actual_host.lower():
+                    score += 6
+                    findings.append(('偽裝連結', [f'{visible_host} → {actual_host}']))
+            except Exception:
+                pass
+
+    trackers = [
+        img.get('src', '')[:80]
+        for img in soup.find_all('img')
+        if str(img.get('width', '')).lower() in ['1', '0']
+        or str(img.get('height', '')).lower() in ['1', '0']
+    ]
+    if trackers:
+        findings.append(('像素追蹤', trackers[:2]))
+        score += min(len(trackers) * 2, 8)
+
+    hidden = soup.find_all(style=re.compile(r'display\\s*:\\s*none|visibility\\s*:\\s*hidden', re.I))
+    if hidden:
+        findings.append(('隱藏元素', [f'{len(hidden)} 個']))
+        score += 3
+
+    forms = soup.find_all('form')
+    password_inputs = soup.find_all('input', attrs={'type': re.compile(r'password', re.I)})
+    if forms:
+        findings.append(('表單元素', [f'{len(forms)} 個']))
+        score += 3
+    if password_inputs:
+        findings.append(('密碼輸入欄位', [f'{len(password_inputs)} 個']))
+        score += 5
+
+    found_brands = [
+        b for b in ['paypal', 'microsoft', 'apple', 'amazon', 'facebook', 'netflix', 'google']
+        if b in soup.get_text(' ').lower()
+    ]
+    if found_brands:
+        findings.append(('品牌偵測', [', '.join(found_brands)]))
+        score += 2
+
     return score, findings
 
-def full_pipeline(text, html=''):
-    score, rules = rule_based_score(text)
-    vec = vectorizer.transform([text])
-    spam_prob = model.predict_proba(vec)[0][list(model.classes_).index('spam')]
-    html_score, html_findings = (0, [])
-    if html: html_score, html_findings = analyze_html(html)
-    total = score + (html_score // 2)
-    if total >= 4 or spam_prob >= 0.3:
-        report = ai_agent_analyze(text, total, rules)
+
+def calculate_risk_score(rule_score, spam_prob, html_score, llm_score=None):
+    """固定融合規則、ML、HTML 與 LLM，避免單一模型直接決定最終分數。"""
+    rule_component = min(rule_score * 5, 100)
+    html_component = min(html_score * 8, 100)
+    ml_component = max(0, min(float(spam_prob) * 100, 100))
+
+    components = [
+        (0.35, rule_component),
+        (0.35, ml_component),
+        (0.15, html_component)
+    ]
+
+    if llm_score is not None:
+        components.append((0.15, max(0, min(float(llm_score), 100))))
     else:
-        report = {'risk_level':'low','risk_score':int(spam_prob*100),
-                  'category':'正常信件','explanation':'安全信件',
-                  'recommended_action':'可安全閱讀','suspicious_points':[]}
+        # LLM 未啟用時，把其權重平均分配給規則與 ML。
+        components = [
+            (0.425, rule_component),
+            (0.425, ml_component),
+            (0.15, html_component)
+        ]
+
+    return int(round(sum(weight * value for weight, value in components)))
+
+
+def apply_risk_level(report, final_score):
+    final_score = max(0, min(int(final_score), 100))
+    report['risk_score'] = final_score
+
+    if final_score >= 70:
+        report['risk_level'] = 'high'
+    elif final_score >= 40:
+        report['risk_level'] = 'medium'
+    else:
+        report['risk_level'] = 'low'
+
+    return report
+
+
+def full_pipeline(text, html=''):
+    rule_score, rules = rule_based_score(text)
+
+    vec = vectorizer.transform([text])
+    spam_index = list(model.classes_).index('spam')
+    spam_prob = float(model.predict_proba(vec)[0][spam_index])
+
+    html_score, html_findings = (0, [])
+    if html:
+        html_score, html_findings = analyze_html(html)
+
+    # 有明顯證據才呼叫 LLM，降低不必要 API 成本。
+    should_call_llm = (
+        rule_score >= 4 or
+        spam_prob >= 0.30 or
+        html_score >= 4
+    )
+
+    if should_call_llm:
+        report = ai_agent_analyze(text, rule_score, rules)
+        llm_score = report.get('risk_score')
+    else:
+        report = {
+            'risk_level': 'low',
+            'risk_score': None,
+            'category': '正常信件',
+            'explanation': '目前規則與 ML 模型未發現明顯異常訊號。',
+            'recommended_action': '可正常閱讀，但仍不建議點擊未知連結。',
+            'suspicious_points': []
+        }
+        llm_score = None
+
+    # 最終風險分數由固定公式融合，不直接採用 LLM 自己的分數。
+    final_score = calculate_risk_score(
+        rule_score, spam_prob, html_score, llm_score
+    )
+    report = apply_risk_level(report, final_score)
+
     for cat, items in html_findings:
         for item in items:
-            report['suspicious_points'].append(f'[HTML] {cat}: {item}')
-    return report, html_score, html_findings, score, spam_prob
+            report.setdefault('suspicious_points', []).append(
+                f'[HTML] {cat}: {item}'
+            )
+
+    return report, html_score, html_findings, rule_score, spam_prob
 
 def gen_ir(email_data, report):
     incident_id = f"IR-{datetime.now().strftime('%Y%m%d')}-{str(uuid.uuid4())[:6].upper()}"
@@ -942,7 +1194,7 @@ def get_html(msg):
 
 # ── Flask ─────────────────────────────────────────────────────
 app = Flask(__name__)
-app.secret_key = 'phishing2024elegant'
+app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'dev-only-change-me')
 _state = {}
 _creds = {}
 _scans = {}
@@ -1175,7 +1427,7 @@ def result(scan_id):
     def make_item(e, idx):
         dot = {'high':'dot-high','medium':'dot-med','low':'dot-low','wl':'dot-wl'}.get(e['level'],'dot-wl')
         score_text = f"{e['risk_score']}/100 · {e['category']}" if e['risk_score'] >= 0 else '白名單 · 略過分析'
-        return (f'<div class="email-item" onclick="showDetail({idx})">'
+        return (f'<div class="email-item" data-idx="{idx}" onclick="showDetail({idx}, this)">'
                 f'<div class="risk-dot {dot}"></div>'
                 f'<div class="item-body">'
                 f'<div class="item-subj">{e["subject"]}</div>'
@@ -1196,7 +1448,8 @@ def result(scan_id):
 
     # 把資料注入 JS
     import html as html_lib
-    emails_json = json.dumps(all_emails, ensure_ascii=False)
+    emails_json = json.dumps(all_emails, ensure_ascii=False).replace(
+        '<', '\\u003c').replace('>', '\\u003e').replace('&', '\\u0026')
 
     page = RESULT_HTML.replace('LIST_PLACEHOLDER', list_html)
     page = page.replace('PLACEHOLDER_DATA', emails_json)
