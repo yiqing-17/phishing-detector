@@ -254,6 +254,11 @@ html, body {
   box-sizing: border-box;
 }
 .banner-icon { font-size: 13px; flex-shrink: 0; }
+.paste-link { display: inline-block; font-size: 12.5px; color: var(--text-muted);
+              text-decoration: none; margin-top: -28px; margin-bottom: 36px;
+              border-bottom: 1px dashed var(--border-accent); padding-bottom: 1px;
+              transition: color 0.2s ease; }
+.paste-link:hover { color: var(--text-main); }
 </style>
 
 <div class="landing-container">
@@ -282,6 +287,8 @@ html, body {
       </svg>
       使用 Google 帳號授權
     </a>
+
+    <a href="/paste" class="paste-link">或直接貼上郵件內容分析 →</a>
 
     <div class="features-grid">
       <div class="feature-card">
@@ -358,6 +365,67 @@ setInterval(() => {
     <div class="step"><div class="step-dot"></div>AI 深度分析中...</div>
     <div class="step"><div class="step-dot"></div>產生報告...</div>
   </div>
+</div>
+"""
+
+# ── 貼上郵件內容分析 HTML（免登入）───────────────────────────
+PASTE_HTML = COMMON_CSS + """
+<style>
+.paste-wrap { max-width: 640px; margin: 0 auto; padding: 40px 20px 60px; }
+.paste-title { font-size: 22px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+.paste-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 28px; line-height: 1.6; }
+.field-label { font-size: 12px; color: var(--text-dim); margin-bottom: 6px;
+               display: block; letter-spacing: 0.03em; }
+.field-input, .field-textarea {
+  width: 100%; background: var(--bg-card); border: 1px solid var(--border-subtle);
+  border-radius: 8px; color: var(--text-main); font-size: 13.5px;
+  padding: 10px 14px; margin-bottom: 18px; font-family: inherit;
+}
+.field-input:focus, .field-textarea:focus { outline: none; border-color: var(--border-accent); }
+.field-textarea { resize: vertical; min-height: 140px; line-height: 1.6; }
+.field-hint { font-size: 11px; color: var(--text-dim); margin: -12px 0 18px; }
+.submit-btn {
+  background: #ffffff; color: #1f2937; font-size: 14px; font-weight: 600;
+  padding: 11px 26px; border-radius: 8px; border: none; cursor: pointer;
+  transition: all 0.2s ease;
+}
+.submit-btn:hover { background: #f1f5f9; transform: translateY(-1px); }
+.err-box { background: var(--red-bg); border: 1px solid var(--red-border);
+           color: var(--red); font-size: 12.5px; padding: 10px 14px;
+           border-radius: 8px; margin-bottom: 18px; }
+</style>
+
+<div class="hdr">
+  <div class="hdr-left">
+    <span class="shield-icon">🛡️</span>
+    <h1>AI 釣魚信件偵測系統 — 貼上分析</h1>
+  </div>
+  <div class="hdr-nav"><a href="/">回首頁</a></div>
+  <span class="proj-tag">PROJ-2026</span>
+</div>
+
+<div class="paste-wrap">
+  <div class="paste-title">貼上郵件內容進行分析</div>
+  <div class="paste-sub">不需要 Google 帳號授權，將郵件的寄件者、主旨與內文貼上即可，系統會以相同的三層式（規則引擎 + ML + LLaMA 3.3）架構進行分析。</div>
+
+  ERROR_PLACEHOLDER
+
+  <form method="POST" action="/paste_analyze">
+    <label class="field-label">寄件者（選填，用於白名單比對）</label>
+    <input class="field-input" type="text" name="sender" placeholder="例如：service@example.com">
+
+    <label class="field-label">主旨</label>
+    <input class="field-input" type="text" name="subject" placeholder="郵件主旨">
+
+    <label class="field-label">郵件內文（必填）</label>
+    <textarea class="field-textarea" name="body" placeholder="貼上郵件的純文字內容..." required></textarea>
+
+    <label class="field-label">HTML 原始碼（選填，用於偵測像素追蹤／偽裝連結等）</label>
+    <textarea class="field-textarea" name="html" placeholder="若有郵件的 HTML 原始碼，可貼於此處以啟用多模態偵測..."></textarea>
+    <div class="field-hint">在大部分信箱可透過「顯示原始郵件 / 檢視原始碼」取得 HTML 內容。</div>
+
+    <button class="submit-btn" type="submit">開始分析</button>
+  </form>
 </div>
 """
 
@@ -1018,6 +1086,81 @@ def scan_status():
     if scan_id and scan_id in _scans:
         return jsonify({'done': _scans[scan_id].get('done',False), 'scan_id': scan_id})
     return jsonify({'done': False, 'scan_id': ''})
+
+@app.route('/paste')
+def paste_page():
+    return PASTE_HTML.replace('ERROR_PLACEHOLDER', '')
+
+@app.route('/paste_analyze', methods=['POST'])
+def paste_analyze():
+    sender  = request.form.get('sender', '').strip() or '(未提供寄件者)'
+    subject = request.form.get('subject', '').strip() or '(無主旨)'
+    body    = request.form.get('body', '').strip()
+    html    = request.form.get('html', '').strip()
+
+    if not body:
+        err = '<div class="err-box">請貼上郵件內文再送出。</div>'
+        return PASTE_HTML.replace('ERROR_PLACEHOLDER', err)
+
+    text = f"From: {sender}\nSubject: {subject}\nBody: {body}"
+
+    try:
+        if is_whitelisted(sender):
+            entry = {'level': 'wl', 'risk_score': -1, 'subject': subject[:55],
+                     'sender': sender[:60], 'explanation': '來自白名單寄件者，系統判定為安全。',
+                     'action': '可安全閱讀', 'tags': [], 'scores': [],
+                     'category': '白名單安全信件', 'ir': None}
+            high = med = low = 0
+            wl = 1
+        else:
+            report, html_score, html_findings, rule_score, spam_prob = full_pipeline(text, html)
+            html_tags = [cat for cat, _ in html_findings[:3]]
+            tags = report.get('suspicious_points', [])[:5]
+            entry = {
+                'level': report['risk_level'],
+                'risk_score': report['risk_score'],
+                'subject': subject[:55],
+                'sender': sender[:60],
+                'explanation': report.get('explanation', '')[:200],
+                'action': report.get('recommended_action', '')[:120],
+                'tags': tags,
+                'scores': [
+                    ['規則引擎', f'{rule_score}分'],
+                    ['ML 機率', f'{spam_prob:.1%}'],
+                    ['HTML', f'+{html_score}分']
+                ],
+                'category': report.get('category', ''),
+                'ir': None
+            }
+            high = med = low = wl = 0
+            if report['risk_level'] == 'high':
+                ir_id, ir_detail = gen_ir({'sender': sender, 'subject': subject}, report)
+                entry['ir'] = {
+                    'id': ir_id,
+                    'severity': ir_detail.get('severity', 'High'),
+                    'impact': ir_detail.get('impact_assessment', '')[:150],
+                    'actions': ir_detail.get('immediate_actions', [])[:3]
+                }
+                high = 1
+            elif report['risk_level'] == 'medium':
+                med = 1
+            else:
+                low = 1
+
+        scan_id = str(uuid.uuid4())[:8]
+        _scans[scan_id] = {
+            'done': True,
+            'all_emails': [entry],
+            'high': high, 'med': med, 'low': low, 'wl': wl, 'skipped': 0,
+            'total': 1
+        }
+        scan_time = datetime.now().strftime('%Y-%m-%d %H:%M')
+        save_scan(scan_id, scan_time, 1, ['x'] * high, ['x'] * med, ['x'] * low, wl, 0)
+        return redirect(f'/result/{scan_id}')
+    except Exception:
+        import traceback
+        err = f'<div class="err-box"><pre>{traceback.format_exc()}</pre></div>'
+        return PASTE_HTML.replace('ERROR_PLACEHOLDER', err)
 
 @app.route('/result/<scan_id>')
 def result(scan_id):
