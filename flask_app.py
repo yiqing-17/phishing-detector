@@ -3,6 +3,7 @@
 # ============================================================
 
 import json, os, uuid, threading, base64, re, sqlite3, smtplib
+import joblib
 from datetime import datetime
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -831,16 +832,33 @@ def get_history():
     conn.close()
     return rows
 
-# ── ML 模型 ──────────────────────────────────────────────────
-print('訓練 ML 模型...')
-_url = 'https://raw.githubusercontent.com/justmarkham/pycon-2016-tutorial/master/data/sms.tsv'
-df = pd.read_csv(_url, sep='\t', header=None, names=['label', 'text'])
-X_train, X_test, y_train, y_test = train_test_split(
-    df['text'], df['label'], test_size=0.2, random_state=42, stratify=df['label'])
-vectorizer = TfidfVectorizer(max_features=3000, stop_words='english')
-X_train_vec = vectorizer.fit_transform(X_train)
-model = LogisticRegression(max_iter=1000, random_state=42)
-model.fit(X_train_vec, y_train)
+# ── ML 模型：Phishing Email Dataset ───────────────────────────
+# V5 不再使用 SMS Spam/ham 資料。
+# 模型由 train_phishing_model.py 預先訓練後，以 joblib 載入。
+MODEL_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'models')
+MODEL_PATH = os.path.join(MODEL_DIR, 'phishing_model.joblib')
+VECTORIZER_PATH = os.path.join(MODEL_DIR, 'phishing_tfidf.joblib')
+METRICS_PATH = os.path.join(MODEL_DIR, 'phishing_metrics.json')
+
+model = None
+vectorizer = None
+model_metrics = {}
+
+try:
+    if os.path.exists(MODEL_PATH) and os.path.exists(VECTORIZER_PATH):
+        model = joblib.load(MODEL_PATH)
+        vectorizer = joblib.load(VECTORIZER_PATH)
+        if os.path.exists(METRICS_PATH):
+            with open(METRICS_PATH, 'r', encoding='utf-8') as f:
+                model_metrics = json.load(f)
+        print('OK - Phishing Email ML 模型已載入')
+    else:
+        print('WARNING - 尚未找到 Phishing Email ML 模型，ML 分析將暫停。請先執行 train_phishing_model.py')
+except Exception as e:
+    model = None
+    vectorizer = None
+    print(f'WARNING - ML 模型載入失敗：{e}')
+
 groq_client = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
 print('OK - 模型就緒' if GROQ_API_KEY else 'WARNING - Groq API Key 未設定，將跳過 LLM 深度分析')
 
@@ -1098,9 +1116,14 @@ def apply_risk_level(report, final_score):
 def full_pipeline(text, html=''):
     rule_score, rules = rule_based_score(text)
 
-    vec = vectorizer.transform([text])
-    spam_index = list(model.classes_).index('spam')
-    spam_prob = float(model.predict_proba(vec)[0][spam_index])
+    # ML 模型使用 1 = phishing、0 = legitimate。
+    if model is not None and vectorizer is not None:
+        vec = vectorizer.transform([text])
+        classes = list(model.classes_)
+        phishing_index = classes.index(1) if 1 in classes else classes.index('1')
+        spam_prob = float(model.predict_proba(vec)[0][phishing_index])
+    else:
+        spam_prob = 0.0
 
     html_score, html_findings = (0, [])
     if html:
