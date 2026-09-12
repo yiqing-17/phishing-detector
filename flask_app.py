@@ -1226,14 +1226,41 @@ _scans = {}
 def index():
     return HOME_HTML
 
+def create_google_flow(state=None):
+    """建立 Google OAuth Flow。優先使用環境變數，沒有才讀 credentials.json。"""
+    redirect_uri = f'{BASE_URL}/callback'
+    if GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET:
+        config = {
+            'web': {
+                'client_id': GOOGLE_CLIENT_ID,
+                'project_id': GOOGLE_PROJECT_ID,
+                'auth_uri': 'https://accounts.google.com/o/oauth2/auth',
+                'token_uri': 'https://oauth2.googleapis.com/token',
+                'auth_provider_x509_cert_url': 'https://www.googleapis.com/oauth2/v1/certs',
+                'client_secret': GOOGLE_CLIENT_SECRET,
+                'redirect_uris': [redirect_uri]
+            }
+        }
+        return Flow.from_client_config(config, scopes=SCOPES,
+                                       redirect_uri=redirect_uri, state=state)
+
+    if os.path.exists('credentials.json'):
+        return Flow.from_client_secrets_file(
+            'credentials.json', scopes=SCOPES,
+            redirect_uri=redirect_uri, state=state)
+
+    raise RuntimeError(
+        '找不到 Google OAuth 設定。請設定 GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET，'
+        '或放置 credentials.json。'
+    )
+
 @app.route('/login')
 def login():
     import secrets, hashlib, base64 as _b64
     cv = secrets.token_urlsafe(64)
     cc = _b64.urlsafe_b64encode(hashlib.sha256(cv.encode()).digest()).rstrip(b'=').decode()
     _state['code_verifier'] = cv
-    flow = Flow.from_client_secrets_file('credentials.json', scopes=SCOPES,
-                                          redirect_uri=f'{BASE_URL}/callback')
+    flow = create_google_flow()
     auth_url, state = flow.authorization_url(prompt='consent', access_type='offline',
                                               code_challenge=cc, code_challenge_method='S256')
     _state['current'] = state
@@ -1242,8 +1269,7 @@ def login():
 @app.route('/callback')
 def callback():
     try:
-        flow = Flow.from_client_secrets_file('credentials.json', scopes=SCOPES,
-            redirect_uri=f'{BASE_URL}/callback', state=_state.get('current',''))
+        flow = create_google_flow(state=_state.get('current',''))
         auth_resp = request.url.replace('http://','https://')
         flow.fetch_token(authorization_response=auth_resp,
                          code_verifier=_state.get('code_verifier',''))
