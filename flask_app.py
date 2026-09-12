@@ -989,7 +989,7 @@ def ai_agent_analyze(text, rule_score, triggered_rules):
         if not GROQ_API_KEY:
             raise RuntimeError('GROQ_API_KEY 未設定')
         resp = groq_client.chat.completions.create(
-            model='llama-3.3-70b-versatile',
+            model='openai/gpt-oss-120b',
             messages=[{'role': 'user', 'content': prompt}],
             temperature=0.2
         )
@@ -1175,7 +1175,7 @@ def gen_ir(email_data, report):
     )
     try:
         resp = groq_client.chat.completions.create(
-            model='llama-3.3-70b-versatile',
+            model='openai/gpt-oss-120b',
             messages=[{'role':'user','content':prompt}], temperature=0.2)
         raw = resp.choices[0].message.content.strip().replace('```json','').replace('```','').strip()
         ir = json.loads(raw)
