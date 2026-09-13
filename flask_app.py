@@ -1,5 +1,5 @@
 # ============================================================
-# AI 釣魚信件偵測系統 - Flask 網頁版 v3（暗色優雅風格）
+# AI 釣魚信件偵測系統 - Flask 網頁版 v8（可疑特徵解釋版）
 # ============================================================
 
 import json, os, uuid, threading, base64, re, sqlite3, smtplib
@@ -314,7 +314,7 @@ html, body {
       <div class="feature-card">
         <div class="feature-icon">🔍</div>
         <h3>三層式智慧分析</h3>
-        <p>規則引擎 + ML + LLaMA 3.3 深度分析</p>
+        <p>規則引擎 + ML + HTML / URL + AI 深度分析</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">🌐</div>
@@ -426,7 +426,7 @@ PASTE_HTML = COMMON_CSS + """
 
 <div class="paste-wrap">
   <div class="paste-title">貼上郵件內容進行分析</div>
-  <div class="paste-sub">不需要 Google 帳號授權，將郵件的寄件者、主旨與內文貼上即可，系統會以相同的三層式（規則引擎 + ML + LLaMA 3.3）架構進行分析。</div>
+  <div class="paste-sub">不需要 Google 帳號授權，將郵件的寄件者、主旨與內文貼上即可，系統會以相同的三層式（規則引擎 + ML + HTML / URL + AI）架構進行分析。</div>
 
   ERROR_PLACEHOLDER
 
@@ -496,20 +496,37 @@ RESULT_HTML = COMMON_CSS + """
 .badge-med  { background: var(--orange-bg); color: var(--orange); border: 1px solid var(--orange-border); }
 .badge-low  { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
 .badge-wl   { background: var(--bg-card); color: var(--text-muted); border: 1px solid var(--border-subtle); }
+
 .detail-subj { font-size: 20px; font-weight: 700; color: #ffffff;
                 margin-bottom: 6px; letter-spacing: -0.3px; line-height: 1.3; }
 .detail-from { font-size: 12px; color: var(--text-muted); margin-bottom: 22px; }
 .gold-line { width: 100%; height: 1px; background: var(--border-subtle); margin: 18px 0; }
 .sec-label { font-size: 10px; color: var(--text-dim); letter-spacing: 0.08em;
-             text-transform: uppercase; margin-bottom: 8px; font-weight: 600; }
+              text-transform: uppercase; margin-bottom: 8px; font-weight: 600; }
 .detail-text { font-size: 13.5px; color: #e2e8f0; line-height: 1.7; }
 .tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
 .htag { font-size: 11px; color: var(--orange); background: var(--orange-bg);
         padding: 3px 8px; border-radius: 4px; border: 1px solid var(--orange-border); }
-.score-row { display: flex; gap: 20px; margin-top: 12px; }
-.score-item { font-size: 12px; color: var(--text-muted); }
-.score-item span { color: var(--text-main); font-weight: 600; }
-.divider { height: 1px; background: var(--border-subtle); margin: 20px 0; }
+
+.layer-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 14px; }
+.layer-card { background: rgba(15, 23, 42, 0.45); border: 1px solid var(--border-subtle);
+               border-radius: 9px; padding: 13px 14px; }
+.layer-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+.layer-name { font-size: 12px; color: var(--text-main); font-weight: 600; }
+.layer-score { font-size: 12px; color: var(--text-main); font-weight: 700; }
+.layer-status { font-size: 11px; color: var(--text-muted); margin-bottom: 7px; line-height: 1.45; }
+.bar { height: 5px; background: rgba(255,255,255,.06); border-radius: 99px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 99px; background: var(--blue); transition: width .25s ease; }
+.layer-meta { display: flex; justify-content: space-between; gap: 8px; margin-top: 7px; font-size: 10px; color: var(--text-dim); }
+
+.evidence-box { margin-top: 14px; background: rgba(15,23,42,.32); border: 1px solid var(--border-subtle);
+                border-radius: 9px; padding: 14px 16px; }
+.evidence-title { font-size: 12px; color: var(--text-main); font-weight: 600; margin-bottom: 9px; }
+.evidence-list { display: flex; flex-direction: column; gap: 6px; }
+.evidence-item { font-size: 12px; color: var(--text-muted); line-height: 1.55; padding-left: 13px; position: relative; }
+.evidence-item::before { content: ''; position: absolute; left: 0; top: 8px; width: 5px; height: 5px; border-radius: 50%; background: var(--orange); }
+.fusion-note { margin-top: 12px; font-size: 10.5px; color: var(--text-dim); }
+
 .recommend { font-size: 13px; color: var(--text-main); background: var(--bg-card);
              border: 1px solid var(--border-subtle); border-radius: 8px;
              padding: 14px 18px; line-height: 1.6; }
@@ -526,6 +543,36 @@ RESULT_HTML = COMMON_CSS + """
                 height: 100%; color: var(--text-dim); font-size: 13px;
                 flex-direction: column; gap: 10px; }
 .empty-icon { font-size: 32px; opacity: 0.4; }
+
+.why-box { margin-top: 14px; }
+.why-title { font-size: 13px; color: var(--text-main); font-weight: 700; margin-bottom: 10px; }
+.why-list { display: flex; flex-direction: column; gap: 8px; }
+.why-item { display: flex; gap: 10px; align-items: flex-start; padding: 11px 12px;
+            border: 1px solid var(--border-subtle); border-radius: 8px;
+            background: rgba(15,23,42,.3); }
+.why-badge { min-width: 42px; text-align: center; font-size: 9px; font-weight: 700;
+             border-radius: 4px; padding: 3px 5px; margin-top: 1px; }
+.why-high { color: var(--red); background: var(--red-bg); border: 1px solid var(--red-border); }
+.why-medium { color: var(--orange); background: var(--orange-bg); border: 1px solid var(--orange-border); }
+.why-low { color: var(--green); background: var(--green-bg); border: 1px solid var(--green-border); }
+.why-content { min-width: 0; }
+.why-source { font-size: 10px; color: var(--text-dim); margin-bottom: 2px; }
+.why-head { font-size: 12px; color: var(--text-main); font-weight: 600; margin-bottom: 3px; }
+.why-detail { font-size: 11.5px; color: var(--text-muted); line-height: 1.5; word-break: break-word; }
+
+@media (max-width: 900px) {
+  .summary { overflow-x: auto; }
+  .stat { min-width: 95px; padding: 12px 14px; }
+  .main { height: auto; min-height: calc(100vh - 120px); }
+  .left { width: 280px; }
+  .right { padding: 22px 20px; }
+}
+@media (max-width: 680px) {
+  .main { display: block; }
+  .left { width: 100%; max-height: 310px; border-right: none; border-bottom: 1px solid var(--border-subtle); }
+  .right { min-height: 520px; }
+  .layer-grid { grid-template-columns: 1fr; }
+}
 </style>
 
 <script>
@@ -541,24 +588,87 @@ function showDetail(idx, element) {
   const d = emailData[idx];
   if (!d) return;
 
-  // 切換左側清單高亮選取狀態
   document.querySelectorAll('.email-item').forEach(el => el.classList.remove('active'));
   if (element) {
     element.classList.add('active');
   } else {
-    // 若沒有傳入 element，預設為對應 index 的第一個元素
     const target = document.querySelector(`.email-item[data-idx="${idx}"]`);
     if (target) target.classList.add('active');
   }
 
-  // 渲染右側詳細面板內容
   const panel = document.getElementById('right-panel');
   let badgeClass = d.level === 'high' ? 'badge-high' : d.level === 'medium' ? 'badge-med' : d.level === 'low' ? 'badge-low' : 'badge-wl';
   let badgeText = d.level === 'high' ? '🚨 高風險' : d.level === 'medium' ? '⚠️ 中風險' : d.level === 'low' ? '✅ 安全' : '🔒 白名單';
   let scoreStr = d.risk_score >= 0 ? ` &nbsp;·&nbsp; ${d.risk_score} / 100` : '';
 
-  let tagsHtml = d.tags && d.tags.length ? `<div class="tag-row">${d.tags.map(t=>`<span class="htag">${escapeHtml(t)}</span>`).join('')}</div>` : '';
-  let scoresHtml = d.scores ? `<div class="score-row">${d.scores.map(s=>`<div class="score-item">${escapeHtml(s[0])} <span>${escapeHtml(s[1])}</span></div>`).join('')}</div>` : '';
+  const layers = d.layers || {};
+  const layerOrder = ['rule', 'ml', 'html', 'llm'];
+  const layerIcons = {rule:'🔍', ml:'🤖', html:'🌐', llm:'🧠'};
+
+  let layerHtml = '';
+  let evidenceHtml = '';
+
+  layerOrder.forEach(key => {
+    const x = layers[key];
+    if (!x) return;
+
+    const score = x.score == null ? 0 : Math.max(0, Math.min(100, Number(x.score)));
+    const scoreText = x.score == null ? '—' : `${Number(x.score).toFixed(0)} / 100`;
+    const meta = key === 'ml' && x.probability != null
+      ? `釣魚機率 ${Number(x.probability).toFixed(1)}%`
+      : `融合權重 ${Number(x.weight || 0).toFixed(1)}%`;
+
+    layerHtml += `
+      <div class="layer-card">
+        <div class="layer-head">
+          <div class="layer-name">${layerIcons[key]} ${escapeHtml(x.name)}</div>
+          <div class="layer-score">${scoreText}</div>
+        </div>
+        <div class="layer-status">${escapeHtml(x.status || '—')}</div>
+        <div class="bar"><div class="bar-fill" style="width:${score}%"></div></div>
+        <div class="layer-meta"><span>${escapeHtml(meta)}</span><span>${key === 'llm' && x.score == null ? '未提供分數' : '分析完成'}</span></div>
+      </div>`;
+  });
+
+  layerOrder.forEach(key => {
+    const x = layers[key];
+    if (!x || !x.findings || !x.findings.length) return;
+
+    const items = x.findings.slice(0, 6).map(v =>
+      `<div class="evidence-item">${escapeHtml(v)}</div>`
+    ).join('');
+
+    evidenceHtml += `
+      <div class="evidence-box">
+        <div class="evidence-title">${layerIcons[key]} ${escapeHtml(x.name)} — 偵測證據</div>
+        <div class="evidence-list">${items}</div>
+      </div>`;
+  });
+
+  const explainable = d.explainable_findings || [];
+  const whyHtml = explainable.length ? `
+    <div class="why-box">
+      <div class="why-title">🔎 為什麼會被判定為可疑？</div>
+      <div class="why-list">
+        ${explainable.map(x => {
+          const cls = x.severity === 'high' ? 'why-high' : x.severity === 'low' ? 'why-low' : 'why-medium';
+          const label = x.severity === 'high' ? '高風險' : x.severity === 'low' ? '低風險' : '注意';
+          return `<div class="why-item">
+            <div class="why-badge ${cls}">${label}</div>
+            <div class="why-content">
+              <div class="why-source">${escapeHtml(x.source || '')}</div>
+              <div class="why-head">${escapeHtml(x.title || '')}</div>
+              <div class="why-detail">${escapeHtml(x.detail || '')}</div>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>` : '';
+
+  let tagsHtml = d.tags && d.tags.length
+    ? `<div class="tag-row">${d.tags.map(t=>`<span class="htag">${escapeHtml(t)}</span>`).join('')}</div>`
+    : '';
+
   let irHtml = d.ir ? `
     <div class="ir-box">
       <div class="ir-label">IR 事件通報報告已自動產生</div>
@@ -571,11 +681,22 @@ function showDetail(idx, element) {
     <span class="detail-badge ${badgeClass}">${badgeText}${scoreStr}</span>
     <div class="detail-subj">${escapeHtml(d.subject)}</div>
     <div class="detail-from">來自：${escapeHtml(d.sender)}</div>
+
     <div class="gold-line"></div>
+
+    <div class="sec-label">多層式智慧分析</div>
+    <div class="layer-grid">${layerHtml}</div>
+    ${d.fusion_formula ? `<div class="fusion-note">風險融合公式：${escapeHtml(d.fusion_formula)}。最終分數由系統固定公式計算，不直接採用單一模型結果。</div>` : ''}
+
+    <div class="gold-line"></div>
+
     <div class="sec-label">AI 分析說明</div>
     <div class="detail-text">${escapeHtml(d.explanation || '—')}</div>
     ${tagsHtml}
-    ${scoresHtml}
+    ${whyHtml}
+
+    ${evidenceHtml}
+
     <div class="divider"></div>
     <div class="sec-label">建議行動</div>
     <div class="recommend">${escapeHtml(d.action || '—')}</div>
@@ -1011,6 +1132,126 @@ def ai_agent_analyze(text, rule_score, triggered_rules):
         }
 
 
+def build_explainable_findings(rules, html_findings, spam_prob, report):
+    """把各分析層的原始證據整理成使用者看得懂的「為什麼可疑」。"""
+    findings = []
+
+    for item in rules or []:
+        s = str(item)
+        if s.startswith('緊急語句'):
+            findings.append({
+                'severity': 'high',
+                'source': '規則引擎',
+                'title': '偵測到緊急／施壓語句',
+                'detail': s
+            })
+        elif s.startswith('索取個資'):
+            findings.append({
+                'severity': 'high',
+                'source': '規則引擎',
+                'title': '出現帳號或敏感資訊要求',
+                'detail': s
+            })
+        elif s.startswith('URL 風險'):
+            findings.append({
+                'severity': 'high',
+                'source': 'URL 分析',
+                'title': '連結具有可疑結構',
+                'detail': s
+            })
+        elif s.startswith('含有連結'):
+            findings.append({
+                'severity': 'medium',
+                'source': '規則引擎',
+                'title': '郵件包含外部連結',
+                'detail': s
+            })
+        elif s.startswith('誘騙話術'):
+            findings.append({
+                'severity': 'medium',
+                'source': '規則引擎',
+                'title': '偵測到誘因／獎勵型話術',
+                'detail': s
+            })
+        elif s.startswith('金錢相關'):
+            findings.append({
+                'severity': 'high',
+                'source': '規則引擎',
+                'title': '出現金錢或付款相關內容',
+                'detail': s
+            })
+        else:
+            findings.append({
+                'severity': 'medium',
+                'source': '規則引擎',
+                'title': '偵測到可疑文字特徵',
+                'detail': s
+            })
+
+    for category, items in html_findings or []:
+        for item in items[:3]:
+            title = {
+                'URL 結構風險': 'URL 結構存在風險',
+                '偽裝連結': '顯示網址與實際連結不一致',
+                '像素追蹤': '發現可能的追蹤像素',
+                '隱藏元素': 'HTML 含有隱藏元素',
+                '表單元素': '郵件內含表單',
+                '密碼輸入欄位': '郵件內含密碼輸入欄位'
+            }.get(category, f'HTML 偵測到{category}')
+            findings.append({
+                'severity': 'high' if category in ('偽裝連結', '密碼輸入欄位') else 'medium',
+                'source': 'HTML / URL',
+                'title': title,
+                'detail': f'{category}：{item}'
+            })
+
+    if spam_prob >= 0.70:
+        findings.append({
+            'severity': 'high',
+            'source': 'ML 模型',
+            'title': '模型高度偏向釣魚信件',
+            'detail': f'釣魚信件機率為 {spam_prob:.1%}。此結果代表模型在目前輸入文字上的分類傾向，並非單獨作為最終判定。'
+        })
+    elif spam_prob >= 0.30:
+        findings.append({
+            'severity': 'medium',
+            'source': 'ML 模型',
+            'title': '模型偏向釣魚信件',
+            'detail': f'釣魚信件機率為 {spam_prob:.1%}，需要搭配其他分析層判斷。'
+        })
+    else:
+        findings.append({
+            'severity': 'low',
+            'source': 'ML 模型',
+            'title': '模型未明顯偏向釣魚信件',
+            'detail': f'釣魚信件機率為 {spam_prob:.1%}，仍會搭配規則與 HTML / URL 分析。'
+        })
+
+    # LLM 的理由保留為「AI 輔助說明」，避免把 LLM 生成內容誤標成確定技術證據。
+    llm_points = report.get('suspicious_points', []) or []
+    for point in llm_points[:5]:
+        point = str(point)
+        if point.startswith('[HTML]'):
+            continue
+        findings.append({
+            'severity': 'medium',
+            'source': 'AI 深度分析',
+            'title': 'AI 輔助判讀',
+            'detail': point
+        })
+
+    # 去除完全重複項目，最多保留 10 個，讓畫面不會過長。
+    unique = []
+    seen = set()
+    for item in findings:
+        key = (item['source'], item['title'], item['detail'])
+        if key not in seen:
+            seen.add(key)
+            unique.append(item)
+
+    return unique[:10]
+
+
 def analyze_html(html_content):
     findings = []
     score = 0
@@ -1150,17 +1391,76 @@ def full_pipeline(text, html=''):
         }
         llm_score = None
 
+    # 保存各層的「原始證據」與「融合用分數」。
+    rule_component = min(rule_score * 5, 100)
+    ml_component = max(0, min(float(spam_prob) * 100, 100))
+    html_component = min(html_score * 8, 100)
+    llm_component = None if llm_score is None else max(0, min(float(llm_score), 100))
+
     # 最終風險分數由固定公式融合，不直接採用 LLM 自己的分數。
     final_score = calculate_risk_score(
         rule_score, spam_prob, html_score, llm_score
     )
     report = apply_risk_level(report, final_score)
 
+    # 將 HTML 證據加入可疑特徵。
     for cat, items in html_findings:
         for item in items:
             report.setdefault('suspicious_points', []).append(
                 f'[HTML] {cat}: {item}'
             )
+
+    # 給前端的「為什麼可疑」證據清單。
+    report['explainable_findings'] = build_explainable_findings(
+        rules, html_findings, spam_prob, report
+    )
+
+    # 給前端的多層分析資料。
+    report['analysis_layers'] = {
+        'rule': {
+            'name': '規則引擎',
+            'score': round(rule_component, 1),
+            'raw_score': rule_score,
+            'weight': 42.5 if llm_score is None else 35,
+            'status': '偵測到可疑規則' if rules else '未發現明顯規則異常',
+            'findings': rules[:6]
+        },
+        'ml': {
+            'name': 'ML 模型',
+            'score': round(ml_component, 1),
+            'probability': round(spam_prob * 100, 1),
+            'weight': 42.5 if llm_score is None else 35,
+            'status': '高度偏向釣魚信件' if spam_prob >= 0.7 else ('偏向釣魚信件' if spam_prob >= 0.3 else '偏向正常信件'),
+            'findings': [
+                f'釣魚信件機率：{spam_prob:.1%}'
+            ]
+        },
+        'html': {
+            'name': 'HTML / URL',
+            'score': round(html_component, 1),
+            'raw_score': html_score,
+            'weight': 15,
+            'status': '偵測到 HTML / URL 風險' if html_findings else '未發現明顯 HTML / URL 異常',
+            'findings': [
+                f'{cat}：{item}'
+                for cat, items in html_findings[:6]
+                for item in items[:2]
+            ]
+        },
+        'llm': {
+            'name': 'AI 深度分析',
+            'score': round(llm_component, 1) if llm_component is not None else None,
+            'weight': 15 if llm_score is not None else 0,
+            'status': 'AI 分析完成' if llm_score is not None else '本次未呼叫或分析失敗',
+            'findings': report.get('suspicious_points', [])[:6]
+        }
+    }
+
+    report['fusion_formula'] = (
+        '規則 35% + ML 35% + HTML 15% + AI 15%'
+        if llm_score is not None
+        else '規則 42.5% + ML 42.5% + HTML 15%'
+    )
 
     return report, html_score, html_findings, rule_score, spam_prob
 
@@ -1336,6 +1636,9 @@ def do_scan(token_data, scan_id):
                     ['ML 機率', f'{spam_prob:.1%}'],
                     ['HTML', f'+{html_score}分']
                 ],
+                'layers': report.get('analysis_layers', {}),
+                'fusion_formula': report.get('fusion_formula', ''),
+                'explainable_findings': report.get('explainable_findings', []),
                 'category': report.get('category',''),
                 'ir': None
             }
@@ -1430,6 +1733,9 @@ def paste_analyze():
                     ['ML 機率', f'{spam_prob:.1%}'],
                     ['HTML', f'+{html_score}分']
                 ],
+                'layers': report.get('analysis_layers', {}),
+                'fusion_formula': report.get('fusion_formula', ''),
+                'explainable_findings': report.get('explainable_findings', []),
                 'category': report.get('category', ''),
                 'ir': None
             }
