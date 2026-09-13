@@ -147,6 +147,8 @@ body {
   margin-bottom: 20px; transition: all 0.2s ease; 
 }
 .back:hover { color: var(--text-main); border-color: var(--border-accent); background: var(--bg-hover); }
+
+.score-breakdown{margin-top:14px;padding:14px;border:1px solid #dbe3ef;border-radius:12px;background:#f8fafc}.score-breakdown h4{margin:0 0 10px}.score-row{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid #e8edf3;font-size:13px}.score-total{margin-top:10px;font-weight:700}
 </style>
 """
 
@@ -555,6 +557,15 @@ RESULT_HTML = COMMON_CSS + """
 .why-high { color: var(--red); background: var(--red-bg); border: 1px solid var(--red-border); }
 .why-medium { color: var(--orange); background: var(--orange-bg); border: 1px solid var(--orange-border); }
 .why-low { color: var(--green); background: var(--green-bg); border: 1px solid var(--green-border); }
+
+.safety-box { margin-top: 14px; padding: 14px 16px; border-radius: 10px;
+              background: var(--bg-card); border: 1px solid var(--border-subtle); }
+.safety-title { font-size: 12px; font-weight: 600; color: var(--text-main); margin-bottom: 9px; }
+.safety-list { display: flex; flex-direction: column; gap: 7px; }
+.safety-item { display: flex; gap: 8px; font-size: 11.5px; color: var(--text-muted); line-height: 1.55; }
+.safety-num { width: 18px; height: 18px; border-radius: 50%; border: 1px solid var(--border-subtle);
+              display: inline-flex; align-items: center; justify-content: center; flex: 0 0 18px;
+              font-size: 10px; color: var(--text-dim); }
 .why-content { min-width: 0; }
 .why-source { font-size: 10px; color: var(--text-dim); margin-bottom: 2px; }
 .why-head { font-size: 12px; color: var(--text-main); font-weight: 600; margin-bottom: 3px; }
@@ -669,6 +680,15 @@ function showDetail(idx, element) {
     ? `<div class="tag-row">${d.tags.map(t=>`<span class="htag">${escapeHtml(t)}</span>`).join('')}</div>`
     : '';
 
+  const safetyActions = d.safety_actions || [];
+  const safetyHtml = safetyActions.length ? `
+    <div class="safety-box">
+      <div class="safety-title">🛡️ 安全處置建議</div>
+      <div class="safety-list">
+        ${safetyActions.map((x, i) => `<div class="safety-item"><span class="safety-num">${i + 1}</span><span>${escapeHtml(x)}</span></div>`).join('')}
+      </div>
+    </div>` : '';
+
   let irHtml = d.ir ? `
     <div class="ir-box">
       <div class="ir-label">IR 事件通報報告已自動產生</div>
@@ -687,6 +707,7 @@ function showDetail(idx, element) {
     <div class="sec-label">多層式智慧分析</div>
     <div class="layer-grid">${layerHtml}</div>
     ${d.fusion_formula ? `<div class="fusion-note">風險融合公式：${escapeHtml(d.fusion_formula)}。最終分數由系統固定公式計算，不直接採用單一模型結果。</div>` : ''}
+      ${d.risk_breakdown ? `<div class="score-breakdown"><h4>📊 分數組成</h4>${d.risk_breakdown.components.map(x => `<div class="score-row"><span>${escapeHtml(x.name)}</span><span>${x.score.toFixed(1)} × ${x.weight}% = ${x.contribution.toFixed(1)}</span></div>`).join('')}<div class="score-total">公式計算值：${d.risk_breakdown.raw_total.toFixed(1)} → 最終 ${d.risk_breakdown.rounded_final}/100</div></div>` : ''}
 
     <div class="gold-line"></div>
 
@@ -700,6 +721,7 @@ function showDetail(idx, element) {
     <div class="divider"></div>
     <div class="sec-label">建議行動</div>
     <div class="recommend">${escapeHtml(d.action || '—')}</div>
+    ${safetyHtml}
     ${irHtml}
   `;
 }
@@ -1340,6 +1362,66 @@ def calculate_risk_score(rule_score, spam_prob, html_score, llm_score=None):
     return int(round(sum(weight * value for weight, value in components)))
 
 
+
+def build_risk_breakdown(rule_score, spam_prob, html_score, llm_score=None):
+    rule_component = min(max(float(rule_score), 0) * 5, 100)
+    ml_component = max(0, min(float(spam_prob) * 100, 100))
+    html_component = min(max(float(html_score), 0) * 8, 100)
+
+    if llm_score is not None:
+        llm_component = max(0, min(float(llm_score), 100))
+        rows = [
+            ('規則引擎', rule_component, 35.0),
+            ('ML 模型', ml_component, 35.0),
+            ('HTML / URL', html_component, 15.0),
+            ('AI 深度分析', llm_component, 15.0),
+        ]
+    else:
+        llm_component = None
+        rows = [
+            ('規則引擎', rule_component, 42.5),
+            ('ML 模型', ml_component, 42.5),
+            ('HTML / URL', html_component, 15.0),
+        ]
+
+    total = sum(score * weight / 100 for _, score, weight in rows)
+    return {
+        'components': [
+            {
+                'name': name,
+                'score': round(score, 2),
+                'weight': weight,
+                'contribution': round(score * weight / 100, 2)
+            }
+            for name, score, weight in rows
+        ],
+        'raw_total': round(total, 2),
+        'rounded_final': int(round(total)),
+        'llm_used': llm_component is not None,
+        'thresholds': {'low': '< 40', 'medium': '40 - 69', 'high': '>= 70'}
+    }
+
+
+def run_risk_score_self_test():
+    cases = [
+        ('zero', calculate_risk_score(0, 0, 0, None), 0),
+        ('maximum_without_llm', calculate_risk_score(20, 1, 13, None), 100),
+        ('maximum_with_llm', calculate_risk_score(20, 1, 13, 100), 100),
+        ('ml_50pct_without_llm', calculate_risk_score(0, 0.5, 0, None), 21),
+        ('llm_100pct', calculate_risk_score(0, 0, 0, 100), 15),
+    ]
+    results = []
+    for name, actual, expected in cases:
+        results.append({'name': name, 'actual': actual, 'expected': expected, 'passed': actual == expected})
+
+    level_cases = [(39, 'low'), (40, 'medium'), (69, 'medium'), (70, 'high'), (100, 'high')]
+    for score, expected in level_cases:
+        report = apply_risk_level({}, score)
+        results.append({'name': f'level_{score}', 'actual': report['risk_level'], 'expected': expected, 'passed': report['risk_level'] == expected})
+
+    return results
+
+
 def apply_risk_level(report, final_score):
     final_score = max(0, min(int(final_score), 100))
     report['risk_score'] = final_score
@@ -1353,6 +1435,41 @@ def apply_risk_level(report, final_score):
 
     return report
 
+
+
+def build_safety_actions(risk_level, rules=None, html_findings=None, category=''):
+    """依風險等級與偵測特徵產生可直接執行的安全處置建議。"""
+    rules = rules or []
+    html_findings = html_findings or []
+    high_signal = any(
+        str(x).startswith(('緊急語句', '索取個資', 'URL 風險', '金錢相關'))
+        for x in rules
+    )
+    has_phishing_link = any(cat in ('URL 結構風險', '偽裝連結', '密碼輸入欄位')
+                            for cat, _ in html_findings)
+
+    if risk_level == 'high':
+        actions = [
+            '不要點擊郵件中的連結、附件，也不要回覆或提供帳號密碼。',
+            '將郵件標記為垃圾郵件／釣魚郵件，並依組織規範進行通報或隔離。',
+            '若需要確認通知內容，請自行開啟官方網站或使用既有官方聯絡方式，不要使用郵件提供的連結。'
+        ]
+        if high_signal or has_phishing_link:
+            actions.append('若已輸入密碼或敏感資訊，請立即從官方網站變更密碼並檢查帳號安全設定。')
+        return actions
+
+    if risk_level == 'medium':
+        actions = [
+            '先不要點擊連結或開啟附件，確認寄件者與郵件內容是否合理。',
+            '若涉及帳號、付款或驗證，請透過官方網站或其他可信管道獨立確認。',
+            '不確定時可將郵件標記為垃圾郵件／釣魚郵件，並請管理者或資安人員協助判斷。'
+        ]
+        return actions
+
+    return [
+        '目前未發現明顯高風險訊號，但仍不建議點擊未知來源的連結或附件。',
+        '若郵件要求提供密碼、付款或敏感資訊，請改用官方管道再次確認。'
+    ]
 
 def full_pipeline(text, html=''):
     rule_score, rules = rule_based_score(text)
@@ -1402,6 +1519,15 @@ def full_pipeline(text, html=''):
         rule_score, spam_prob, html_score, llm_score
     )
     report = apply_risk_level(report, final_score)
+    report['risk_breakdown'] = build_risk_breakdown(
+        rule_score, spam_prob, html_score, llm_score
+    )
+    report['score_validation'] = {
+        'formula_total': report['risk_breakdown']['raw_total'],
+        'final_score': final_score,
+        'consistent': report['risk_breakdown']['rounded_final'] == final_score,
+        'threshold_rule': '高風險 >= 70；中風險 40-69；低風險 < 40'
+    }
 
     # 將 HTML 證據加入可疑特徵。
     for cat, items in html_findings:
@@ -1413,6 +1539,11 @@ def full_pipeline(text, html=''):
     # 給前端的「為什麼可疑」證據清單。
     report['explainable_findings'] = build_explainable_findings(
         rules, html_findings, spam_prob, report
+    )
+
+    # 依最終風險產生可執行的安全處置建議。
+    report['safety_actions'] = build_safety_actions(
+        report['risk_level'], rules, html_findings, report.get('category', '')
     )
 
     # 給前端的多層分析資料。
@@ -1639,6 +1770,7 @@ def do_scan(token_data, scan_id):
                 'layers': report.get('analysis_layers', {}),
                 'fusion_formula': report.get('fusion_formula', ''),
                 'explainable_findings': report.get('explainable_findings', []),
+                'safety_actions': report.get('safety_actions', []),
                 'category': report.get('category',''),
                 'ir': None
             }
@@ -1736,6 +1868,7 @@ def paste_analyze():
                 'layers': report.get('analysis_layers', {}),
                 'fusion_formula': report.get('fusion_formula', ''),
                 'explainable_findings': report.get('explainable_findings', []),
+                'safety_actions': report.get('safety_actions', []),
                 'category': report.get('category', ''),
                 'ir': None
             }
