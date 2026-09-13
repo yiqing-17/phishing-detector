@@ -1,5 +1,5 @@
 # ============================================================
-# AI 釣魚信件偵測系統 - Flask 網頁版 v14（Gmail OAuth 與掃描測試版）
+# AI 釣魚信件偵測系統 - Flask 網頁版 v18（首頁 UI 優化版）
 # ============================================================
 
 import json, os, uuid, threading, base64, re, sqlite3, smtplib
@@ -150,6 +150,163 @@ body {
 
 .score-breakdown{margin-top:14px;padding:16px 18px;border:1px solid var(--border-subtle);border-radius:12px;background:var(--bg-card);color:var(--text-main);box-shadow:0 8px 24px rgba(0,0,0,.12)}
 .score-breakdown h4{margin:0 0 12px;color:var(--text-main);font-size:14px;font-weight:600;letter-spacing:.2px}.score-row{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:9px 0;border-bottom:1px solid var(--border-subtle);font-size:13px;color:var(--text-muted)}.score-row span:first-child{color:var(--text-main)!important;font-weight:500}.score-row span:last-child{color:var(--text-muted)!important;text-align:right;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}.score-total{margin-top:12px;padding-top:2px;font-weight:600;color:var(--text-main)}
+
+/* STEP 12：分析結果頁 UI 優化 */
+.result-hero{
+    background:linear-gradient(135deg,rgba(30,41,59,.96),rgba(15,23,42,.98));
+    border:1px solid rgba(148,163,184,.20);
+    border-radius:22px;
+    padding:28px;
+    margin-bottom:22px;
+    box-shadow:0 12px 35px rgba(0,0,0,.22);
+}
+.result-hero-grid{
+    display:grid;
+    grid-template-columns:180px 1fr;
+    gap:28px;
+    align-items:center;
+}
+.risk-score-box{
+    min-height:150px;
+    border:1px solid rgba(148,163,184,.24);
+    border-radius:20px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    background:rgba(2,6,23,.52);
+}
+.risk-score-number{
+    font-size:52px;
+    line-height:1;
+    font-weight:800;
+    letter-spacing:-2px;
+}
+.risk-score-label{
+    margin-top:9px;
+    color:#94a3b8;
+    font-size:13px;
+}
+.result-title{
+    margin:0 0 10px;
+    font-size:25px;
+    line-height:1.4;
+    word-break:break-word;
+}
+.result-meta{
+    color:#94a3b8;
+    font-size:14px;
+    line-height:1.8;
+}
+.result-focus{
+    margin-top:18px;
+    padding:14px 16px;
+    border-radius:14px;
+    background:rgba(15,23,42,.75);
+    border-left:3px solid #64748b;
+}
+.result-focus strong{
+    display:block;
+    margin-bottom:7px;
+    color:#e2e8f0;
+}
+.result-focus ul{
+    margin:0;
+    padding-left:20px;
+    color:#cbd5e1;
+}
+.result-section{
+    margin-top:22px;
+}
+.result-section-title{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    margin:0 0 13px;
+    font-size:19px;
+}
+.layer-grid{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:15px;
+}
+.layer-card{
+    min-width:0;
+    border:1px solid rgba(148,163,184,.17);
+    background:rgba(15,23,42,.78);
+    border-radius:17px;
+    padding:18px;
+    transition:transform .18s ease,border-color .18s ease;
+}
+.layer-card:hover{
+    transform:translateY(-2px);
+    border-color:rgba(148,163,184,.35);
+}
+.layer-card-top{
+    display:flex;
+    justify-content:space-between;
+    gap:12px;
+    align-items:flex-start;
+}
+.layer-card-name{
+    font-weight:700;
+    color:#f1f5f9;
+}
+.layer-card-score{
+    font-weight:800;
+    white-space:nowrap;
+}
+.layer-card-desc{
+    margin:8px 0 13px;
+    color:#94a3b8;
+    font-size:13px;
+    line-height:1.6;
+}
+.layer-bar{
+    height:7px;
+    background:#1e293b;
+    border-radius:999px;
+    overflow:hidden;
+}
+.layer-bar-fill{
+    height:100%;
+    border-radius:999px;
+    background:currentColor;
+}
+.result-panel{
+    border:1px solid rgba(148,163,184,.17);
+    background:rgba(15,23,42,.78);
+    border-radius:17px;
+    padding:20px;
+}
+.result-panel + .result-panel{
+    margin-top:15px;
+}
+.finding-list{
+    display:grid;
+    gap:10px;
+}
+.finding-item{
+    padding:13px 15px;
+    border-radius:12px;
+    background:rgba(30,41,59,.66);
+    color:#cbd5e1;
+    line-height:1.65;
+}
+.finding-item::before{
+    content:"•";
+    margin-right:8px;
+    color:#94a3b8;
+}
+@media(max-width:760px){
+    .result-hero{padding:20px;}
+    .result-hero-grid{grid-template-columns:1fr;gap:18px;}
+    .risk-score-box{min-height:125px;}
+    .risk-score-number{font-size:46px;}
+    .layer-grid{grid-template-columns:1fr;}
+    .result-title{font-size:21px;}
+}
+
 </style>
 """
 
@@ -282,6 +439,31 @@ html, body {
               border-bottom: 1px dashed var(--border-accent); padding-bottom: 1px;
               transition: color 0.2s ease; }
 .paste-link:hover { color: var(--text-main); }
+
+.home-status-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin: 0 0 16px;
+  color: var(--text-dim);
+  font-size: 10.5px;
+}
+.status-item { display: inline-flex; align-items: center; gap: 5px; }
+.status-item span { color: var(--green); font-size: 9px; }
+.feature-card { transition: transform .2s ease, border-color .2s ease, background .2s ease; }
+.feature-card:hover { transform: translateY(-2px); border-color: var(--border-accent); background: var(--bg-hover); }
+.google-btn-white { min-width: 230px; justify-content: center; }
+@media (max-width: 700px) {
+  html, body { overflow: auto !important; height: auto; min-height: 100%; }
+  .landing-container { min-height: 100vh; height: auto; }
+  .hdr { padding: 14px 18px; }
+  .main-content { padding: 42px 18px 36px; }
+  .title { font-size: 28px; }
+  .features-grid { grid-template-columns: 1fr; gap: 10px; }
+  .whitelist-banner { line-height: 1.6; }
+}
 </style>
 
 <div class="landing-container">
@@ -296,9 +478,9 @@ html, body {
   </div>
 
   <div class="main-content">
-    <h1 class="title">一鍵掃描你的 Gmail</h1>
+    <h1 class="title">安全掃描 Gmail，快速找出可疑郵件</h1>
     <p class="subtitle">
-      授權後系統自動掃描最新 15 封信件，用 AI 識別釣魚攻擊並產生詳細分析報告。
+      授權 Google 後掃描最新 15 封郵件，結合規則、機器學習、URL / HTML 與 AI 分析，快速找出可疑信件。
     </p>
 
     <a href="/login" class="google-btn-white">
@@ -308,32 +490,39 @@ html, body {
         <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.29C.47 8.21 0 10.05 0 12s.47 3.79 1.29 5.42l3.99-3.15z"/>
         <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.58l3.99 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
       </svg>
-      使用 Google 帳號授權
+      使用 Google 帳號開始掃描
     </a>
 
-    <a href="/paste" class="paste-link">或直接貼上郵件內容分析 →</a>
+    <a href="/paste" class="paste-link">不想連接 Gmail？直接貼上郵件內容分析 →</a>
 
     <div class="features-grid">
       <div class="feature-card">
-        <div class="feature-icon">🔍</div>
-        <h3>三層式智慧分析</h3>
-        <p>規則引擎 + ML + HTML / URL + AI 深度分析</p>
+        <div class="feature-icon">🧠</div>
+        <h3>多層智慧分析</h3>
+        <p>規則引擎、ML、HTML / URL 與 AI 交叉判讀</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon">🌐</div>
-        <h3>HTML 多模態</h3>
-        <p>偵測像素追蹤、偽裝連結、隱藏元素</p>
+        <div class="feature-icon">🔗</div>
+        <h3>可疑特徵解析</h3>
+        <p>分析連結、追蹤像素、隱藏元素與敏感資訊要求</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon">📄</div>
-        <h3>IR 事件報告</h3>
-        <p>高風險信件自動產生資安事件通報</p>
+        <div class="feature-icon">🛡️</div>
+        <h3>資安事件處置</h3>
+        <p>高風險信件提供處置建議與 IR 事件資訊</p>
       </div>
+    </div>
+
+    <div class="home-status-row">
+      <div class="status-item"><span>●</span> Gmail OAuth</div>
+      <div class="status-item"><span>●</span> ML 模型</div>
+      <div class="status-item"><span>●</span> URL / HTML</div>
+      <div class="status-item"><span>●</span> AI 輔助判讀</div>
     </div>
 
     <div class="whitelist-banner">
       <span class="banner-icon">✅</span>
-      <div><strong>白名單機制已啟用：</strong> SKIMS、lululemon、Alo Yoga、玉山銀行、Google 等已知安全寄件者將直接標記為安全，不進行 AI 分析。</div>
+      <div><strong>白名單機制已啟用：</strong> 已知安全網域可直接標記為安全，避免重複進行分析。</div>
     </div>
   </div>
 </div>
@@ -356,7 +545,7 @@ LOADING_HTML = COMMON_CSS + """
 .step.active .step-dot { background: var(--blue); box-shadow: 0 0 8px var(--blue); }
 </style>
 <script>
-const stepLabels = ['連線 Gmail...','讀取最新信件...','規則引擎分析中...','AI 深度分析中...','產生報告...'];
+const stepLabels = ['連線 Gmail...','讀取最新信件...','規則引擎分析中...','AI 深度分析中...','整理分析結果...'];
 let i = 0;
 setInterval(() => {
   if (i < stepLabels.length) {
@@ -386,7 +575,7 @@ setInterval(() => {
     <div class="step"><div class="step-dot"></div>讀取最新信件...</div>
     <div class="step"><div class="step-dot"></div>規則引擎分析中...</div>
     <div class="step"><div class="step-dot"></div>AI 深度分析中...</div>
-    <div class="step"><div class="step-dot"></div>產生報告...</div>
+    <div class="step"><div class="step-dot"></div>整理分析結果...</div>
   </div>
 </div>
 """
@@ -933,7 +1122,7 @@ document.addEventListener('DOMContentLoaded', () => {
 <div class="container">
   <a href="/" class="back">← 返回首頁</a>
   <div class="page-title">白名單設定</div>
-  <p class="page-sub">加入白名單後，來自該網域的信件將直接標記為安全，不進行 AI 分析。</p>
+  <p class="page-sub">加入白名單後，來自該網域及其子網域的信件將直接標記為安全，不進行 AI 分析。請只加入確定可信任的網域。</p>
 
   <div class="add-row">
     <input type="text" id="domain-input" placeholder="輸入網域，例如：example.com">
@@ -986,6 +1175,23 @@ def extract_sender_domain(sender):
     if '@' not in email_addr:
         return ''
     return email_addr.rsplit('@', 1)[1].strip().rstrip('.')
+
+def normalize_whitelist_domain(value):
+    """正規化白名單網域，只接受純網域名稱。"""
+    value = (value or '').strip().lower()
+    value = re.sub(r'^https?://', '', value)
+    value = value.split('/', 1)[0].split('?', 1)[0].split('#', 1)[0]
+    value = value.rstrip('.')
+    if ':' in value:
+        return ''
+    if not re.fullmatch(r'[a-z0-9](?:[a-z0-9.-]{0,251}[a-z0-9])?', value):
+        return ''
+    if '.' not in value or '..' in value or value.startswith('.'):
+        return ''
+    labels = value.split('.')
+    if any(not x or len(x) > 63 or x.startswith('-') or x.endswith('-') for x in labels):
+        return ''
+    return value
 
 def is_whitelisted(sender):
     domain = extract_sender_domain(sender)
@@ -2117,26 +2323,37 @@ def whitelist_page():
 
 @app.route('/whitelist/add', methods=['POST'])
 def whitelist_add():
-    domain = request.get_json().get('domain','').strip().lower()
-    if not domain: return jsonify({'success':False,'error':'請輸入網域'})
+    data = request.get_json(silent=True) or {}
+    raw_domain = data.get('domain', '')
+    domain = normalize_whitelist_domain(raw_domain)
+    if not domain:
+        return jsonify({'success':False,'error':'網域格式不正確，請輸入例如 example.com'}), 400
     try:
         conn = sqlite3.connect('phishing.db')
         c = conn.cursor()
         c.execute('INSERT INTO whitelist (domain, added_time) VALUES (?,?)',
                  (domain, datetime.now().isoformat()))
         conn.commit(); conn.close()
-        return jsonify({'success':True})
+        return jsonify({'success':True,'domain':domain})
+    except sqlite3.IntegrityError:
+        return jsonify({'success':False,'error':'這個網域已經在白名單中'})
     except Exception as e:
-        return jsonify({'success':False,'error':str(e)})
+        return jsonify({'success':False,'error':'新增白名單失敗'})
 
 @app.route('/whitelist/delete', methods=['POST'])
 def whitelist_delete():
-    domain = request.get_json().get('domain','')
+    data = request.get_json(silent=True) or {}
+    domain = normalize_whitelist_domain(data.get('domain', ''))
+    if not domain:
+        return jsonify({'success':False,'error':'網域格式不正確'}), 400
+    if domain in DEFAULT_WHITELIST:
+        return jsonify({'success':False,'error':'預設安全網域不建議刪除'}), 400
     conn = sqlite3.connect('phishing.db')
     c = conn.cursor()
     c.execute('DELETE FROM whitelist WHERE domain=?', (domain,))
+    deleted = c.rowcount
     conn.commit(); conn.close()
-    return jsonify({'success':True})
+    return jsonify({'success':True,'deleted':bool(deleted)})
 
 @app.route('/health')
 def health():
