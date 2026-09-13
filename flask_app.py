@@ -541,6 +541,13 @@ RESULT_HTML = COMMON_CSS + """
 .ir-impact { font-size: 12px; color: #a7f3d0; line-height: 1.6; }
 .ir-actions { margin-top: 10px; display: flex; flex-direction: column; gap: 4px; }
 .ir-action { font-size: 12px; color: #93c5fd; }
+.ir-meta { display:grid; grid-template-columns: repeat(3, 1fr); gap:8px; margin-top:12px; }
+.ir-meta-item { background: rgba(15,23,42,.35); border:1px solid var(--border-subtle); border-radius:6px; padding:8px; }
+.ir-meta-label { font-size:9px; color:var(--text-dim); text-transform:uppercase; }
+.ir-meta-value { font-size:11px; color:var(--text-main); margin-top:3px; }
+.ir-section { margin-top:12px; }
+.ir-section-title { font-size:10px; color:var(--text-dim); font-weight:600; margin-bottom:5px; }
+.ir-text { font-size:12px; color:var(--text-muted); line-height:1.6; }
 .empty-detail { display: flex; align-items: center; justify-content: center;
                 height: 100%; color: var(--text-dim); font-size: 13px;
                 flex-direction: column; gap: 10px; }
@@ -593,6 +600,12 @@ function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>"']/g, c => ({
     '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
   }[c]));
+}
+
+function downloadPdf(){
+  const idx = window.currentDetailIndex;
+  if (idx === undefined || idx === null) return;
+  window.location.href = '/report/' + encodeURIComponent(SCAN_ID) + '/' + idx + '/pdf';
 }
 
 function showDetail(idx, element) {
@@ -692,9 +705,18 @@ function showDetail(idx, element) {
   let irHtml = d.ir ? `
     <div class="ir-box">
       <div class="ir-label">IR 事件通報報告已自動產生</div>
+      <button class="pdf-btn" onclick="downloadPdf()">📄 下載 PDF 資安報告</button>
       <div class="ir-id">${escapeHtml(d.ir.id)} &nbsp;|&nbsp; 嚴重等級：${escapeHtml(d.ir.severity)}</div>
       <div class="ir-impact">${escapeHtml(d.ir.impact)}</div>
       ${d.ir.actions && d.ir.actions.length ? `<div class="ir-actions">${d.ir.actions.map(a=>`<div class="ir-action">• ${escapeHtml(a)}</div>`).join('')}</div>` : ''}
+       <div class="ir-meta">
+         <div class="ir-meta-item"><div class="ir-meta-label">Status</div><div class="ir-meta-value">${escapeHtml(d.ir.status || 'Open')}</div></div>
+         <div class="ir-meta-item"><div class="ir-meta-label">Risk</div><div class="ir-meta-value">${escapeHtml(String(d.ir.risk_score ?? '—'))}/100</div></div>
+         <div class="ir-meta-item"><div class="ir-meta-label">Created</div><div class="ir-meta-value">${escapeHtml(d.ir.created_at || '—')}</div></div>
+       </div>
+       <div class="ir-section"><div class="ir-section-title">隔離 / Containment</div><div class="ir-text">${escapeHtml(d.ir.containment || '—')}</div></div>
+       <div class="ir-section"><div class="ir-section-title">驗證 / Verification</div><div class="ir-text">${escapeHtml(d.ir.verification || '—')}</div></div>
+       <div class="ir-section"><div class="ir-section-title">復原 / Recovery</div><div class="ir-text">${escapeHtml(d.ir.recovery || '—')}</div></div>
     </div>` : '';
 
   panel.innerHTML = `
@@ -1597,23 +1619,157 @@ def full_pipeline(text, html=''):
 
 def gen_ir(email_data, report):
     incident_id = f"IR-{datetime.now().strftime('%Y%m%d')}-{str(uuid.uuid4())[:6].upper()}"
+    risk = int(report.get('risk_score', 0))
+    if risk >= 85:
+        default_severity = 'Critical'
+    elif risk >= 70:
+        default_severity = 'High'
+    else:
+        default_severity = 'Medium'
+
+    findings = report.get('explainable_findings', [])[:8]
+    finding_text = '\n'.join(
+        f"- {x.get('title','可疑特徵')}：{x.get('detail','')}" for x in findings
+    ) or '- 未提供額外可疑特徵'
+
     prompt = (
-        "You are a cybersecurity analyst. Reply ONLY with JSON.\n"
-        f"Email from: {email_data['sender']}\nSubject: {email_data['subject']}\n"
-        f"Risk: {report['risk_score']}/100\n"
+        "You are a cybersecurity incident response analyst. Reply ONLY with valid JSON.\n"
+        "Do not invent facts. Base the assessment only on the supplied email and detection evidence.\n"
+        f"Email from: {email_data.get('sender','未知')}\n"
+        f"Subject: {email_data.get('subject','未知')}\n"
+        f"Risk score: {risk}/100\n"
+        f"Detection evidence:\n{finding_text}\n"
         'JSON: {"severity":"Critical/High/Medium","impact_assessment":"繁體中文",'
-        '"immediate_actions":["行動1","行動2","行動3"]}'
+        '"immediate_actions":["行動1","行動2","行動3"],'
+        '"containment":"繁體中文", "verification":"繁體中文", "recovery":"繁體中文"}'
     )
     try:
+        if not groq_client:
+            raise RuntimeError('AI client unavailable')
         resp = groq_client.chat.completions.create(
             model='openai/gpt-oss-120b',
             messages=[{'role':'user','content':prompt}], temperature=0.2)
         raw = resp.choices[0].message.content.strip().replace('```json','').replace('```','').strip()
         ir = json.loads(raw)
-    except:
-        ir = {'severity':'High','impact_assessment':'可能導致個資外洩或財務損失',
-              'immediate_actions':['不要點擊連結','不要提供個資','向資安人員通報']}
+    except Exception:
+        ir = {
+            'severity': default_severity,
+            'impact_assessment': '依目前偵測結果，可能存在帳號遭竊、個資外洩或財務損失風險；實際影響仍需人工確認。',
+            'immediate_actions': ['不要點擊連結或附件', '不要回覆或提供帳號密碼與個資', '依組織流程標記、隔離並通報可疑郵件'],
+            'containment': '先停止與郵件中連結、附件及要求的外部服務互動；若已點擊或輸入資料，應立即通知資安人員。',
+            'verification': '透過官方網站、已知電話或其他可信管道獨立確認寄件者與事件真實性。',
+            'recovery': '若確認已受影響，依組織流程進行密碼重設、工作階段撤銷及必要的帳號與端點檢查。'
+        }
+
+    ir['incident_id'] = incident_id
+    ir['created_at'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    ir['risk_score'] = risk
+    ir['email_sender'] = email_data.get('sender', '')
+    ir['email_subject'] = email_data.get('subject', '')
+    ir['status'] = 'Open'
+    ir.setdefault('severity', default_severity)
+    ir.setdefault('immediate_actions', [])
+    ir.setdefault('containment', '依組織資安事件處理流程進行隔離與通報。')
+    ir.setdefault('verification', '使用可信管道確認事件。')
+    ir.setdefault('recovery', '確認影響範圍後依流程復原。')
     return incident_id, ir
+
+def create_pdf_report(email_data, scan_id, index, entry):
+    """產生單封郵件的 PDF 分析報告。"""
+    from io import BytesIO
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.enums import TA_CENTER
+    from reportlab.pdfbase import pdfmetrics
+    from reportlab.pdfbase.cidfonts import UnicodeCIDFont
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, KeepTogether
+    from reportlab.lib import colors
+
+    try:
+        pdfmetrics.registerFont(UnicodeCIDFont('STSong-Light'))
+    except Exception:
+        pass
+
+    buf = BytesIO()
+    doc = SimpleDocTemplate(buf, pagesize=A4, rightMargin=42, leftMargin=42, topMargin=42, bottomMargin=42)
+    styles = getSampleStyleSheet()
+    font = 'STSong-Light'
+    title = ParagraphStyle('zhTitle', parent=styles['Title'], fontName=font, fontSize=18, leading=24, alignment=TA_CENTER, spaceAfter=16)
+    h2 = ParagraphStyle('zhH2', parent=styles['Heading2'], fontName=font, fontSize=13, leading=18, spaceBefore=10, spaceAfter=7)
+    body = ParagraphStyle('zhBody', parent=styles['BodyText'], fontName=font, fontSize=9.5, leading=15, spaceAfter=5)
+    small = ParagraphStyle('zhSmall', parent=body, fontSize=8.5, leading=13)
+
+    risk = int(entry.get('risk_score', 0))
+    level_map = {'high':'高風險', 'medium':'中風險', 'low':'低風險', 'wl':'白名單'}
+    level = level_map.get(entry.get('level'), entry.get('level', '未知'))
+    story = [
+        Paragraph('AI 釣魚信件偵測系統｜分析報告', title),
+        Paragraph(f'報告編號：{scan_id}-{index+1:02d}', small),
+        Spacer(1, 6),
+        Paragraph('一、郵件資訊', h2)
+    ]
+    info = [
+        ['項目', '內容'],
+        ['寄件者', str(email_data.get('sender','未提供'))],
+        ['主旨', str(email_data.get('subject','無主旨'))],
+        ['風險等級', level],
+        ['風險分數', f'{risk}/100' if risk >= 0 else '白名單'],
+    ]
+    t=Table(info, colWidths=[90, 390], repeatRows=1)
+    t.setStyle(TableStyle([('FONTNAME',(0,0),(-1,-1),font),('FONTSIZE',(0,0),(-1,-1),9),('LEADING',(0,0),(-1,-1),13),('GRID',(0,0),(-1,-1),0.5,colors.grey),('BACKGROUND',(0,0),(-1,0),colors.lightgrey),('VALIGN',(0,0),(-1,-1),'TOP'),('LEFTPADDING',(0,0),(-1,-1),6),('RIGHTPADDING',(0,0),(-1,-1),6),('TOPPADDING',(0,0),(-1,-1),5),('BOTTOMPADDING',(0,0),(-1,-1),5)]))
+    story += [t, Paragraph('二、風險分析', h2)]
+
+    rb = entry.get('risk_breakdown') or {}
+    rows=[['分析層', '分數', '權重', '貢獻']]
+    for c in rb.get('components', []):
+        rows.append([str(c.get('name','')), f"{float(c.get('score',0)):.1f}", f"{c.get('weight',0)}%", f"{float(c.get('contribution',0)):.1f}"])
+    if len(rows)>1:
+        tt=Table(rows, colWidths=[150,90,90,90], repeatRows=1)
+        tt.setStyle(TableStyle([('FONTNAME',(0,0),(-1,-1),font),('FONTSIZE',(0,0),(-1,-1),9),('GRID',(0,0),(-1,-1),0.5,colors.grey),('BACKGROUND',(0,0),(-1,0),colors.lightgrey),('ALIGN',(1,1),(-1,-1),'CENTER'),('VALIGN',(0,0),(-1,-1),'MIDDLE')]))
+        story.append(tt)
+    story.append(Paragraph(f"融合公式：{entry.get('fusion_formula','—')}", small))
+    story.append(Paragraph(f"最終風險分數：{risk}/100", body))
+
+    story.append(Paragraph('三、可疑特徵與分析說明', h2))
+    findings=entry.get('explainable_findings') or []
+    if findings:
+        for x in findings[:10]:
+            story.append(Paragraph(f"• {x.get('title','可疑特徵')}：{x.get('detail','')}", body))
+    else:
+        story.append(Paragraph('未提供額外可疑特徵。', body))
+    story.append(Paragraph(f"AI 分析說明：{entry.get('explanation','—')}", body))
+
+    story.append(Paragraph('四、安全處置建議', h2))
+    actions=entry.get('safety_actions') or []
+    for i,a in enumerate(actions[:8],1):
+        story.append(Paragraph(f'{i}. {a}', body))
+    if not actions:
+        story.append(Paragraph('請依目前風險等級進行人工確認。', body))
+
+    ir=entry.get('ir')
+    if ir:
+        story.append(Paragraph('五、資安事件回應（IR）', h2))
+        ir_rows=[
+            ['事件 ID', str(ir.get('id','—'))],
+            ['嚴重等級', str(ir.get('severity','—'))],
+            ['狀態', str(ir.get('status','Open'))],
+            ['建立時間', str(ir.get('created_at','—'))],
+            ['影響評估', str(ir.get('impact','—'))],
+            ['隔離 / Containment', str(ir.get('containment','—'))],
+            ['驗證 / Verification', str(ir.get('verification','—'))],
+            ['復原 / Recovery', str(ir.get('recovery','—'))],
+        ]
+        it=Table(ir_rows, colWidths=[125,355])
+        it.setStyle(TableStyle([('FONTNAME',(0,0),(-1,-1),font),('FONTSIZE',(0,0),(-1,-1),8.8),('LEADING',(0,0),(-1,-1),13),('GRID',(0,0),(-1,-1),0.5,colors.grey),('BACKGROUND',(0,0),(0,-1),colors.lightgrey),('VALIGN',(0,0),(-1,-1),'TOP'),('LEFTPADDING',(0,0),(-1,-1),6),('RIGHTPADDING',(0,0),(-1,-1),6),('TOPPADDING',(0,0),(-1,-1),5),('BOTTOMPADDING',(0,0),(-1,-1),5)]))
+        story.append(it)
+        if ir.get('actions'):
+            story.append(Spacer(1,6))
+            story.append(Paragraph('立即處置：' + '；'.join(str(x) for x in ir['actions'][:5]), body))
+
+    story += [Spacer(1,12), Paragraph('※ 本報告為 AI 與規則式偵測之輔助結果，不能取代人工資安判斷。請勿因低風險結果而直接信任未知郵件。', small)]
+    doc.build(story)
+    buf.seek(0)
+    return buf
 
 def get_header(msg, name):
     for h in msg['payload']['headers']:
@@ -1769,6 +1925,7 @@ def do_scan(token_data, scan_id):
                 ],
                 'layers': report.get('analysis_layers', {}),
                 'fusion_formula': report.get('fusion_formula', ''),
+                'risk_breakdown': report.get('risk_breakdown', {}),
                 'explainable_findings': report.get('explainable_findings', []),
                 'safety_actions': report.get('safety_actions', []),
                 'category': report.get('category',''),
@@ -1781,7 +1938,13 @@ def do_scan(token_data, scan_id):
                     'id': ir_id,
                     'severity': ir_detail.get('severity','High'),
                     'impact': ir_detail.get('impact_assessment','')[:150],
-                    'actions': ir_detail.get('immediate_actions',[])[:3]
+                    'actions': ir_detail.get('immediate_actions',[])[:3],
+                    'status': ir_detail.get('status','Open'),
+                    'risk_score': ir_detail.get('risk_score', report.get('risk_score',0)),
+                    'created_at': ir_detail.get('created_at',''),
+                    'containment': ir_detail.get('containment',''),
+                    'verification': ir_detail.get('verification',''),
+                    'recovery': ir_detail.get('recovery',''),
                 }
                 high_list.append(entry)
             elif report['risk_level'] == 'medium':
@@ -1867,6 +2030,7 @@ def paste_analyze():
                 ],
                 'layers': report.get('analysis_layers', {}),
                 'fusion_formula': report.get('fusion_formula', ''),
+                'risk_breakdown': report.get('risk_breakdown', {}),
                 'explainable_findings': report.get('explainable_findings', []),
                 'safety_actions': report.get('safety_actions', []),
                 'category': report.get('category', ''),
@@ -1879,7 +2043,14 @@ def paste_analyze():
                     'id': ir_id,
                     'severity': ir_detail.get('severity', 'High'),
                     'impact': ir_detail.get('impact_assessment', '')[:150],
-                    'actions': ir_detail.get('immediate_actions', [])[:3]
+                    'actions': ir_detail.get('immediate_actions', [])[:3],
+                    'status': ir_detail.get('status','Open'),
+                    'risk_score': ir_detail.get('risk_score', report.get('risk_score',0)),
+                    'created_at': ir_detail.get('created_at',''),
+                    'containment': ir_detail.get('containment',''),
+                    'verification': ir_detail.get('verification',''),
+                    'recovery': ir_detail.get('recovery',''),
+
                 }
                 high = 1
             elif report['risk_level'] == 'medium':
@@ -1948,6 +2119,20 @@ def result(scan_id):
     page = page.replace('WL_COUNT',    str(data['wl']))
     page = page.replace('SK_COUNT',    str(data['skipped']))
     return page
+
+@app.route('/report/<scan_id>/<int:index>/pdf')
+def report_pdf(scan_id, index):
+    data = _scans.get(scan_id)
+    if not data or not data.get('done'):
+        return redirect('/')
+    emails = data.get('all_emails', [])
+    if index < 0 or index >= len(emails):
+        return '找不到指定郵件', 404
+    entry = emails[index]
+    email_data = {'sender': entry.get('sender',''), 'subject': entry.get('subject','')}
+    pdf = create_pdf_report(email_data, scan_id, index, entry)
+    filename = f"phishing_report_{scan_id}_{index+1}.pdf"
+    return send_file(pdf, mimetype='application/pdf', as_attachment=True, download_name=filename)
 
 @app.route('/history')
 def history():
