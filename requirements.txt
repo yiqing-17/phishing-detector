@@ -11,3 +11,5 @@ pyngrok
 requests
 gunicorn
 jieba
+reportlab
+joblib
