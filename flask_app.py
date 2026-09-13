@@ -1,5 +1,5 @@
 # ============================================================
-# AI 釣魚信件偵測系統 - Flask 網頁版 v13（PDF與分數組成修正版）
+# AI 釣魚信件偵測系統 - Flask 網頁版 v14（Gmail OAuth 與掃描測試版）
 # ============================================================
 
 import json, os, uuid, threading, base64, re, sqlite3, smtplib
@@ -14,7 +14,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
 from groq import Groq
 from bs4 import BeautifulSoup
-from flask import Flask, redirect, request, render_template_string, jsonify, send_file
+from flask import Flask, redirect, request, render_template_string, jsonify
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
 from google.oauth2.credentials import Credentials
@@ -148,7 +148,8 @@ body {
 }
 .back:hover { color: var(--text-main); border-color: var(--border-accent); background: var(--bg-hover); }
 
-.score-breakdown{margin-top:14px;padding:14px;border:1px solid #dbe3ef;border-radius:12px;background:#f8fafc;color:#172033}.score-breakdown h4{margin:0 0 10px;color:#172033;font-size:14px}.score-row{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid #e8edf3;font-size:13px;color:#172033}.score-row span{color:#172033 !important}.score-total{margin-top:10px;font-weight:700;color:#172033}
+.score-breakdown{margin-top:14px;padding:16px 18px;border:1px solid var(--border-subtle);border-radius:12px;background:var(--bg-card);color:var(--text-main);box-shadow:0 8px 24px rgba(0,0,0,.12)}
+.score-breakdown h4{margin:0 0 12px;color:var(--text-main);font-size:14px;font-weight:600;letter-spacing:.2px}.score-row{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:9px 0;border-bottom:1px solid var(--border-subtle);font-size:13px;color:var(--text-muted)}.score-row span:first-child{color:var(--text-main)!important;font-weight:500}.score-row span:last-child{color:var(--text-muted)!important;text-align:right;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}.score-total{margin-top:12px;padding-top:2px;font-weight:600;color:var(--text-main)}
 </style>
 """
 
@@ -465,6 +466,20 @@ RESULT_HTML = COMMON_CSS + """
 .s-low   .stat-num { color: var(--green); }
 .s-wl    .stat-num { color: var(--text-muted); }
 .s-sk    .stat-num { color: var(--text-dim); }
+.scan-overview { padding: 12px 18px; border-bottom: 1px solid var(--border-subtle); background: rgba(15, 23, 42, 0.22); }
+.overview-label { font-size: 10px; color: var(--text-dim); letter-spacing: .06em; margin-bottom: 7px; }
+.risk-track { display: flex; height: 7px; border-radius: 99px; overflow: hidden; background: rgba(255,255,255,.06); }
+.risk-seg-high { background: var(--red); }
+.risk-seg-med { background: var(--orange); }
+.risk-seg-low { background: var(--green); }
+.risk-seg-wl { background: var(--text-dim); }
+.overview-meta { display:flex; justify-content:space-between; gap:10px; margin-top:7px; font-size:10px; color:var(--text-muted); }
+.item-reason { font-size: 10.5px; color: var(--text-muted); margin-top: 6px; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.item-reason.high { color: #fca5a5; }
+.item-reason.medium { color: #fdba74; }
+.item-reason.low { color: #86efac; }
+.item-cat { display:inline-block; margin-top:5px; padding:2px 6px; border-radius:4px; font-size:9.5px; color:var(--text-dim); background:rgba(255,255,255,.04); border:1px solid var(--border-subtle); }
+
 
 .main { display: flex; height: calc(100vh - 120px); }
 .left { width: 320px; border-right: 1px solid var(--border-subtle); overflow-y: auto; flex-shrink: 0; }
@@ -602,11 +617,6 @@ function escapeHtml(value) {
   }[c]));
 }
 
-function downloadPdf(){
-  const idx = window.currentDetailIndex;
-  if (idx === undefined || idx === null) return;
-  window.location.href = '/report/' + encodeURIComponent(SCAN_ID) + '/' + idx + '/pdf';
-}
 
 function showDetail(idx, element) {
   const d = emailData[idx];
@@ -705,8 +715,7 @@ function showDetail(idx, element) {
   let irHtml = d.ir ? `
     <div class="ir-box">
       <div class="ir-label">IR 事件通報報告已自動產生</div>
-      <button class="pdf-btn" onclick="downloadPdf()">📄 下載 PDF 資安報告</button>
-      <div class="ir-id">${escapeHtml(d.ir.id)} &nbsp;|&nbsp; 嚴重等級：${escapeHtml(d.ir.severity)}</div>
+            <div class="ir-id">${escapeHtml(d.ir.id)} &nbsp;|&nbsp; 嚴重等級：${escapeHtml(d.ir.severity)}</div>
       <div class="ir-impact">${escapeHtml(d.ir.impact)}</div>
       ${d.ir.actions && d.ir.actions.length ? `<div class="ir-actions">${d.ir.actions.map(a=>`<div class="ir-action">• ${escapeHtml(a)}</div>`).join('')}</div>` : ''}
        <div class="ir-meta">
@@ -775,6 +784,17 @@ window.addEventListener('DOMContentLoaded', () => {
   <div class="stat s-low"><div class="stat-num">LOW_COUNT</div><div class="stat-lbl">安全</div></div>
   <div class="stat s-wl"><div class="stat-num">WL_COUNT</div><div class="stat-lbl">白名單</div></div>
   <div class="stat s-sk"><div class="stat-num">SK_COUNT</div><div class="stat-lbl">略過</div></div>
+</div>
+
+<div class="scan-overview">
+  <div class="overview-label">風險分布</div>
+  <div class="risk-track" title="高風險 / 中風險 / 安全 / 白名單">
+    <div class="risk-seg-high" style="width:HIGH_PCT%"></div>
+    <div class="risk-seg-med" style="width:MED_PCT%"></div>
+    <div class="risk-seg-low" style="width:LOW_PCT%"></div>
+    <div class="risk-seg-wl" style="width:WL_PCT%"></div>
+  </div>
+  <div class="overview-meta"><span>已分析：ANALYZED_COUNT 封</span><span>高風險優先顯示</span></div>
 </div>
 
 <div class="main">
@@ -1674,120 +1694,49 @@ def gen_ir(email_data, report):
     ir.setdefault('recovery', '確認影響範圍後依流程復原。')
     return incident_id, ir
 
-def create_pdf_report(email_data, scan_id, index, entry):
-    """產生單封郵件的 PDF 分析報告。"""
-    from io import BytesIO
-    from reportlab.lib.pagesizes import A4
-    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-    from reportlab.lib.enums import TA_CENTER
-    from reportlab.pdfbase import pdfmetrics
-    from reportlab.pdfbase.cidfonts import UnicodeCIDFont
-    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, KeepTogether
-    from reportlab.lib import colors
-    from xml.sax.saxutils import escape
-
-    try:
-        pdfmetrics.registerFont(UnicodeCIDFont('STSong-Light'))
-    except Exception:
-        pass
-
-    buf = BytesIO()
-    doc = SimpleDocTemplate(buf, pagesize=A4, rightMargin=42, leftMargin=42, topMargin=42, bottomMargin=42)
-    styles = getSampleStyleSheet()
-    font = 'STSong-Light'
-    title = ParagraphStyle('zhTitle', parent=styles['Title'], fontName=font, fontSize=18, leading=24, alignment=TA_CENTER, spaceAfter=16)
-    h2 = ParagraphStyle('zhH2', parent=styles['Heading2'], fontName=font, fontSize=13, leading=18, spaceBefore=10, spaceAfter=7)
-    body = ParagraphStyle('zhBody', parent=styles['BodyText'], fontName=font, fontSize=9.5, leading=15, spaceAfter=5)
-    small = ParagraphStyle('zhSmall', parent=body, fontSize=8.5, leading=13)
-
-    risk = int(entry.get('risk_score', 0))
-    level_map = {'high':'高風險', 'medium':'中風險', 'low':'低風險', 'wl':'白名單'}
-    level = level_map.get(entry.get('level'), entry.get('level', '未知'))
-    story = [
-        Paragraph('AI 釣魚信件偵測系統｜分析報告', title),
-        Paragraph(f'報告編號：{escape(str(scan_id))}-{index+1:02d}', small),
-        Spacer(1, 6),
-        Paragraph('一、郵件資訊', h2)
-    ]
-    info = [
-        ['項目', '內容'],
-        ['寄件者', escape(str(email_data.get('sender','未提供')))],
-        ['主旨', escape(str(email_data.get('subject','無主旨')))],
-        ['風險等級', level],
-        ['風險分數', f'{risk}/100' if risk >= 0 else '白名單'],
-    ]
-    t=Table(info, colWidths=[90, 390], repeatRows=1)
-    t.setStyle(TableStyle([('FONTNAME',(0,0),(-1,-1),font),('FONTSIZE',(0,0),(-1,-1),9),('LEADING',(0,0),(-1,-1),13),('GRID',(0,0),(-1,-1),0.5,colors.grey),('BACKGROUND',(0,0),(-1,0),colors.lightgrey),('VALIGN',(0,0),(-1,-1),'TOP'),('LEFTPADDING',(0,0),(-1,-1),6),('RIGHTPADDING',(0,0),(-1,-1),6),('TOPPADDING',(0,0),(-1,-1),5),('BOTTOMPADDING',(0,0),(-1,-1),5)]))
-    story += [t, Paragraph('二、風險分析', h2)]
-
-    rb = entry.get('risk_breakdown') or {}
-    rows=[['分析層', '分數', '權重', '貢獻']]
-    for c in rb.get('components', []):
-        rows.append([str(c.get('name','')), f"{float(c.get('score',0)):.1f}", f"{c.get('weight',0)}%", f"{float(c.get('contribution',0)):.1f}"])
-    if len(rows)>1:
-        tt=Table(rows, colWidths=[150,90,90,90], repeatRows=1)
-        tt.setStyle(TableStyle([('FONTNAME',(0,0),(-1,-1),font),('FONTSIZE',(0,0),(-1,-1),9),('GRID',(0,0),(-1,-1),0.5,colors.grey),('BACKGROUND',(0,0),(-1,0),colors.lightgrey),('ALIGN',(1,1),(-1,-1),'CENTER'),('VALIGN',(0,0),(-1,-1),'MIDDLE')]))
-        story.append(tt)
-    story.append(Paragraph(f"融合公式：{escape(str(entry.get('fusion_formula','—')))}", small))
-    story.append(Paragraph(f"最終風險分數：{risk}/100", body))
-
-    story.append(Paragraph('三、可疑特徵與分析說明', h2))
-    findings=entry.get('explainable_findings') or []
-    if findings:
-        for x in findings[:10]:
-            story.append(Paragraph(f"• {x.get('title','可疑特徵')}：{x.get('detail','')}", body))
-    else:
-        story.append(Paragraph('未提供額外可疑特徵。', body))
-    story.append(Paragraph(f"AI 分析說明：{escape(str(entry.get('explanation','—')))}", body))
-
-    story.append(Paragraph('四、安全處置建議', h2))
-    actions=entry.get('safety_actions') or []
-    for i,a in enumerate(actions[:8],1):
-        story.append(Paragraph(f'{i}. {escape(str(a))}', body))
-    if not actions:
-        story.append(Paragraph('請依目前風險等級進行人工確認。', body))
-
-    ir=entry.get('ir')
-    if ir:
-        story.append(Paragraph('五、資安事件回應（IR）', h2))
-        ir_rows=[
-            ['事件 ID', str(ir.get('id','—'))],
-            ['嚴重等級', str(ir.get('severity','—'))],
-            ['狀態', str(ir.get('status','Open'))],
-            ['建立時間', str(ir.get('created_at','—'))],
-            ['影響評估', str(ir.get('impact','—'))],
-            ['隔離 / Containment', str(ir.get('containment','—'))],
-            ['驗證 / Verification', str(ir.get('verification','—'))],
-            ['復原 / Recovery', str(ir.get('recovery','—'))],
-        ]
-        it=Table(ir_rows, colWidths=[125,355])
-        it.setStyle(TableStyle([('FONTNAME',(0,0),(-1,-1),font),('FONTSIZE',(0,0),(-1,-1),8.8),('LEADING',(0,0),(-1,-1),13),('GRID',(0,0),(-1,-1),0.5,colors.grey),('BACKGROUND',(0,0),(0,-1),colors.lightgrey),('VALIGN',(0,0),(-1,-1),'TOP'),('LEFTPADDING',(0,0),(-1,-1),6),('RIGHTPADDING',(0,0),(-1,-1),6),('TOPPADDING',(0,0),(-1,-1),5),('BOTTOMPADDING',(0,0),(-1,-1),5)]))
-        story.append(it)
-        if ir.get('actions'):
-            story.append(Spacer(1,6))
-            story.append(Paragraph('立即處置：' + '；'.join(str(x) for x in ir['actions'][:5]), body))
-
-    story += [Spacer(1,12), Paragraph('※ 本報告為 AI 與規則式偵測之輔助結果，不能取代人工資安判斷。請勿因低風險結果而直接信任未知郵件。', small)]
-    doc.build(story)
-    buf.seek(0)
-    return buf
 
 def get_header(msg, name):
     for h in msg['payload']['headers']:
         if h['name'].lower() == name.lower(): return h['value']
     return ''
 
+def _walk_parts(payload):
+    yield payload
+    for part in payload.get('parts', []) or []:
+        yield from _walk_parts(part)
+
+def _decode_part(part):
+    data = part.get('body', {}).get('data', '')
+    if not data:
+        return ''
+    try:
+        return base64.urlsafe_b64decode(data).decode('utf-8', errors='ignore')
+    except Exception:
+        return ''
+
 def get_body(msg):
-    body = ''
-    if 'parts' in msg['payload']:
-        for part in msg['payload']['parts']:
-            if part['mimeType'] == 'text/plain':
-                data = part['body'].get('data','')
-                if data: body = base64.urlsafe_b64decode(data).decode('utf-8',errors='ignore'); break
-    else:
-        data = msg['payload']['body'].get('data','')
-        if data: body = base64.urlsafe_b64decode(data).decode('utf-8',errors='ignore')
-    return body[:500]
+    # 優先取得 text/plain；若信件只有 HTML，退回 HTML 去除標籤後的文字。
+    payload = msg.get('payload', {})
+    for part in _walk_parts(payload):
+        if part.get('mimeType') == 'text/plain':
+            text = _decode_part(part)
+            if text:
+                return text[:5000]
+    for part in _walk_parts(payload):
+        if part.get('mimeType') == 'text/html':
+            html = _decode_part(part)
+            if html:
+                return BeautifulSoup(html, 'html.parser').get_text(' ', strip=True)[:5000]
+    return ''
+
+def get_html(msg):
+    payload = msg.get('payload', {})
+    for part in _walk_parts(payload):
+        if part.get('mimeType') == 'text/html':
+            html = _decode_part(part)
+            if html:
+                return html[:20000]
+    return ''
 
 def get_html(msg):
     html = ''
@@ -1858,7 +1807,7 @@ def login():
 def callback():
     try:
         flow = create_google_flow(state=_state.get('current',''))
-        auth_resp = request.url.replace('http://','https://')
+        auth_resp = request.url
         flow.fetch_token(authorization_response=auth_resp,
                          code_verifier=_state.get('code_verifier',''))
         creds = flow.credentials
@@ -1870,7 +1819,14 @@ def callback():
         return redirect('/scan')
     except Exception as e:
         import traceback
-        return f'<h2 style="color:#fff;background:#141414;padding:20px">授權錯誤</h2><pre style="background:#1c1c1c;color:#f0ede8;padding:20px">{traceback.format_exc()}</pre>', 500
+        detail = traceback.format_exc()
+        return (
+            '<div style="font-family:system-ui;background:#0b0d12;color:#f8fafc;min-height:100vh;padding:40px">'
+            '<h2>Google Gmail 授權失敗</h2>'
+            '<p style="color:#94a3b8">請確認 Google OAuth 的重新導向 URI、Client ID / Secret 與 Gmail API 設定。</p>'
+            f'<pre style="white-space:pre-wrap;background:#111827;padding:16px;border-radius:8px;color:#fca5a5">{detail}</pre>'
+            '<p><a href="/" style="color:#60a5fa">← 返回首頁</a></p></div>'
+        ), 500
 
 def do_scan(token_data, scan_id):
     try:
@@ -1878,8 +1834,8 @@ def do_scan(token_data, scan_id):
         service = build('gmail','v1',credentials=creds)
         results_api = service.users().messages().list(
             userId='me', maxResults=15, labelIds=['INBOX']).execute()
-        messages = results_api.get('messages',[])
-
+        messages = results_api.get('messages', [])
+        inbox_count = len(messages)
         all_emails = []
         high_list, med_list, low_list = [], [], []
         wl_list = []
@@ -1964,7 +1920,8 @@ def do_scan(token_data, scan_id):
             'all_emails': all_emails,
             'high': len(high_list), 'med': len(med_list),
             'low': len(low_list), 'wl': len(wl_list), 'skipped': skipped,
-            'total': len(all_emails)
+            'total': len(all_emails),
+            'inbox_messages_fetched': inbox_count
         }
     except Exception as e:
         import traceback
@@ -2084,15 +2041,30 @@ def result(scan_id):
     all_emails = data['all_emails']
 
     # 建立左側列表 HTML
+    import html as html_lib
+
     def make_item(e, idx):
-        dot = {'high':'dot-high','medium':'dot-med','low':'dot-low','wl':'dot-wl'}.get(e['level'],'dot-wl')
-        score_text = f"{e['risk_score']}/100 · {e['category']}" if e['risk_score'] >= 0 else '白名單 · 略過分析'
+        level = e.get('level', 'wl')
+        dot = {'high':'dot-high','medium':'dot-med','low':'dot-low','wl':'dot-wl'}.get(level,'dot-wl')
+        score_text = f"{e.get('risk_score', -1)}/100 · {e.get('category','')}" if e.get('risk_score', -1) >= 0 else '白名單 · 略過分析'
+        reason = ''
+        findings = e.get('explainable_findings') or []
+        if findings:
+            reason = str(findings[0].get('title') or findings[0].get('detail') or '')
+        elif e.get('explanation'):
+            reason = str(e.get('explanation'))
+        reason = html_lib.escape(reason[:70])
+        subject = html_lib.escape(str(e.get('subject','')))
+        sender = html_lib.escape(str(e.get('sender','')))
+        category = html_lib.escape(str(e.get('category','')))
         return (f'<div class="email-item" data-idx="{idx}" onclick="showDetail({idx}, this)">'
                 f'<div class="risk-dot {dot}"></div>'
                 f'<div class="item-body">'
-                f'<div class="item-subj">{e["subject"]}</div>'
-                f'<div class="item-from">{e["sender"]}</div>'
-                f'<div class="item-score">{score_text}</div>'
+                f'<div class="item-subj">{subject}</div>'
+                f'<div class="item-from">{sender}</div>'
+                f'<div class="item-score">{html_lib.escape(score_text)}</div>'
+                f'{f"<div class=\"item-reason {level}\">🔎 {reason}</div>" if reason else ""}'
+                f'{f"<span class=\"item-cat\">{category}</span>" if category else ""}'
                 f'</div></div>')
 
     high_items  = [make_item(e,i) for i,e in enumerate(all_emails) if e['level']=='high']
@@ -2119,21 +2091,15 @@ def result(scan_id):
     page = page.replace('LOW_COUNT',   str(data['low']))
     page = page.replace('WL_COUNT',    str(data['wl']))
     page = page.replace('SK_COUNT',    str(data['skipped']))
+    total_for_pct = max(int(data.get('total', 0)), 1)
+    analyzed_count = int(data.get('high', 0)) + int(data.get('med', 0)) + int(data.get('low', 0))
+    page = page.replace('HIGH_PCT', f"{data['high'] / total_for_pct * 100:.2f}")
+    page = page.replace('MED_PCT', f"{data['med'] / total_for_pct * 100:.2f}")
+    page = page.replace('LOW_PCT', f"{data['low'] / total_for_pct * 100:.2f}")
+    page = page.replace('WL_PCT', f"{data['wl'] / total_for_pct * 100:.2f}")
+    page = page.replace('ANALYZED_COUNT', str(analyzed_count))
     return page
 
-@app.route('/report/<scan_id>/<int:index>/pdf')
-def report_pdf(scan_id, index):
-    data = _scans.get(scan_id)
-    if not data or not data.get('done'):
-        return redirect('/')
-    emails = data.get('all_emails', [])
-    if index < 0 or index >= len(emails):
-        return '找不到指定郵件', 404
-    entry = emails[index]
-    email_data = {'sender': entry.get('sender',''), 'subject': entry.get('subject','')}
-    pdf = create_pdf_report(email_data, scan_id, index, entry)
-    filename = f"phishing_report_{scan_id}_{index+1}.pdf"
-    return send_file(pdf, mimetype='application/pdf', as_attachment=True, download_name=filename)
 
 @app.route('/history')
 def history():
