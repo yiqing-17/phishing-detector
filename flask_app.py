@@ -1,5 +1,5 @@
 # ============================================================
-# AI 釣魚信件偵測系統 - Flask 網頁版 v8（可疑特徵解釋版）
+# AI 釣魚信件偵測系統 - Flask 網頁版 v13（PDF與分數組成修正版）
 # ============================================================
 
 import json, os, uuid, threading, base64, re, sqlite3, smtplib
@@ -14,7 +14,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
 from groq import Groq
 from bs4 import BeautifulSoup
-from flask import Flask, redirect, request, render_template_string, jsonify
+from flask import Flask, redirect, request, render_template_string, jsonify, send_file
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
 from google.oauth2.credentials import Credentials
@@ -148,7 +148,7 @@ body {
 }
 .back:hover { color: var(--text-main); border-color: var(--border-accent); background: var(--bg-hover); }
 
-.score-breakdown{margin-top:14px;padding:14px;border:1px solid #dbe3ef;border-radius:12px;background:#f8fafc}.score-breakdown h4{margin:0 0 10px}.score-row{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid #e8edf3;font-size:13px}.score-total{margin-top:10px;font-weight:700}
+.score-breakdown{margin-top:14px;padding:14px;border:1px solid #dbe3ef;border-radius:12px;background:#f8fafc;color:#172033}.score-breakdown h4{margin:0 0 10px;color:#172033;font-size:14px}.score-row{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid #e8edf3;font-size:13px;color:#172033}.score-row span{color:#172033 !important}.score-total{margin-top:10px;font-weight:700;color:#172033}
 </style>
 """
 
@@ -1684,6 +1684,7 @@ def create_pdf_report(email_data, scan_id, index, entry):
     from reportlab.pdfbase.cidfonts import UnicodeCIDFont
     from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, KeepTogether
     from reportlab.lib import colors
+    from xml.sax.saxutils import escape
 
     try:
         pdfmetrics.registerFont(UnicodeCIDFont('STSong-Light'))
@@ -1704,14 +1705,14 @@ def create_pdf_report(email_data, scan_id, index, entry):
     level = level_map.get(entry.get('level'), entry.get('level', '未知'))
     story = [
         Paragraph('AI 釣魚信件偵測系統｜分析報告', title),
-        Paragraph(f'報告編號：{scan_id}-{index+1:02d}', small),
+        Paragraph(f'報告編號：{escape(str(scan_id))}-{index+1:02d}', small),
         Spacer(1, 6),
         Paragraph('一、郵件資訊', h2)
     ]
     info = [
         ['項目', '內容'],
-        ['寄件者', str(email_data.get('sender','未提供'))],
-        ['主旨', str(email_data.get('subject','無主旨'))],
+        ['寄件者', escape(str(email_data.get('sender','未提供')))],
+        ['主旨', escape(str(email_data.get('subject','無主旨')))],
         ['風險等級', level],
         ['風險分數', f'{risk}/100' if risk >= 0 else '白名單'],
     ]
@@ -1727,7 +1728,7 @@ def create_pdf_report(email_data, scan_id, index, entry):
         tt=Table(rows, colWidths=[150,90,90,90], repeatRows=1)
         tt.setStyle(TableStyle([('FONTNAME',(0,0),(-1,-1),font),('FONTSIZE',(0,0),(-1,-1),9),('GRID',(0,0),(-1,-1),0.5,colors.grey),('BACKGROUND',(0,0),(-1,0),colors.lightgrey),('ALIGN',(1,1),(-1,-1),'CENTER'),('VALIGN',(0,0),(-1,-1),'MIDDLE')]))
         story.append(tt)
-    story.append(Paragraph(f"融合公式：{entry.get('fusion_formula','—')}", small))
+    story.append(Paragraph(f"融合公式：{escape(str(entry.get('fusion_formula','—')))}", small))
     story.append(Paragraph(f"最終風險分數：{risk}/100", body))
 
     story.append(Paragraph('三、可疑特徵與分析說明', h2))
@@ -1737,12 +1738,12 @@ def create_pdf_report(email_data, scan_id, index, entry):
             story.append(Paragraph(f"• {x.get('title','可疑特徵')}：{x.get('detail','')}", body))
     else:
         story.append(Paragraph('未提供額外可疑特徵。', body))
-    story.append(Paragraph(f"AI 分析說明：{entry.get('explanation','—')}", body))
+    story.append(Paragraph(f"AI 分析說明：{escape(str(entry.get('explanation','—')))}", body))
 
     story.append(Paragraph('四、安全處置建議', h2))
     actions=entry.get('safety_actions') or []
     for i,a in enumerate(actions[:8],1):
-        story.append(Paragraph(f'{i}. {a}', body))
+        story.append(Paragraph(f'{i}. {escape(str(a))}', body))
     if not actions:
         story.append(Paragraph('請依目前風險等級進行人工確認。', body))
 
