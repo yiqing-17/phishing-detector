@@ -386,8 +386,12 @@ body {
 </style>
 """
 
-# ── 首頁 HTML (單頁固定 100vh 滿版，無滾輪) ───────────────────
-HOME_HTML = COMMON_CSS + """
+# ── 首頁 HTML (極簡工程風／終端機質感，單頁固定 100vh 滿版，無滾輪) ─────
+HOME_HTML = """
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
+""" + COMMON_CSS + """
 <style>
 html, body {
   height: 100vh;
@@ -397,208 +401,184 @@ html, body {
 }
 
 .landing-container {
+  --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   display: flex;
   flex-direction: column;
   height: 100vh;
   width: 100vw;
-  background-color: var(--bg-main);
-  color: #e2e8f0;
+  background-color: #000000;
+  color: #e9e9e9;
   box-sizing: border-box;
+  font-family: var(--mono);
+}
+.landing-container .hdr {
+  border-bottom: 1px solid #262626;
+}
+.landing-container .hdr-left { font-family: var(--mono); font-weight: 500; }
+.landing-container .hdr-left span:first-child { color: #6b6b6b; }
+.landing-container .proj-tag {
+  background: transparent;
+  border: 1px solid #333;
+  color: #7a7a7a;
+  border-radius: 0;
+  font-family: var(--mono);
 }
 
 .main-content {
   flex: 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  padding: 0 20px;
-  max-width: 860px;
+  padding: 0 24px;
+  max-width: 720px;
   margin: 0 auto;
   width: 100%;
 }
 
+.prompt-line {
+  font-size: 12.5px;
+  color: #6b6b6b;
+  margin-bottom: 10px;
+}
+.prompt-line::before { content: "$ "; color: #4ade80; }
+
 .title {
-  font-size: 34px;
+  font-size: 26px;
   font-weight: 700;
   color: #ffffff;
-  margin-bottom: 12px;
-  letter-spacing: -0.5px;
-  text-align: center;
+  margin-bottom: 14px;
+  letter-spacing: -0.3px;
+  text-align: left;
+  line-height: 1.4;
 }
 
 .subtitle {
-  font-size: 13.5px;
-  color: var(--text-muted);
-  line-height: 1.6;
-  text-align: center;
-  margin-bottom: 32px;
+  font-size: 13px;
+  color: #8a8a8a;
+  line-height: 1.7;
+  text-align: left;
+  margin-bottom: 28px;
   max-width: 560px;
 }
+
+.cta-row { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; margin-bottom: 30px; }
 
 .google-btn-white {
   display: inline-flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   background: #ffffff;
-  color: #1f2937;
-  font-size: 14px;
-  font-weight: 600;
-  padding: 11px 24px;
-  border-radius: 8px;
+  color: #000000;
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 700;
+  padding: 11px 20px;
+  border-radius: 2px;
   text-decoration: none;
-  box-shadow: 0 2px 12px rgba(255, 255, 255, 0.12);
-  transition: all 0.2s ease;
-  margin-bottom: 44px;
+  transition: background 0.15s ease, color 0.15s ease;
   border: 1px solid #ffffff;
 }
 .google-btn-white:hover {
-  background: #f8fafc;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 18px rgba(255, 255, 255, 0.22);
+  background: #000000;
+  color: #ffffff;
 }
 .google-icon-svg {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   flex-shrink: 0;
   display: block;
 }
 
-.features-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  width: 100%;
-  margin-bottom: 24px;
+.paste-link {
+  display: inline-block; font-size: 12.5px; color: #8a8a8a;
+  text-decoration: none;
+  border-bottom: 1px dashed #444; padding-bottom: 1px;
+  transition: color 0.15s ease; font-family: var(--mono);
 }
-.feature-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  border-radius: 10px;
-  padding: 20px 16px;
-  text-align: center;
-}
-.feature-icon {
-  font-size: 18px;
-  margin-bottom: 10px;
-  opacity: 0.9;
-}
-.feature-card h3 {
-  font-size: 14px;
-  font-weight: 600;
-  color: #f1f5f9;
-  margin-bottom: 6px;
-}
-.feature-card p {
-  font-size: 12px;
-  color: var(--text-dim);
-  line-height: 1.5;
-  margin: 0;
-}
+.paste-link:hover { color: #ffffff; border-color: #888; }
+.paste-link::before { content: "# "; color: #555; }
 
-.whitelist-banner {
+.terminal {
   width: 100%;
-  background: var(--green-bg);
-  border: 1px solid var(--green-border);
-  border-radius: 8px;
-  padding: 11px 18px;
-  font-size: 12px;
-  color: var(--green);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  box-sizing: border-box;
+  background: #0a0a0a;
+  border: 1px solid #2a2a2a;
+  border-radius: 4px;
+  margin-bottom: 22px;
+  overflow: hidden;
 }
-.banner-icon { font-size: 13px; flex-shrink: 0; }
-.paste-link { display: inline-block; font-size: 12.5px; color: var(--text-muted);
-              text-decoration: none; margin-top: -28px; margin-bottom: 36px;
-              border-bottom: 1px dashed var(--border-accent); padding-bottom: 1px;
-              transition: color 0.2s ease; }
-.paste-link:hover { color: var(--text-main); }
+.terminal-bar {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 12px;
+  border-bottom: 1px solid #222;
+}
+.terminal-dot { width: 8px; height: 8px; border-radius: 50%; background: #333; }
+.terminal-title { margin-left: 8px; font-size: 11px; color: #555; }
+.terminal-body { padding: 14px 16px; font-size: 12px; line-height: 1.85; }
+.terminal-body .cmd { color: #ffffff; }
+.terminal-body .cmd::before { content: "$ "; color: #4ade80; }
+.terminal-row { display: flex; gap: 10px; color: #999; }
+.terminal-row .tag { color: #4ade80; flex-shrink: 0; }
+.terminal-row .step { color: #d4d4d4; flex-shrink: 0; width: 130px; }
+.terminal-row .desc { color: #7a7a7a; }
+.terminal-note { margin-top: 10px; padding-top: 10px; border-top: 1px dashed #222; color: #6b6b6b; }
+.terminal-note .cursor { display: inline-block; width: 6px; height: 12px; background: #4ade80; margin-left: 4px; animation: blink 1s step-start infinite; vertical-align: -2px; }
+@keyframes blink { 50% { opacity: 0; } }
 
-.home-status-row {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px 18px;
-  margin: 0 0 16px;
-  color: var(--text-dim);
-  font-size: 10.5px;
-}
-.status-item { display: inline-flex; align-items: center; gap: 5px; }
-.status-item span { color: var(--green); font-size: 9px; }
-.feature-card { transition: transform .2s ease, border-color .2s ease, background .2s ease; }
-.feature-card:hover { transform: translateY(-2px); border-color: var(--border-accent); background: var(--bg-hover); }
-.google-btn-white { min-width: 230px; justify-content: center; }
 @media (max-width: 700px) {
   html, body { overflow: auto !important; height: auto; min-height: 100%; }
   .landing-container { min-height: 100vh; height: auto; }
   .hdr { padding: 14px 18px; }
   .main-content { padding: 42px 18px 36px; }
-  .title { font-size: 28px; }
-  .features-grid { grid-template-columns: 1fr; gap: 10px; }
-  .whitelist-banner { line-height: 1.6; }
+  .title { font-size: 21px; }
+  .terminal-row { flex-direction: column; gap: 2px; }
+  .terminal-row .step { width: auto; }
 }
 </style>
 
 <div class="landing-container">
   <div class="hdr">
     <div class="hdr-left">
-      <span class="shield-icon">🛡️</span>
-      <span>AI 釣魚信件偵測系統</span>
+      <span>phishing-detector</span><span style="color:#4ade80">$</span>
     </div>
     <div class="hdr-nav">
-      <span class="proj-tag">PROJ-2026</span>
+      <span class="proj-tag">[prototype]</span>
     </div>
   </div>
 
   <div class="main-content">
+    <div class="prompt-line">whoami --scan gmail --limit 15</div>
     <h1 class="title">安全掃描 Gmail，快速找出可疑郵件</h1>
     <p class="subtitle">
-      授權 Google 後掃描最新 15 封郵件，結合規則、機器學習、URL / HTML 與 AI 分析，快速找出可疑信件。
+      授權 Google 後掃描最新 15 封郵件，結合規則引擎、機器學習、URL / HTML 解析與 AI 語意判讀，快速找出可疑信件。
     </p>
 
-    <a href="/login" class="google-btn-white">
-      <svg class="google-icon-svg" viewBox="0 0 24 24">
-        <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
-        <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.29v3.15C3.26 21.3 7.31 24 12 24z"/>
-        <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.29C.47 8.21 0 10.05 0 12s.47 3.79 1.29 5.42l3.99-3.15z"/>
-        <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.58l3.99 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
-      </svg>
-      使用 Google 帳號開始掃描
-    </a>
-
-    <a href="/paste" class="paste-link">不想連接 Gmail？直接貼上郵件內容分析 →</a>
-
-    <div class="features-grid">
-      <div class="feature-card">
-        <div class="feature-icon">🧠</div>
-        <h3>多層智慧分析</h3>
-        <p>規則引擎、ML、HTML / URL 與 AI 交叉判讀</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">🔗</div>
-        <h3>可疑特徵解析</h3>
-        <p>分析連結、追蹤像素、隱藏元素與敏感資訊要求</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">🛡️</div>
-        <h3>資安事件處置</h3>
-        <p>高風險信件提供處置建議與 IR 事件資訊</p>
-      </div>
+    <div class="cta-row">
+      <a href="/login" class="google-btn-white">
+        <svg class="google-icon-svg" viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
+          <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.29v3.15C3.26 21.3 7.31 24 12 24z"/>
+          <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.29C.47 8.21 0 10.05 0 12s.47 3.79 1.29 5.42l3.99-3.15z"/>
+          <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.58l3.99 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+        </svg>
+        使用 Google 帳號開始掃描
+      </a>
+      <a href="/paste" class="paste-link">不想連接 Gmail？直接貼上郵件內容分析</a>
     </div>
 
-    <div class="home-status-row">
-      <div class="status-item"><span>●</span> Gmail OAuth</div>
-      <div class="status-item"><span>●</span> ML 模型</div>
-      <div class="status-item"><span>●</span> URL / HTML</div>
-      <div class="status-item"><span>●</span> AI 輔助判讀</div>
-    </div>
-
-    <div class="whitelist-banner">
-      <span class="banner-icon">✅</span>
-      <div><strong>白名單機制已啟用：</strong> 已知安全網域可直接標記為安全，避免重複進行分析。</div>
+    <div class="terminal">
+      <div class="terminal-bar">
+        <span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span>
+        <span class="terminal-title">pipeline.log</span>
+      </div>
+      <div class="terminal-body">
+        <div class="cmd">python scan.py --source gmail</div>
+        <div class="terminal-row"><span class="tag">[1/4]</span><span class="step">規則引擎</span><span class="desc">已知釣魚樣式與關鍵字比對</span></div>
+        <div class="terminal-row"><span class="tag">[2/4]</span><span class="step">ML 模型</span><span class="desc">XGBoost + RandomForest + GradientBoosting 投票</span></div>
+        <div class="terminal-row"><span class="tag">[3/4]</span><span class="step">URL / HTML 解析</span><span class="desc">連結還原、追蹤像素、隱藏元素偵測</span></div>
+        <div class="terminal-row"><span class="tag">[4/4]</span><span class="step">AI 語意判讀</span><span class="desc">交叉比對郵件意圖與敏感資訊索取</span></div>
+        <div class="terminal-note"># 白名單機制已啟用，已知安全網域自動略過重複分析<span class="cursor"></span></div>
+      </div>
     </div>
   </div>
 </div>
