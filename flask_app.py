@@ -1,8 +1,8 @@
 # ============================================================
-# AI 釣魚信件偵測系統 - Flask 網頁版 v18（首頁 UI 優化版）
+# AI 釣魚信件偵測系統 - Flask 網頁版 v24（最終整合版）
 # ============================================================
 
-import json, os, uuid, threading, base64, re, sqlite3, smtplib
+import json, os, uuid, threading, base64, re, sqlite3, smtplib, secrets
 import joblib
 from datetime import datetime
 from email.mime.text import MIMEText
@@ -12,7 +12,10 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
-from groq import Groq
+try:
+    from groq import Groq
+except ImportError:
+    Groq = None
 from bs4 import BeautifulSoup
 from flask import Flask, redirect, request, render_template_string, jsonify
 from google_auth_oauthlib.flow import Flow
@@ -305,6 +308,79 @@ body {
     .risk-score-number{font-size:46px;}
     .layer-grid{grid-template-columns:1fr;}
     .result-title{font-size:21px;}
+}
+
+
+/* STEP 13：歷史紀錄頁 UI 優化 */
+.history-header{display:flex;justify-content:space-between;align-items:flex-end;gap:18px;margin-bottom:20px}
+.history-header h1{margin:0 0 6px;font-size:26px}
+.history-header p{margin:0;color:#94a3b8;font-size:14px}
+.history-toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+.history-filter{min-width:180px;padding:10px 13px;border-radius:10px;border:1px solid rgba(148,163,184,.2);background:#0f172a;color:#e2e8f0}
+.history-list{display:grid;gap:12px}
+.history-item{display:grid;grid-template-columns:72px 1fr auto;gap:16px;align-items:center;padding:17px 18px;border:1px solid rgba(148,163,184,.17);border-radius:16px;background:rgba(15,23,42,.78);transition:transform .18s ease,border-color .18s ease}
+.history-item:hover{transform:translateY(-1px);border-color:rgba(148,163,184,.34)}
+.history-score{width:58px;height:58px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#020617;border:1px solid rgba(148,163,184,.24);font-weight:800;font-size:17px}
+.history-subject{font-weight:700;color:#f1f5f9;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.history-meta{margin-top:5px;color:#94a3b8;font-size:13px}
+.history-actions{display:flex;gap:8px;align-items:center}
+.history-empty{text-align:center;padding:45px 20px;border:1px dashed rgba(148,163,184,.22);border-radius:16px;color:#94a3b8}
+@media(max-width:700px){.history-header{align-items:flex-start;flex-direction:column}.history-item{grid-template-columns:58px 1fr}.history-actions{grid-column:2}}
+
+
+/* STEP 14：全站導覽列與 Gmail Dashboard UI */
+.app-nav{
+    display:flex;align-items:center;justify-content:space-between;
+    gap:18px;padding:12px 18px;margin-bottom:22px;
+    border:1px solid rgba(148,163,184,.16);border-radius:16px;
+    background:rgba(15,23,42,.82);backdrop-filter:blur(10px);
+}
+.app-brand{display:flex;align-items:center;gap:10px;font-weight:800;color:#f8fafc;text-decoration:none}
+.app-brand-icon{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:#1e293b}
+.app-nav-links{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.app-nav-link{
+    padding:8px 11px;border-radius:9px;color:#94a3b8;
+    text-decoration:none;font-size:13px;transition:.18s ease;
+}
+.app-nav-link:hover,.app-nav-link.active{color:#f1f5f9;background:#1e293b}
+.dashboard-summary{
+    display:grid;grid-template-columns:repeat(5,minmax(0,1fr));
+    gap:11px;margin-bottom:18px;
+}
+.dashboard-stat{
+    padding:15px;border:1px solid rgba(148,163,184,.16);
+    border-radius:14px;background:rgba(15,23,42,.72);
+}
+.dashboard-stat-label{font-size:12px;color:#94a3b8}
+.dashboard-stat-value{margin-top:5px;font-size:25px;font-weight:800;color:#f8fafc}
+.dashboard-stat-sub{margin-top:3px;font-size:11px;color:#64748b}
+.scan-list-header{
+    display:flex;justify-content:space-between;align-items:center;
+    gap:12px;margin:18px 0 10px;
+}
+.scan-list-header h2{margin:0;font-size:18px}
+.scan-list-header span{font-size:12px;color:#64748b}
+.scan-email-card{
+    display:grid;grid-template-columns:52px 1fr auto;
+    gap:14px;align-items:center;padding:14px 16px;margin-bottom:9px;
+    border:1px solid rgba(148,163,184,.14);border-radius:14px;
+    background:rgba(15,23,42,.68);transition:.18s ease;
+}
+.scan-email-card:hover{border-color:rgba(148,163,184,.3);transform:translateY(-1px)}
+.scan-risk{
+    width:44px;height:44px;border-radius:12px;
+    display:flex;align-items:center;justify-content:center;
+    background:#020617;border:1px solid rgba(148,163,184,.2);
+    font-weight:800;font-size:14px;
+}
+.scan-email-subject{font-weight:700;color:#e2e8f0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.scan-email-meta{margin-top:4px;color:#64748b;font-size:12px}
+@media(max-width:900px){.dashboard-summary{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:650px){
+    .app-nav{align-items:flex-start;flex-direction:column}
+    .app-nav-links{width:100%}
+    .dashboard-summary{grid-template-columns:repeat(2,1fr)}
+    .scan-email-card{grid-template-columns:44px 1fr}
 }
 
 </style>
@@ -1250,7 +1326,7 @@ except Exception as e:
     vectorizer = None
     print(f'WARNING - ML 模型載入失敗：{e}')
 
-groq_client = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
+groq_client = Groq(api_key=GROQ_API_KEY) if (GROQ_API_KEY and Groq is not None) else None
 print('OK - 模型就緒' if GROQ_API_KEY else 'WARNING - Groq API Key 未設定，將跳過 LLM 深度分析')
 
 # ── 分析函式 ─────────────────────────────────────────────────
@@ -1960,10 +2036,49 @@ def get_html(msg):
 
 # ── Flask ─────────────────────────────────────────────────────
 app = Flask(__name__)
-app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'dev-only-change-me')
+app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024  # 2 MB
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['SESSION_COOKIE_SECURE'] = os.getenv('COOKIE_SECURE', '1' if BASE_URL.startswith('https://') else '0') == '1'
+
+
+@app.errorhandler(413)
+def handle_payload_too_large(e):
+    if request.path.startswith('/api') or request.is_json:
+        return jsonify({"ok": False, "error": "內容過大，請縮短郵件內容後再試。"}), 413
+    return "內容過大，請縮短郵件內容後再試。", 413
+
+@app.errorhandler(404)
+def handle_not_found(e):
+    if request.path.startswith('/api') or request.is_json:
+        return jsonify({"ok": False, "error": "找不到要求的頁面。"}), 404
+    return "找不到要求的頁面。", 404
+
+@app.errorhandler(500)
+def handle_internal_error(e):
+    app.logger.exception("Unhandled application error")
+    if request.path.startswith('/api') or request.is_json:
+        return jsonify({"ok": False, "error": "系統暫時發生錯誤，請稍後再試。"}), 500
+    return "系統暫時發生錯誤，請稍後再試。", 500
+
+app.secret_key = os.environ.get('FLASK_SECRET_KEY') or secrets.token_hex(32)
+if not os.environ.get('FLASK_SECRET_KEY') and BASE_URL.startswith('https://'):
+    print('WARNING: FLASK_SECRET_KEY 未設定，已使用隨機暫時金鑰；正式部署請設定環境變數。')
 _state = {}
 _creds = {}
 _scans = {}
+
+
+@app.after_request
+def add_security_headers(response):
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("X-Frame-Options", "SAMEORIGIN")
+    response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    response.headers.setdefault(
+        "Permissions-Policy",
+        "camera=(), microphone=(), geolocation=()"
+    )
+    return response
 
 @app.route('/')
 def index():
@@ -2355,9 +2470,86 @@ def whitelist_delete():
     conn.commit(); conn.close()
     return jsonify({'success':True,'deleted':bool(deleted)})
 
+def run_system_self_test():
+    """執行不依賴 Gmail / Groq 的本機系統自我檢測。"""
+    tests = []
+
+    def add(name, passed, detail=''):
+        tests.append({'name': name, 'passed': bool(passed), 'detail': detail})
+
+    # 1. 模型與向量器
+    add('ML 模型已載入', model is not None and hasattr(model, 'predict_proba'),
+        'predict_proba 可用' if model is not None else '模型未載入')
+    add('TF-IDF 已載入', vectorizer is not None and hasattr(vectorizer, 'transform'),
+        'transform 可用' if vectorizer is not None else '向量器未載入')
+
+    # 2. 風險公式與門檻
+    for item in run_risk_score_self_test():
+        add('風險公式：' + item['name'], item['passed'],
+            f"actual={item['actual']}, expected={item['expected']}")
+
+    # 3. URL 分析
+    url_findings = analyze_url('https://example.xyz/login/verify')
+    add('URL 風險分析', len(url_findings) >= 2, str(url_findings))
+
+    # 4. HTML 分析
+    sample_html = '''<html><body>
+        <a href="https://evil.xyz/login">https://google.com/login</a>
+        <img src="https://evil.xyz/p.gif" width="1" height="1">
+        <form><input type="password"></form>
+        <div style="display:none">hidden</div>
+    </body></html>'''
+    html_score, html_findings = analyze_html(sample_html)
+    add('HTML 風險分析', html_score > 0 and len(html_findings) >= 3,
+        f'score={html_score}, findings={len(html_findings)}')
+
+    # 5. 白名單
+    normalized = normalize_whitelist_domain('https://Example.COM/path')
+    add('白名單網域正規化', normalized == 'example.com', normalized)
+    add('白名單子網域比對', is_whitelisted('User <a@accounts.google.com>'),
+        'google.com 子網域應通過' if is_whitelisted('User <a@accounts.google.com>') else '比對失敗')
+
+    # 6. Flask 路由
+    route_paths = {str(rule.rule) for rule in app.url_map.iter_rules()}
+    required_routes = {'/', '/health', '/self_test', '/paste', '/history', '/whitelist'}
+    missing = sorted(required_routes - route_paths)
+    add('核心路由存在', not missing, 'missing=' + ','.join(missing))
+
+    passed = sum(1 for x in tests if x['passed'])
+    total = len(tests)
+    return {
+        'status': 'ok' if passed == total else 'warning',
+        'passed': passed,
+        'total': total,
+        'tests': tests,
+        'external_services_tested': False,
+        'note': '自我檢測不會連線 Gmail 或 Groq。'
+    }
+
+
+@app.route('/self_test')
+def self_test():
+    return jsonify(run_system_self_test())
+
+
 @app.route('/health')
 def health():
-    return jsonify({'status':'ok','time':datetime.now().isoformat()})
+    ml_ready = model is not None and vectorizer is not None
+    self_test = run_system_self_test()
+    return jsonify({
+        'status': 'ok' if self_test['status'] == 'ok' else 'warning',
+        'time': datetime.now().isoformat(),
+        'ml_model_loaded': model is not None,
+        'tfidf_loaded': vectorizer is not None,
+        'gmail_oauth_configured': bool(GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET),
+        'ai_configured': bool(GROQ_API_KEY and Groq is not None),
+        'ml_ready': ml_ready,
+        'self_test': {
+            'status': self_test['status'],
+            'passed': self_test['passed'],
+            'total': self_test['total']
+        }
+    })
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
