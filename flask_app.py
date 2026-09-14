@@ -1,5 +1,5 @@
 # ============================================================
-# AI 釣魚信件偵測系統 - Flask 網頁版 v24（最終整合版）
+# AI 釣魚信件偵測系統 - Flask 網頁版 v25（加入測試範例）
 # ============================================================
 
 import json, os, uuid, threading, base64, re, sqlite3, smtplib, secrets
@@ -386,12 +386,8 @@ body {
 </style>
 """
 
-# ── 首頁 HTML (極簡工程風／終端機質感，單頁固定 100vh 滿版，無滾輪) ─────
-HOME_HTML = """
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
-""" + COMMON_CSS + """
+# ── 首頁 HTML (單頁固定 100vh 滿版，無滾輪) ───────────────────
+HOME_HTML = COMMON_CSS + """
 <style>
 html, body {
   height: 100vh;
@@ -401,184 +397,208 @@ html, body {
 }
 
 .landing-container {
-  --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   display: flex;
   flex-direction: column;
   height: 100vh;
   width: 100vw;
-  background-color: #000000;
-  color: #e9e9e9;
+  background-color: var(--bg-main);
+  color: #e2e8f0;
   box-sizing: border-box;
-  font-family: var(--mono);
-}
-.landing-container .hdr {
-  border-bottom: 1px solid #262626;
-}
-.landing-container .hdr-left { font-family: var(--mono); font-weight: 500; }
-.landing-container .hdr-left span:first-child { color: #6b6b6b; }
-.landing-container .proj-tag {
-  background: transparent;
-  border: 1px solid #333;
-  color: #7a7a7a;
-  border-radius: 0;
-  font-family: var(--mono);
 }
 
 .main-content {
   flex: 1;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
-  padding: 0 24px;
-  max-width: 720px;
+  padding: 0 20px;
+  max-width: 860px;
   margin: 0 auto;
   width: 100%;
 }
 
-.prompt-line {
-  font-size: 12.5px;
-  color: #6b6b6b;
-  margin-bottom: 10px;
-}
-.prompt-line::before { content: "$ "; color: #4ade80; }
-
 .title {
-  font-size: 26px;
+  font-size: 34px;
   font-weight: 700;
   color: #ffffff;
-  margin-bottom: 14px;
-  letter-spacing: -0.3px;
-  text-align: left;
-  line-height: 1.4;
+  margin-bottom: 12px;
+  letter-spacing: -0.5px;
+  text-align: center;
 }
 
 .subtitle {
-  font-size: 13px;
-  color: #8a8a8a;
-  line-height: 1.7;
-  text-align: left;
-  margin-bottom: 28px;
+  font-size: 13.5px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  text-align: center;
+  margin-bottom: 32px;
   max-width: 560px;
 }
-
-.cta-row { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; margin-bottom: 30px; }
 
 .google-btn-white {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   background: #ffffff;
-  color: #000000;
-  font-family: var(--mono);
-  font-size: 13px;
-  font-weight: 700;
-  padding: 11px 20px;
-  border-radius: 2px;
+  color: #1f2937;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 11px 24px;
+  border-radius: 8px;
   text-decoration: none;
-  transition: background 0.15s ease, color 0.15s ease;
+  box-shadow: 0 2px 12px rgba(255, 255, 255, 0.12);
+  transition: all 0.2s ease;
+  margin-bottom: 44px;
   border: 1px solid #ffffff;
 }
 .google-btn-white:hover {
-  background: #000000;
-  color: #ffffff;
+  background: #f8fafc;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 18px rgba(255, 255, 255, 0.22);
 }
 .google-icon-svg {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   flex-shrink: 0;
   display: block;
 }
 
-.paste-link {
-  display: inline-block; font-size: 12.5px; color: #8a8a8a;
-  text-decoration: none;
-  border-bottom: 1px dashed #444; padding-bottom: 1px;
-  transition: color 0.15s ease; font-family: var(--mono);
-}
-.paste-link:hover { color: #ffffff; border-color: #888; }
-.paste-link::before { content: "# "; color: #555; }
-
-.terminal {
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
   width: 100%;
-  background: #0a0a0a;
-  border: 1px solid #2a2a2a;
-  border-radius: 4px;
-  margin-bottom: 22px;
-  overflow: hidden;
+  margin-bottom: 24px;
 }
-.terminal-bar {
-  display: flex; align-items: center; gap: 6px;
-  padding: 8px 12px;
-  border-bottom: 1px solid #222;
+.feature-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 20px 16px;
+  text-align: center;
 }
-.terminal-dot { width: 8px; height: 8px; border-radius: 50%; background: #333; }
-.terminal-title { margin-left: 8px; font-size: 11px; color: #555; }
-.terminal-body { padding: 14px 16px; font-size: 12px; line-height: 1.85; }
-.terminal-body .cmd { color: #ffffff; }
-.terminal-body .cmd::before { content: "$ "; color: #4ade80; }
-.terminal-row { display: flex; gap: 10px; color: #999; }
-.terminal-row .tag { color: #4ade80; flex-shrink: 0; }
-.terminal-row .step { color: #d4d4d4; flex-shrink: 0; width: 130px; }
-.terminal-row .desc { color: #7a7a7a; }
-.terminal-note { margin-top: 10px; padding-top: 10px; border-top: 1px dashed #222; color: #6b6b6b; }
-.terminal-note .cursor { display: inline-block; width: 6px; height: 12px; background: #4ade80; margin-left: 4px; animation: blink 1s step-start infinite; vertical-align: -2px; }
-@keyframes blink { 50% { opacity: 0; } }
+.feature-icon {
+  font-size: 18px;
+  margin-bottom: 10px;
+  opacity: 0.9;
+}
+.feature-card h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #f1f5f9;
+  margin-bottom: 6px;
+}
+.feature-card p {
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.5;
+  margin: 0;
+}
 
+.whitelist-banner {
+  width: 100%;
+  background: var(--green-bg);
+  border: 1px solid var(--green-border);
+  border-radius: 8px;
+  padding: 11px 18px;
+  font-size: 12px;
+  color: var(--green);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-sizing: border-box;
+}
+.banner-icon { font-size: 13px; flex-shrink: 0; }
+.paste-link { display: inline-block; font-size: 12.5px; color: var(--text-muted);
+              text-decoration: none; margin-top: -28px; margin-bottom: 36px;
+              border-bottom: 1px dashed var(--border-accent); padding-bottom: 1px;
+              transition: color 0.2s ease; }
+.paste-link:hover { color: var(--text-main); }
+
+.home-status-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin: 0 0 16px;
+  color: var(--text-dim);
+  font-size: 10.5px;
+}
+.status-item { display: inline-flex; align-items: center; gap: 5px; }
+.status-item span { color: var(--green); font-size: 9px; }
+.feature-card { transition: transform .2s ease, border-color .2s ease, background .2s ease; }
+.feature-card:hover { transform: translateY(-2px); border-color: var(--border-accent); background: var(--bg-hover); }
+.google-btn-white { min-width: 230px; justify-content: center; }
 @media (max-width: 700px) {
   html, body { overflow: auto !important; height: auto; min-height: 100%; }
   .landing-container { min-height: 100vh; height: auto; }
   .hdr { padding: 14px 18px; }
   .main-content { padding: 42px 18px 36px; }
-  .title { font-size: 21px; }
-  .terminal-row { flex-direction: column; gap: 2px; }
-  .terminal-row .step { width: auto; }
+  .title { font-size: 28px; }
+  .features-grid { grid-template-columns: 1fr; gap: 10px; }
+  .whitelist-banner { line-height: 1.6; }
 }
 </style>
 
 <div class="landing-container">
   <div class="hdr">
     <div class="hdr-left">
-      <span>phishing-detector</span><span style="color:#4ade80">$</span>
+      <span class="shield-icon">🛡️</span>
+      <span>AI 釣魚信件偵測系統</span>
     </div>
     <div class="hdr-nav">
-      <span class="proj-tag">[prototype]</span>
+      <span class="proj-tag">PROJ-2026</span>
     </div>
   </div>
 
   <div class="main-content">
-    <div class="prompt-line">whoami --scan gmail --limit 15</div>
     <h1 class="title">安全掃描 Gmail，快速找出可疑郵件</h1>
     <p class="subtitle">
-      授權 Google 後掃描最新 15 封郵件，結合規則引擎、機器學習、URL / HTML 解析與 AI 語意判讀，快速找出可疑信件。
+      授權 Google 後掃描最新 15 封郵件，結合規則、機器學習、URL / HTML 與 AI 分析，快速找出可疑信件。
     </p>
 
-    <div class="cta-row">
-      <a href="/login" class="google-btn-white">
-        <svg class="google-icon-svg" viewBox="0 0 24 24">
-          <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
-          <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.29v3.15C3.26 21.3 7.31 24 12 24z"/>
-          <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.29C.47 8.21 0 10.05 0 12s.47 3.79 1.29 5.42l3.99-3.15z"/>
-          <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.58l3.99 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
-        </svg>
-        使用 Google 帳號開始掃描
-      </a>
-      <a href="/paste" class="paste-link">不想連接 Gmail？直接貼上郵件內容分析</a>
+    <a href="/login" class="google-btn-white">
+      <svg class="google-icon-svg" viewBox="0 0 24 24">
+        <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
+        <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.29v3.15C3.26 21.3 7.31 24 12 24z"/>
+        <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.29C.47 8.21 0 10.05 0 12s.47 3.79 1.29 5.42l3.99-3.15z"/>
+        <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.58l3.99 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+      </svg>
+      使用 Google 帳號開始掃描
+    </a>
+
+    <a href="/paste" class="paste-link">不想連接 Gmail？直接貼上郵件內容分析 →</a>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🧠</div>
+        <h3>多層智慧分析</h3>
+        <p>規則引擎、ML、HTML / URL 與 AI 交叉判讀</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔗</div>
+        <h3>可疑特徵解析</h3>
+        <p>分析連結、追蹤像素、隱藏元素與敏感資訊要求</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🛡️</div>
+        <h3>資安事件處置</h3>
+        <p>高風險信件提供處置建議與 IR 事件資訊</p>
+      </div>
     </div>
 
-    <div class="terminal">
-      <div class="terminal-bar">
-        <span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span>
-        <span class="terminal-title">pipeline.log</span>
-      </div>
-      <div class="terminal-body">
-        <div class="cmd">python scan.py --source gmail</div>
-        <div class="terminal-row"><span class="tag">[1/4]</span><span class="step">規則引擎</span><span class="desc">已知釣魚樣式與關鍵字比對</span></div>
-        <div class="terminal-row"><span class="tag">[2/4]</span><span class="step">ML 模型</span><span class="desc">XGBoost + RandomForest + GradientBoosting 投票</span></div>
-        <div class="terminal-row"><span class="tag">[3/4]</span><span class="step">URL / HTML 解析</span><span class="desc">連結還原、追蹤像素、隱藏元素偵測</span></div>
-        <div class="terminal-row"><span class="tag">[4/4]</span><span class="step">AI 語意判讀</span><span class="desc">交叉比對郵件意圖與敏感資訊索取</span></div>
-        <div class="terminal-note"># 白名單機制已啟用，已知安全網域自動略過重複分析<span class="cursor"></span></div>
-      </div>
+    <div class="home-status-row">
+      <div class="status-item"><span>●</span> Gmail OAuth</div>
+      <div class="status-item"><span>●</span> ML 模型</div>
+      <div class="status-item"><span>●</span> URL / HTML</div>
+      <div class="status-item"><span>●</span> AI 輔助判讀</div>
+    </div>
+
+    <div class="whitelist-banner">
+      <span class="banner-icon">✅</span>
+      <div><strong>白名單機制已啟用：</strong> 已知安全網域可直接標記為安全，避免重複進行分析。</div>
     </div>
   </div>
 </div>
@@ -661,6 +681,20 @@ PASTE_HTML = COMMON_CSS + """
 .err-box { background: var(--red-bg); border: 1px solid var(--red-border);
            color: var(--red); font-size: 12.5px; padding: 10px 14px;
            border-radius: 8px; margin-bottom: 18px; }
+.sample-box { background: rgba(15, 23, 42, 0.55); border: 1px solid var(--border-subtle);
+              border-radius: 10px; padding: 14px; margin-bottom: 22px; }
+.sample-title { font-size: 12px; font-weight: 600; color: var(--text-main); margin-bottom: 10px; }
+.sample-row { display: flex; gap: 8px; }
+.sample-select { flex: 1; min-width: 0; background: #111827; color: var(--text-main);
+                 border: 1px solid var(--border-subtle); border-radius: 7px; padding: 9px 10px; font-size: 12px; }
+.sample-btn { background: var(--bg-hover); color: var(--text-main); border: 1px solid var(--border-accent);
+              border-radius: 7px; padding: 9px 14px; font-size: 12px; cursor: pointer; white-space: nowrap; }
+.sample-btn:hover { background: rgba(51, 65, 85, 0.8); }
+.sample-hint { font-size: 10.5px; color: var(--text-dim); margin-top: 8px; }
+@media (max-width: 520px) {
+  .sample-row { flex-direction: column; }
+  .sample-btn { width: 100%; }
+}
 </style>
 
 <div class="hdr">
@@ -676,26 +710,61 @@ PASTE_HTML = COMMON_CSS + """
   <div class="paste-title">貼上郵件內容進行分析</div>
   <div class="paste-sub">不需要 Google 帳號授權，將郵件的寄件者、主旨與內文貼上即可，系統會以相同的三層式（規則引擎 + ML + HTML / URL + AI）架構進行分析。</div>
 
+  <form method="GET" action="/paste" class="sample-box">
+    <div class="sample-title">🧪 快速載入測試信件</div>
+    <div class="sample-row">
+      <select name="sample" class="sample-select">
+        <option value="">請選擇測試範例</option>
+        <option value="account" SELECT_ACCOUNT>⚠️ 帳戶停用釣魚信</option>
+        <option value="prize" SELECT_PRIZE>🎁 中獎詐騙信</option>
+        <option value="delivery" SELECT_DELIVERY>📦 假物流通知</option>
+        <option value="normal" SELECT_NORMAL>✅ 正常商業信件</option>
+      </select>
+      <button type="submit" class="sample-btn">載入範例</button>
+    </div>
+    <div class="sample-hint">選擇範例後按「載入範例」，系統會直接填入郵件欄位，不依賴 JavaScript。</div>
+  </form>
+
   ERROR_PLACEHOLDER
 
   <form method="POST" action="/paste_analyze">
     <label class="field-label">寄件者（選填，用於白名單比對）</label>
-    <input class="field-input" type="text" name="sender" placeholder="例如：service@example.com">
+    <input class="field-input" type="text" name="sender" value="SAMPLE_SENDER" placeholder="例如：service@example.com">
 
     <label class="field-label">主旨</label>
-    <input class="field-input" type="text" name="subject" placeholder="郵件主旨">
+    <input class="field-input" type="text" name="subject" value="SAMPLE_SUBJECT" placeholder="郵件主旨">
 
     <label class="field-label">郵件內文（必填）</label>
-    <textarea class="field-textarea" name="body" placeholder="貼上郵件的純文字內容..." required></textarea>
+    <textarea class="field-textarea" name="body" placeholder="貼上郵件的純文字內容..." required>SAMPLE_BODY</textarea>
 
     <label class="field-label">HTML 原始碼（選填，用於偵測像素追蹤／偽裝連結等）</label>
-    <textarea class="field-textarea" name="html" placeholder="若有郵件的 HTML 原始碼，可貼於此處以啟用多模態偵測..."></textarea>
+    <textarea class="field-textarea" name="html" placeholder="若有郵件的 HTML 原始碼，可貼於此處以啟用多模態偵測...">SAMPLE_HTML</textarea>
     <div class="field-hint">在大部分信箱可透過「顯示原始郵件 / 檢視原始碼」取得 HTML 內容。</div>
 
     <button class="submit-btn" type="submit">開始分析</button>
   </form>
 </div>
 """
+
+# ── 貼上分析測試範例（伺服器端載入，不依賴 JavaScript） ────────
+SAMPLE_EMAILS = {
+    'account': {'sender':'security@example-security.com','subject':'【緊急】您的帳戶即將被停用，請立即驗證','body':'親愛的使用者：\n\n我們偵測到您的帳戶有異常登入活動。若未在 24 小時內完成驗證，您的帳戶將被暫停。\n\n請立即登入以下連結：\nhttps://secure-account-verify.example.xyz/login\n\n請輸入您的帳號、密碼、信用卡資訊及簡訊驗證碼，以完成身分驗證。\n\n若未完成驗證，系統將自動限制您的帳戶。','html':'<a href="https://secure-account-verify.example.xyz/login">立即驗證帳戶</a><form><input type="password"></form>'},
+    'prize': {'sender':'winner@reward-notice.example.xyz','subject':'🎉 恭喜您獲得限時獎金，請立即領取！','body':'恭喜您！您的電子郵件已被抽中獲得新台幣 50,000 元獎金。\n\n請於今日 23:59 前點擊下方連結完成領取，逾期資格將自動失效：\nhttps://claim-reward.example.xyz/prize\n\n為了確認身分，請提供姓名、身分資料及銀行帳戶資訊。','html':'<a href="https://claim-reward.example.xyz/prize">立即領取獎金</a>'},
+    'delivery': {'sender':'delivery@shipping-update.example.xyz','subject':'【物流通知】您的包裹配送地址需要確認','body':'您好，您的包裹目前無法完成配送。\n\n請在 12 小時內確認配送地址，否則包裹將退回寄件地：\nhttps://delivery-check.example.xyz/verify\n\n請輸入收件資訊與信用卡資料以支付重新配送費用。','html':'<a href="https://delivery-check.example.xyz/verify">確認配送資訊</a><img src="https://delivery-check.example.xyz/p.gif" width="1" height="1">'},
+    'normal': {'sender':'service@company.example.com','subject':'本月電子帳單與服務通知','body':'您好，您的本月服務帳單已產生。\n\n您可以登入官方網站查看帳單與使用明細。若您近期沒有使用相關服務，請透過官方客服管道聯繫我們。\n\n謝謝您的使用。','html':'<p>您好，您的本月服務帳單已產生。</p>'}
+}
+
+def render_paste_page(sample_key='', error=''):
+    import html as html_lib
+    sample = SAMPLE_EMAILS.get(sample_key, {'sender':'','subject':'','body':'','html':''})
+    out = PASTE_HTML.replace('ERROR_PLACEHOLDER', error)
+    out = out.replace('SAMPLE_SENDER', html_lib.escape(sample['sender'], quote=True))
+    out = out.replace('SAMPLE_SUBJECT', html_lib.escape(sample['subject'], quote=True))
+    out = out.replace('SAMPLE_BODY', html_lib.escape(sample['body']))
+    out = out.replace('SAMPLE_HTML', html_lib.escape(sample['html']))
+    for key in SAMPLE_EMAILS:
+        out = out.replace(f'SELECT_{key.upper()}', 'selected' if key == sample_key else '')
+    return out
 
 # ── 結果頁 HTML (修正點擊與高亮同步邏輯) ─────────────────────
 RESULT_HTML = COMMON_CSS + """
@@ -2247,7 +2316,7 @@ def scan_status():
 
 @app.route('/paste')
 def paste_page():
-    return PASTE_HTML.replace('ERROR_PLACEHOLDER', '')
+    return render_paste_page(request.args.get('sample', '').strip())
 
 @app.route('/paste_analyze', methods=['POST'])
 def paste_analyze():
@@ -2258,7 +2327,7 @@ def paste_analyze():
 
     if not body:
         err = '<div class="err-box">請貼上郵件內文再送出。</div>'
-        return PASTE_HTML.replace('ERROR_PLACEHOLDER', err)
+        return render_paste_page(error=err)
 
     text = f"From: {sender}\nSubject: {subject}\nBody: {body}"
 
@@ -2330,7 +2399,7 @@ def paste_analyze():
     except Exception:
         import traceback
         err = f'<div class="err-box"><pre>{traceback.format_exc()}</pre></div>'
-        return PASTE_HTML.replace('ERROR_PLACEHOLDER', err)
+        return render_paste_page(error=err)
 
 @app.route('/result/<scan_id>')
 def result(scan_id):
