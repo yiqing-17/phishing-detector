@@ -64,32 +64,36 @@ if GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET:
 else:
     print('WARNING: GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET 尚未設定，Gmail OAuth 將無法使用。')
 
-# ── CSS 共用樣式 (全站統一風格：極簡深藍黑主題 + 自訂精緻微型捲軸) ───────────────────
+# ── CSS 共用樣式 (全站統一風格：極簡工程風／終端機質感，黑白為主) ───────────────────
 COMMON_CSS = """
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg-main: #0b0d12;
-  --bg-card: rgba(15, 23, 42, 0.5);
-  --bg-hover: rgba(30, 41, 59, 0.6);
-  --border-subtle: rgba(255, 255, 255, 0.07);
-  --border-accent: rgba(255, 255, 255, 0.15);
-  --text-main: #f8fafc;
-  --text-muted: #8a99ad;
-  --text-dim: #64748b;
-  --red: #ef4444; --red-bg: rgba(239, 68, 68, 0.1); --red-border: rgba(239, 68, 68, 0.25);
-  --orange: #f97316; --orange-bg: rgba(249, 115, 22, 0.1); --orange-border: rgba(249, 115, 22, 0.25);
-  --green: #10b981; --green-bg: rgba(16, 185, 129, 0.1); --green-border: rgba(16, 185, 129, 0.25);
-  --blue: #3b82f6; --blue-bg: rgba(59, 130, 246, 0.1);
+  --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --bg-main: #000000;
+  --bg-card: #0a0a0a;
+  --bg-hover: #151515;
+  --border-subtle: #262626;
+  --border-accent: #444444;
+  --text-main: #f2f2f2;
+  --text-muted: #8a8a8a;
+  --text-dim: #616161;
+  --red: #ef4444; --red-bg: rgba(239, 68, 68, 0.08); --red-border: rgba(239, 68, 68, 0.3);
+  --orange: #f59e0b; --orange-bg: rgba(245, 158, 11, 0.08); --orange-border: rgba(245, 158, 11, 0.3);
+  --green: #4ade80; --green-bg: rgba(74, 222, 128, 0.08); --green-border: rgba(74, 222, 128, 0.3);
+  --blue: #e5e5e5; --blue-bg: rgba(229, 229, 229, 0.08);
 }
 * { 
   box-sizing: border-box; 
   margin: 0; 
   padding: 0; 
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+  scrollbar-color: #333 transparent;
 }
 body { 
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--mono);
   background: var(--bg-main); 
   color: var(--text-main); 
   min-height: 100vh; 
@@ -104,12 +108,12 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
-  border-radius: 99px;
+  background: #333;
+  border-radius: 2px;
   transition: background 0.2s ease;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.28);
+  background: #4a4a4a;
 }
 
 /* 全站統一導航列 */
@@ -120,48 +124,48 @@ body {
   align-items: center; 
   justify-content: space-between; 
 }
-.hdr-left { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 15px; letter-spacing: 0.3px; }
-.shield-icon { font-size: 16px; display: inline-flex; align-items: center; }
-.hdr h1 { font-size: 15px; font-weight: 600; color: var(--text-main); letter-spacing: 0.3px; }
+.hdr-left { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 14px; letter-spacing: 0; font-family: var(--mono); }
+.hdr-left::before { content: "$"; color: var(--green); margin-right: -2px; }
+.shield-icon { display: none; }
+.hdr h1 { font-size: 14px; font-weight: 600; color: var(--text-main); letter-spacing: 0; }
 .hdr-nav { display: flex; gap: 8px; align-items: center; }
 .hdr-nav a { 
   font-size: 12px; 
   color: var(--text-muted); 
   text-decoration: none;
   padding: 6px 12px; 
-  border-radius: 6px; 
+  border-radius: 2px; 
   border: 1px solid var(--border-subtle);
-  transition: all 0.2s ease; 
+  transition: all 0.15s ease; 
 }
-.hdr-nav a:hover { color: var(--text-main); border-color: var(--border-accent); background: var(--bg-hover); }
+.hdr-nav a:hover { color: #000; border-color: #fff; background: #fff; }
 .proj-tag { 
-  background: rgba(255, 255, 255, 0.04); 
+  background: transparent; 
   border: 1px solid var(--border-subtle);
   color: var(--text-dim); 
   font-size: 11px; 
   padding: 4px 10px; 
-  border-radius: 4px; 
-  font-family: monospace; 
+  border-radius: 2px; 
+  font-family: var(--mono); 
 }
 .back { 
   display: inline-flex; align-items: center; gap: 6px; font-size: 12px;
   color: var(--text-muted); text-decoration: none; padding: 6px 14px;
-  border-radius: 6px; border: 1px solid var(--border-subtle);
-  margin-bottom: 20px; transition: all 0.2s ease; 
+  border-radius: 2px; border: 1px solid var(--border-subtle);
+  margin-bottom: 20px; transition: all 0.15s ease; font-family: var(--mono);
 }
-.back:hover { color: var(--text-main); border-color: var(--border-accent); background: var(--bg-hover); }
+.back:hover { color: #000; border-color: #fff; background: #fff; }
 
-.score-breakdown{margin-top:14px;padding:16px 18px;border:1px solid var(--border-subtle);border-radius:12px;background:var(--bg-card);color:var(--text-main);box-shadow:0 8px 24px rgba(0,0,0,.12)}
-.score-breakdown h4{margin:0 0 12px;color:var(--text-main);font-size:14px;font-weight:600;letter-spacing:.2px}.score-row{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:9px 0;border-bottom:1px solid var(--border-subtle);font-size:13px;color:var(--text-muted)}.score-row span:first-child{color:var(--text-main)!important;font-weight:500}.score-row span:last-child{color:var(--text-muted)!important;text-align:right;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}.score-total{margin-top:12px;padding-top:2px;font-weight:600;color:var(--text-main)}
+.score-breakdown{margin-top:14px;padding:16px 18px;border:1px solid var(--border-subtle);border-radius:4px;background:var(--bg-card);color:var(--text-main)}
+.score-breakdown h4{margin:0 0 12px;color:var(--text-main);font-size:13px;font-weight:600;letter-spacing:0}.score-breakdown h4::before{content:"# ";color:var(--text-dim)}.score-row{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:9px 0;border-bottom:1px solid var(--border-subtle);font-size:12.5px;color:var(--text-muted);font-family:var(--mono)}.score-row span:first-child{color:var(--text-main)!important;font-weight:500}.score-row span:last-child{color:var(--text-muted)!important;text-align:right;font-family:var(--mono)}.score-total{margin-top:12px;padding-top:2px;font-weight:600;color:var(--text-main);font-family:var(--mono)}
 
-/* STEP 12：分析結果頁 UI 優化 */
+/* STEP 12：分析結果頁 UI（單一色階、直角為主） */
 .result-hero{
-    background:linear-gradient(135deg,rgba(30,41,59,.96),rgba(15,23,42,.98));
-    border:1px solid rgba(148,163,184,.20);
-    border-radius:22px;
+    background:var(--bg-card);
+    border:1px solid var(--border-subtle);
+    border-radius:4px;
     padding:28px;
     margin-bottom:22px;
-    box-shadow:0 12px 35px rgba(0,0,0,.22);
 }
 .result-hero-grid{
     display:grid;
@@ -171,52 +175,55 @@ body {
 }
 .risk-score-box{
     min-height:150px;
-    border:1px solid rgba(148,163,184,.24);
-    border-radius:20px;
+    border:1px solid var(--border-subtle);
+    border-radius:4px;
     display:flex;
     flex-direction:column;
     align-items:center;
     justify-content:center;
-    background:rgba(2,6,23,.52);
+    background:#000;
 }
 .risk-score-number{
-    font-size:52px;
+    font-size:48px;
     line-height:1;
     font-weight:800;
-    letter-spacing:-2px;
+    letter-spacing:-1px;
+    font-family:var(--mono);
 }
 .risk-score-label{
     margin-top:9px;
-    color:#94a3b8;
-    font-size:13px;
+    color:var(--text-muted);
+    font-size:12px;
+    font-family:var(--mono);
 }
 .result-title{
     margin:0 0 10px;
-    font-size:25px;
+    font-size:22px;
     line-height:1.4;
     word-break:break-word;
 }
 .result-meta{
-    color:#94a3b8;
-    font-size:14px;
+    color:var(--text-muted);
+    font-size:13px;
     line-height:1.8;
+    font-family:var(--mono);
 }
 .result-focus{
     margin-top:18px;
     padding:14px 16px;
-    border-radius:14px;
-    background:rgba(15,23,42,.75);
-    border-left:3px solid #64748b;
+    border-radius:4px;
+    background:var(--bg-card);
+    border-left:2px solid var(--text-dim);
 }
 .result-focus strong{
     display:block;
     margin-bottom:7px;
-    color:#e2e8f0;
+    color:var(--text-main);
 }
 .result-focus ul{
     margin:0;
     padding-left:20px;
-    color:#cbd5e1;
+    color:var(--text-muted);
 }
 .result-section{
     margin-top:22px;
@@ -226,24 +233,24 @@ body {
     align-items:center;
     gap:9px;
     margin:0 0 13px;
-    font-size:19px;
+    font-size:16px;
+    font-family:var(--mono);
 }
 .layer-grid{
     display:grid;
     grid-template-columns:repeat(2,minmax(0,1fr));
-    gap:15px;
+    gap:12px;
 }
 .layer-card{
     min-width:0;
-    border:1px solid rgba(148,163,184,.17);
-    background:rgba(15,23,42,.78);
-    border-radius:17px;
-    padding:18px;
-    transition:transform .18s ease,border-color .18s ease;
+    border:1px solid var(--border-subtle);
+    background:var(--bg-card);
+    border-radius:4px;
+    padding:16px;
+    transition:border-color .15s ease;
 }
 .layer-card:hover{
-    transform:translateY(-2px);
-    border-color:rgba(148,163,184,.35);
+    border-color:var(--border-accent);
 }
 .layer-card-top{
     display:flex;
@@ -253,33 +260,35 @@ body {
 }
 .layer-card-name{
     font-weight:700;
-    color:#f1f5f9;
+    color:var(--text-main);
+    font-family:var(--mono);
 }
 .layer-card-score{
     font-weight:800;
     white-space:nowrap;
+    font-family:var(--mono);
 }
 .layer-card-desc{
     margin:8px 0 13px;
-    color:#94a3b8;
-    font-size:13px;
+    color:var(--text-muted);
+    font-size:12.5px;
     line-height:1.6;
 }
 .layer-bar{
-    height:7px;
-    background:#1e293b;
-    border-radius:999px;
+    height:4px;
+    background:#1a1a1a;
+    border-radius:2px;
     overflow:hidden;
 }
 .layer-bar-fill{
     height:100%;
-    border-radius:999px;
+    border-radius:2px;
     background:currentColor;
 }
 .result-panel{
-    border:1px solid rgba(148,163,184,.17);
-    background:rgba(15,23,42,.78);
-    border-radius:17px;
+    border:1px solid var(--border-subtle);
+    background:var(--bg-card);
+    border-radius:4px;
     padding:20px;
 }
 .result-panel + .result-panel{
@@ -287,44 +296,45 @@ body {
 }
 .finding-list{
     display:grid;
-    gap:10px;
+    gap:8px;
 }
 .finding-item{
-    padding:13px 15px;
-    border-radius:12px;
-    background:rgba(30,41,59,.66);
-    color:#cbd5e1;
+    padding:11px 14px;
+    border-radius:3px;
+    background:#111;
+    color:var(--text-muted);
     line-height:1.65;
+    font-size:13px;
 }
 .finding-item::before{
-    content:"•";
+    content:"›";
     margin-right:8px;
-    color:#94a3b8;
+    color:var(--text-dim);
 }
 @media(max-width:760px){
     .result-hero{padding:20px;}
     .result-hero-grid{grid-template-columns:1fr;gap:18px;}
     .risk-score-box{min-height:125px;}
-    .risk-score-number{font-size:46px;}
+    .risk-score-number{font-size:42px;}
     .layer-grid{grid-template-columns:1fr;}
-    .result-title{font-size:21px;}
+    .result-title{font-size:19px;}
 }
 
 
-/* STEP 13：歷史紀錄頁 UI 優化 */
+/* STEP 13：歷史紀錄頁 UI */
 .history-header{display:flex;justify-content:space-between;align-items:flex-end;gap:18px;margin-bottom:20px}
-.history-header h1{margin:0 0 6px;font-size:26px}
-.history-header p{margin:0;color:#94a3b8;font-size:14px}
+.history-header h1{margin:0 0 6px;font-size:22px;font-family:var(--mono)}
+.history-header p{margin:0;color:var(--text-muted);font-size:13px}
 .history-toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
-.history-filter{min-width:180px;padding:10px 13px;border-radius:10px;border:1px solid rgba(148,163,184,.2);background:#0f172a;color:#e2e8f0}
-.history-list{display:grid;gap:12px}
-.history-item{display:grid;grid-template-columns:72px 1fr auto;gap:16px;align-items:center;padding:17px 18px;border:1px solid rgba(148,163,184,.17);border-radius:16px;background:rgba(15,23,42,.78);transition:transform .18s ease,border-color .18s ease}
-.history-item:hover{transform:translateY(-1px);border-color:rgba(148,163,184,.34)}
-.history-score{width:58px;height:58px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#020617;border:1px solid rgba(148,163,184,.24);font-weight:800;font-size:17px}
-.history-subject{font-weight:700;color:#f1f5f9;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.history-meta{margin-top:5px;color:#94a3b8;font-size:13px}
+.history-filter{min-width:180px;padding:10px 13px;border-radius:3px;border:1px solid var(--border-subtle);background:#0a0a0a;color:var(--text-main);font-family:var(--mono)}
+.history-list{display:grid;gap:10px}
+.history-item{display:grid;grid-template-columns:72px 1fr auto;gap:16px;align-items:center;padding:16px 18px;border:1px solid var(--border-subtle);border-radius:4px;background:var(--bg-card);transition:border-color .15s ease}
+.history-item:hover{border-color:var(--border-accent)}
+.history-score{width:54px;height:54px;border-radius:3px;display:flex;align-items:center;justify-content:center;background:#000;border:1px solid var(--border-subtle);font-weight:800;font-size:16px;font-family:var(--mono)}
+.history-subject{font-weight:700;color:var(--text-main);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.history-meta{margin-top:5px;color:var(--text-muted);font-size:12.5px;font-family:var(--mono)}
 .history-actions{display:flex;gap:8px;align-items:center}
-.history-empty{text-align:center;padding:45px 20px;border:1px dashed rgba(148,163,184,.22);border-radius:16px;color:#94a3b8}
+.history-empty{text-align:center;padding:45px 20px;border:1px dashed var(--border-subtle);border-radius:4px;color:var(--text-muted)}
 @media(max-width:700px){.history-header{align-items:flex-start;flex-direction:column}.history-item{grid-template-columns:58px 1fr}.history-actions{grid-column:2}}
 
 
@@ -332,49 +342,49 @@ body {
 .app-nav{
     display:flex;align-items:center;justify-content:space-between;
     gap:18px;padding:12px 18px;margin-bottom:22px;
-    border:1px solid rgba(148,163,184,.16);border-radius:16px;
-    background:rgba(15,23,42,.82);backdrop-filter:blur(10px);
+    border:1px solid var(--border-subtle);border-radius:4px;
+    background:var(--bg-card);
 }
-.app-brand{display:flex;align-items:center;gap:10px;font-weight:800;color:#f8fafc;text-decoration:none}
-.app-brand-icon{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:#1e293b}
+.app-brand{display:flex;align-items:center;gap:10px;font-weight:800;color:var(--text-main);text-decoration:none;font-family:var(--mono)}
+.app-brand-icon{width:30px;height:30px;border-radius:3px;display:flex;align-items:center;justify-content:center;background:#000;border:1px solid var(--border-subtle)}
 .app-nav-links{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
 .app-nav-link{
-    padding:8px 11px;border-radius:9px;color:#94a3b8;
-    text-decoration:none;font-size:13px;transition:.18s ease;
+    padding:7px 11px;border-radius:3px;color:var(--text-muted);
+    text-decoration:none;font-size:12.5px;transition:.15s ease;font-family:var(--mono);
 }
-.app-nav-link:hover,.app-nav-link.active{color:#f1f5f9;background:#1e293b}
+.app-nav-link:hover,.app-nav-link.active{color:#000;background:#fff}
 .dashboard-summary{
     display:grid;grid-template-columns:repeat(5,minmax(0,1fr));
-    gap:11px;margin-bottom:18px;
+    gap:10px;margin-bottom:18px;
 }
 .dashboard-stat{
-    padding:15px;border:1px solid rgba(148,163,184,.16);
-    border-radius:14px;background:rgba(15,23,42,.72);
+    padding:14px;border:1px solid var(--border-subtle);
+    border-radius:4px;background:var(--bg-card);
 }
-.dashboard-stat-label{font-size:12px;color:#94a3b8}
-.dashboard-stat-value{margin-top:5px;font-size:25px;font-weight:800;color:#f8fafc}
-.dashboard-stat-sub{margin-top:3px;font-size:11px;color:#64748b}
+.dashboard-stat-label{font-size:11px;color:var(--text-muted);font-family:var(--mono)}
+.dashboard-stat-value{margin-top:5px;font-size:22px;font-weight:800;color:var(--text-main);font-family:var(--mono)}
+.dashboard-stat-sub{margin-top:3px;font-size:10.5px;color:var(--text-dim)}
 .scan-list-header{
     display:flex;justify-content:space-between;align-items:center;
     gap:12px;margin:18px 0 10px;
 }
-.scan-list-header h2{margin:0;font-size:18px}
-.scan-list-header span{font-size:12px;color:#64748b}
+.scan-list-header h2{margin:0;font-size:16px;font-family:var(--mono)}
+.scan-list-header span{font-size:11px;color:var(--text-dim)}
 .scan-email-card{
     display:grid;grid-template-columns:52px 1fr auto;
-    gap:14px;align-items:center;padding:14px 16px;margin-bottom:9px;
-    border:1px solid rgba(148,163,184,.14);border-radius:14px;
-    background:rgba(15,23,42,.68);transition:.18s ease;
+    gap:14px;align-items:center;padding:13px 16px;margin-bottom:8px;
+    border:1px solid var(--border-subtle);border-radius:4px;
+    background:var(--bg-card);transition:.15s ease;
 }
-.scan-email-card:hover{border-color:rgba(148,163,184,.3);transform:translateY(-1px)}
+.scan-email-card:hover{border-color:var(--border-accent)}
 .scan-risk{
-    width:44px;height:44px;border-radius:12px;
+    width:42px;height:42px;border-radius:3px;
     display:flex;align-items:center;justify-content:center;
-    background:#020617;border:1px solid rgba(148,163,184,.2);
-    font-weight:800;font-size:14px;
+    background:#000;border:1px solid var(--border-subtle);
+    font-weight:800;font-size:13px;font-family:var(--mono);
 }
-.scan-email-subject{font-weight:700;color:#e2e8f0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.scan-email-meta{margin-top:4px;color:#64748b;font-size:12px}
+.scan-email-subject{font-weight:700;color:var(--text-main);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.scan-email-meta{margin-top:4px;color:var(--text-dim);font-size:11.5px;font-family:var(--mono)}
 @media(max-width:900px){.dashboard-summary{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:650px){
     .app-nav{align-items:flex-start;flex-direction:column}
@@ -386,7 +396,7 @@ body {
 </style>
 """
 
-# ── 首頁 HTML (單頁固定 100vh 滿版，無滾輪) ───────────────────
+# ── 首頁 HTML (極簡工程風／終端機質感，單頁固定 100vh 滿版，無滾輪) ─────
 HOME_HTML = COMMON_CSS + """
 <style>
 html, body {
@@ -401,8 +411,8 @@ html, body {
   flex-direction: column;
   height: 100vh;
   width: 100vw;
-  background-color: var(--bg-main);
-  color: #e2e8f0;
+  background-color: #000000;
+  color: #e9e9e9;
   box-sizing: border-box;
 }
 
@@ -410,195 +420,145 @@ html, body {
   flex: 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  padding: 0 20px;
-  max-width: 860px;
+  padding: 0 24px;
+  max-width: 720px;
   margin: 0 auto;
   width: 100%;
 }
 
+.prompt-line {
+  font-size: 12.5px;
+  color: var(--text-dim);
+  margin-bottom: 10px;
+}
+.prompt-line::before { content: "$ "; color: var(--green); }
+
 .title {
-  font-size: 34px;
+  font-size: 26px;
   font-weight: 700;
   color: #ffffff;
-  margin-bottom: 12px;
-  letter-spacing: -0.5px;
-  text-align: center;
+  margin-bottom: 14px;
+  letter-spacing: -0.3px;
+  text-align: left;
+  line-height: 1.4;
 }
 
 .subtitle {
-  font-size: 13.5px;
+  font-size: 13px;
   color: var(--text-muted);
-  line-height: 1.6;
-  text-align: center;
-  margin-bottom: 32px;
+  line-height: 1.7;
+  text-align: left;
+  margin-bottom: 28px;
   max-width: 560px;
 }
+
+.cta-row { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; margin-bottom: 30px; }
 
 .google-btn-white {
   display: inline-flex;
   align-items: center;
-  gap: 12px;
-  background: #ffffff;
-  color: #1f2937;
-  font-size: 14px;
-  font-weight: 600;
-  padding: 11px 24px;
-  border-radius: 8px;
+  gap: 10px;
+  background: transparent;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 11px 20px;
+  border-radius: 2px;
   text-decoration: none;
-  box-shadow: 0 2px 12px rgba(255, 255, 255, 0.12);
-  transition: all 0.2s ease;
-  margin-bottom: 44px;
+  transition: background 0.15s ease, color 0.15s ease;
   border: 1px solid #ffffff;
+  font-family: var(--mono);
 }
 .google-btn-white:hover {
-  background: #f8fafc;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 18px rgba(255, 255, 255, 0.22);
-}
-.google-icon-svg {
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
-  display: block;
+  background: #ffffff;
+  color: #000000;
 }
 
-.features-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  width: 100%;
-  margin-bottom: 24px;
+.paste-link {
+  display: inline-block; font-size: 12.5px; color: var(--text-muted);
+  text-decoration: none;
+  border-bottom: 1px dashed var(--border-accent); padding-bottom: 1px;
+  transition: color 0.15s ease;
 }
-.feature-card {
+.paste-link:hover { color: #ffffff; border-color: #888; }
+.paste-link::before { content: "# "; color: var(--text-dim); }
+
+.terminal {
+  width: 100%;
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
-  border-radius: 10px;
-  padding: 20px 16px;
-  text-align: center;
+  border-radius: 4px;
+  margin-bottom: 22px;
+  overflow: hidden;
 }
-.feature-icon {
-  font-size: 18px;
-  margin-bottom: 10px;
-  opacity: 0.9;
+.terminal-bar {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-subtle);
 }
-.feature-card h3 {
-  font-size: 14px;
-  font-weight: 600;
-  color: #f1f5f9;
-  margin-bottom: 6px;
-}
-.feature-card p {
-  font-size: 12px;
-  color: var(--text-dim);
-  line-height: 1.5;
-  margin: 0;
-}
+.terminal-dot { width: 8px; height: 8px; border-radius: 50%; background: #333; }
+.terminal-title { margin-left: 8px; font-size: 11px; color: var(--text-dim); }
+.terminal-body { padding: 14px 16px; font-size: 12px; line-height: 1.85; }
+.terminal-body .cmd { color: #ffffff; }
+.terminal-body .cmd::before { content: "$ "; color: var(--green); }
+.terminal-row { display: flex; gap: 10px; color: var(--text-muted); }
+.terminal-row .tag { color: var(--green); flex-shrink: 0; }
+.terminal-row .step { color: #d4d4d4; flex-shrink: 0; width: 130px; }
+.terminal-row .desc { color: var(--text-dim); }
+.terminal-note { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border-subtle); color: var(--text-dim); }
+.terminal-note .cursor { display: inline-block; width: 6px; height: 12px; background: var(--green); margin-left: 4px; animation: blink 1s step-start infinite; vertical-align: -2px; }
+@keyframes blink { 50% { opacity: 0; } }
 
-.whitelist-banner {
-  width: 100%;
-  background: var(--green-bg);
-  border: 1px solid var(--green-border);
-  border-radius: 8px;
-  padding: 11px 18px;
-  font-size: 12px;
-  color: var(--green);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  box-sizing: border-box;
-}
-.banner-icon { font-size: 13px; flex-shrink: 0; }
-.paste-link { display: inline-block; font-size: 12.5px; color: var(--text-muted);
-              text-decoration: none; margin-top: -28px; margin-bottom: 36px;
-              border-bottom: 1px dashed var(--border-accent); padding-bottom: 1px;
-              transition: color 0.2s ease; }
-.paste-link:hover { color: var(--text-main); }
-
-.home-status-row {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px 18px;
-  margin: 0 0 16px;
-  color: var(--text-dim);
-  font-size: 10.5px;
-}
-.status-item { display: inline-flex; align-items: center; gap: 5px; }
-.status-item span { color: var(--green); font-size: 9px; }
-.feature-card { transition: transform .2s ease, border-color .2s ease, background .2s ease; }
-.feature-card:hover { transform: translateY(-2px); border-color: var(--border-accent); background: var(--bg-hover); }
-.google-btn-white { min-width: 230px; justify-content: center; }
 @media (max-width: 700px) {
   html, body { overflow: auto !important; height: auto; min-height: 100%; }
   .landing-container { min-height: 100vh; height: auto; }
   .hdr { padding: 14px 18px; }
   .main-content { padding: 42px 18px 36px; }
-  .title { font-size: 28px; }
-  .features-grid { grid-template-columns: 1fr; gap: 10px; }
-  .whitelist-banner { line-height: 1.6; }
+  .title { font-size: 21px; }
+  .terminal-row { flex-direction: column; gap: 2px; }
+  .terminal-row .step { width: auto; }
 }
 </style>
 
 <div class="landing-container">
   <div class="hdr">
     <div class="hdr-left">
-      <span class="shield-icon">🛡️</span>
-      <span>AI 釣魚信件偵測系統</span>
+      <span>phishing-detector</span>
     </div>
     <div class="hdr-nav">
-      <span class="proj-tag">PROJ-2026</span>
+      <span class="proj-tag">[prototype]</span>
     </div>
   </div>
 
   <div class="main-content">
+    <div class="prompt-line">whoami --scan gmail --limit 15</div>
     <h1 class="title">安全掃描 Gmail，快速找出可疑郵件</h1>
     <p class="subtitle">
-      授權 Google 後掃描最新 15 封郵件，結合規則、機器學習、URL / HTML 與 AI 分析，快速找出可疑信件。
+      授權 Google 後掃描最新 15 封郵件，結合規則引擎、機器學習、URL / HTML 解析與 AI 語意判讀，快速找出可疑信件。
     </p>
 
-    <a href="/login" class="google-btn-white">
-      <svg class="google-icon-svg" viewBox="0 0 24 24">
-        <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
-        <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.29v3.15C3.26 21.3 7.31 24 12 24z"/>
-        <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.29C.47 8.21 0 10.05 0 12s.47 3.79 1.29 5.42l3.99-3.15z"/>
-        <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.58l3.99 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
-      </svg>
-      使用 Google 帳號開始掃描
-    </a>
-
-    <a href="/paste" class="paste-link">不想連接 Gmail？直接貼上郵件內容分析 →</a>
-
-    <div class="features-grid">
-      <div class="feature-card">
-        <div class="feature-icon">🧠</div>
-        <h3>多層智慧分析</h3>
-        <p>規則引擎、ML、HTML / URL 與 AI 交叉判讀</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">🔗</div>
-        <h3>可疑特徵解析</h3>
-        <p>分析連結、追蹤像素、隱藏元素與敏感資訊要求</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">🛡️</div>
-        <h3>資安事件處置</h3>
-        <p>高風險信件提供處置建議與 IR 事件資訊</p>
-      </div>
+    <div class="cta-row">
+      <a href="/login" class="google-btn-white">
+        使用 Google 帳號開始掃描
+      </a>
+      <a href="/paste" class="paste-link">不想連接 Gmail？直接貼上郵件內容分析</a>
     </div>
 
-    <div class="home-status-row">
-      <div class="status-item"><span>●</span> Gmail OAuth</div>
-      <div class="status-item"><span>●</span> ML 模型</div>
-      <div class="status-item"><span>●</span> URL / HTML</div>
-      <div class="status-item"><span>●</span> AI 輔助判讀</div>
-    </div>
-
-    <div class="whitelist-banner">
-      <span class="banner-icon">✅</span>
-      <div><strong>白名單機制已啟用：</strong> 已知安全網域可直接標記為安全，避免重複進行分析。</div>
+    <div class="terminal">
+      <div class="terminal-bar">
+        <span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span>
+        <span class="terminal-title">pipeline.log</span>
+      </div>
+      <div class="terminal-body">
+        <div class="cmd">python scan.py --source gmail</div>
+        <div class="terminal-row"><span class="tag">[1/4]</span><span class="step">規則引擎</span><span class="desc">已知釣魚樣式與關鍵字比對</span></div>
+        <div class="terminal-row"><span class="tag">[2/4]</span><span class="step">ML 模型</span><span class="desc">XGBoost + RandomForest + GradientBoosting 投票</span></div>
+        <div class="terminal-row"><span class="tag">[3/4]</span><span class="step">URL / HTML 解析</span><span class="desc">連結還原、追蹤像素、隱藏元素偵測</span></div>
+        <div class="terminal-row"><span class="tag">[4/4]</span><span class="step">AI 語意判讀</span><span class="desc">交叉比對郵件意圖與敏感資訊索取</span></div>
+        <div class="terminal-note"># 白名單機制已啟用，已知安全網域自動略過重複分析<span class="cursor"></span></div>
+      </div>
     </div>
   </div>
 </div>
@@ -607,18 +567,17 @@ html, body {
 # ── Loading HTML ─────────────────────────────────────────────
 LOADING_HTML = COMMON_CSS + """
 <style>
-.loading-wrap { display: flex; flex-direction: column; align-items: center;
-                justify-content: center; min-height: calc(100vh - 57px); gap: 24px; }
-.spinner { width: 44px; height: 44px; border: 3px solid var(--border-subtle);
-           border-top: 3px solid var(--blue); border-radius: 50%;
-           animation: spin 0.9s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
-.loading-title { font-size: 17px; font-weight: 600; color: var(--text-main); }
-.steps { display: flex; flex-direction: column; gap: 10px; }
-.step { font-size: 13px; color: var(--text-dim); display: flex; align-items: center; gap: 10px; }
-.step.active { color: var(--blue); font-weight: 500; }
-.step-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border-subtle); flex-shrink: 0; }
-.step.active .step-dot { background: var(--blue); box-shadow: 0 0 8px var(--blue); }
+.loading-wrap { display: flex; flex-direction: column; align-items: flex-start;
+                justify-content: center; min-height: calc(100vh - 57px); gap: 18px;
+                max-width: 480px; margin: 0 auto; padding: 0 24px; }
+.loading-title { font-size: 13px; color: var(--text-muted); font-family: var(--mono); }
+.loading-title::before { content: "$ "; color: var(--green); }
+.steps { display: flex; flex-direction: column; gap: 9px; width: 100%; }
+.step { font-size: 12.5px; color: var(--text-dim); display: flex; align-items: center; gap: 10px; font-family: var(--mono); }
+.step::before { content: "[ ]"; color: var(--border-accent); flex-shrink: 0; }
+.step.active { color: var(--text-main); }
+.step.active::before { content: "[x]"; color: var(--green); }
+.step-dot { display: none; }
 </style>
 <script>
 const stepLabels = ['連線 Gmail...','讀取最新信件...','規則引擎分析中...','AI 深度分析中...','整理分析結果...'];
@@ -638,20 +597,18 @@ setInterval(() => {
 
 <div class="hdr">
   <div class="hdr-left">
-    <span class="shield-icon">🛡️</span>
-    <h1>AI 釣魚信件偵測系統</h1>
+    <span>phishing-detector</span>
   </div>
-  <span class="proj-tag">SCANNING...</span>
+  <span class="proj-tag">[scanning]</span>
 </div>
 <div class="loading-wrap">
-  <div class="spinner"></div>
   <div class="loading-title">正在掃描你的 Gmail...</div>
   <div class="steps">
-    <div class="step active"><div class="step-dot"></div>連線 Gmail...</div>
-    <div class="step"><div class="step-dot"></div>讀取最新信件...</div>
-    <div class="step"><div class="step-dot"></div>規則引擎分析中...</div>
-    <div class="step"><div class="step-dot"></div>AI 深度分析中...</div>
-    <div class="step"><div class="step-dot"></div>整理分析結果...</div>
+    <div class="step active">連線 Gmail...</div>
+    <div class="step">讀取最新信件...</div>
+    <div class="step">規則引擎分析中...</div>
+    <div class="step">AI 深度分析中...</div>
+    <div class="step">整理分析結果...</div>
   </div>
 </div>
 """
@@ -660,36 +617,38 @@ setInterval(() => {
 PASTE_HTML = COMMON_CSS + """
 <style>
 .paste-wrap { max-width: 640px; margin: 0 auto; padding: 40px 20px 60px; }
-.paste-title { font-size: 22px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+.paste-title { font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 6px; }
 .paste-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 28px; line-height: 1.6; }
-.field-label { font-size: 12px; color: var(--text-dim); margin-bottom: 6px;
-               display: block; letter-spacing: 0.03em; }
+.field-label { font-size: 11.5px; color: var(--text-dim); margin-bottom: 6px;
+               display: block; letter-spacing: 0; font-family: var(--mono); }
+.field-label::before { content: "# "; color: #444; }
 .field-input, .field-textarea {
   width: 100%; background: var(--bg-card); border: 1px solid var(--border-subtle);
-  border-radius: 8px; color: var(--text-main); font-size: 13.5px;
-  padding: 10px 14px; margin-bottom: 18px; font-family: inherit;
+  border-radius: 3px; color: var(--text-main); font-size: 13px;
+  padding: 10px 14px; margin-bottom: 18px; font-family: var(--mono);
 }
 .field-input:focus, .field-textarea:focus { outline: none; border-color: var(--border-accent); }
 .field-textarea { resize: vertical; min-height: 140px; line-height: 1.6; }
 .field-hint { font-size: 11px; color: var(--text-dim); margin: -12px 0 18px; }
 .submit-btn {
-  background: #ffffff; color: #1f2937; font-size: 14px; font-weight: 600;
-  padding: 11px 26px; border-radius: 8px; border: none; cursor: pointer;
-  transition: all 0.2s ease;
+  background: #ffffff; color: #000000; font-size: 13px; font-weight: 700;
+  padding: 11px 26px; border-radius: 2px; border: 1px solid #fff; cursor: pointer;
+  transition: all 0.15s ease; font-family: var(--mono);
 }
-.submit-btn:hover { background: #f1f5f9; transform: translateY(-1px); }
+.submit-btn:hover { background: #000; color: #fff; }
 .err-box { background: var(--red-bg); border: 1px solid var(--red-border);
            color: var(--red); font-size: 12.5px; padding: 10px 14px;
-           border-radius: 8px; margin-bottom: 18px; }
-.sample-box { background: rgba(15, 23, 42, 0.55); border: 1px solid var(--border-subtle);
-              border-radius: 10px; padding: 14px; margin-bottom: 22px; }
-.sample-title { font-size: 12px; font-weight: 600; color: var(--text-main); margin-bottom: 10px; }
+           border-radius: 3px; margin-bottom: 18px; font-family: var(--mono); }
+.sample-box { background: var(--bg-card); border: 1px solid var(--border-subtle);
+              border-radius: 4px; padding: 14px; margin-bottom: 22px; }
+.sample-title { font-size: 12px; font-weight: 600; color: var(--text-main); margin-bottom: 10px; font-family: var(--mono); }
+.sample-title::before { content: "$ load-sample  "; color: var(--green); }
 .sample-row { display: flex; gap: 8px; }
-.sample-select { flex: 1; min-width: 0; background: #111827; color: var(--text-main);
-                 border: 1px solid var(--border-subtle); border-radius: 7px; padding: 9px 10px; font-size: 12px; }
-.sample-btn { background: var(--bg-hover); color: var(--text-main); border: 1px solid var(--border-accent);
-              border-radius: 7px; padding: 9px 14px; font-size: 12px; cursor: pointer; white-space: nowrap; }
-.sample-btn:hover { background: rgba(51, 65, 85, 0.8); }
+.sample-select { flex: 1; min-width: 0; background: #0a0a0a; color: var(--text-main);
+                 border: 1px solid var(--border-subtle); border-radius: 3px; padding: 9px 10px; font-size: 12px; font-family: var(--mono); }
+.sample-btn { background: transparent; color: var(--text-main); border: 1px solid var(--border-accent);
+              border-radius: 3px; padding: 9px 14px; font-size: 12px; cursor: pointer; white-space: nowrap; font-family: var(--mono); transition: all .15s ease; }
+.sample-btn:hover { background: #fff; color: #000; border-color: #fff; }
 .sample-hint { font-size: 10.5px; color: var(--text-dim); margin-top: 8px; }
 @media (max-width: 520px) {
   .sample-row { flex-direction: column; }
@@ -699,11 +658,10 @@ PASTE_HTML = COMMON_CSS + """
 
 <div class="hdr">
   <div class="hdr-left">
-    <span class="shield-icon">🛡️</span>
-    <h1>AI 釣魚信件偵測系統 — 貼上分析</h1>
+    <span>phishing-detector / paste</span>
   </div>
   <div class="hdr-nav"><a href="/">回首頁</a></div>
-  <span class="proj-tag">PROJ-2026</span>
+  <span class="proj-tag">[prototype]</span>
 </div>
 
 <div class="paste-wrap">
@@ -711,18 +669,18 @@ PASTE_HTML = COMMON_CSS + """
   <div class="paste-sub">不需要 Google 帳號授權，將郵件的寄件者、主旨與內文貼上即可，系統會以相同的三層式（規則引擎 + ML + HTML / URL + AI）架構進行分析。</div>
 
   <form method="GET" action="/paste" class="sample-box">
-    <div class="sample-title">🧪 快速載入測試信件</div>
+    <div class="sample-title">快速載入測試信件</div>
     <div class="sample-row">
       <select name="sample" class="sample-select">
         <option value="">請選擇測試範例</option>
-        <option value="account" SELECT_ACCOUNT>⚠️ 帳戶停用釣魚信</option>
-        <option value="prize" SELECT_PRIZE>🎁 中獎詐騙信</option>
-        <option value="delivery" SELECT_DELIVERY>📦 假物流通知</option>
-        <option value="normal" SELECT_NORMAL>✅ 正常商業信件</option>
+        <option value="account" SELECT_ACCOUNT>帳戶停用釣魚信</option>
+        <option value="prize" SELECT_PRIZE>中獎詐騙信</option>
+        <option value="delivery" SELECT_DELIVERY>假物流通知</option>
+        <option value="normal" SELECT_NORMAL>正常商業信件</option>
       </select>
       <button type="submit" class="sample-btn">載入範例</button>
     </div>
-    <div class="sample-hint">選擇範例後按「載入範例」，系統會直接填入郵件欄位，不依賴 JavaScript。</div>
+    <div class="sample-hint"># 選擇範例後按「載入範例」，系統會直接填入郵件欄位，不依賴 JavaScript。</div>
   </form>
 
   ERROR_PLACEHOLDER
@@ -782,7 +740,7 @@ RESULT_HTML = COMMON_CSS + """
 .s-sk    .stat-num { color: var(--text-dim); }
 .scan-overview { padding: 12px 18px; border-bottom: 1px solid var(--border-subtle); background: rgba(15, 23, 42, 0.22); }
 .overview-label { font-size: 10px; color: var(--text-dim); letter-spacing: .06em; margin-bottom: 7px; }
-.risk-track { display: flex; height: 7px; border-radius: 99px; overflow: hidden; background: rgba(255,255,255,.06); }
+.risk-track { display: flex; height: 7px; border-radius: 2px; overflow: hidden; background: #1a1a1a; }
 .risk-seg-high { background: var(--red); }
 .risk-seg-med { background: var(--orange); }
 .risk-seg-low { background: var(--green); }
@@ -805,10 +763,10 @@ RESULT_HTML = COMMON_CSS + """
               cursor: pointer; transition: all 0.15s ease;
               display: flex; align-items: flex-start; gap: 10px; border-left: 3px solid transparent; }
 .email-item:hover { background: var(--bg-hover); }
-.email-item.active { background: var(--bg-hover); border-left-color: var(--blue); }
+.email-item.active { background: var(--bg-hover); border-left-color: var(--green); }
 
-.risk-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
-.dot-high { background: var(--red); box-shadow: 0 0 6px var(--red); }
+.risk-dot { width: 6px; height: 6px; border-radius: 1px; flex-shrink: 0; margin-top: 5px; }
+.dot-high { background: var(--red); }
 .dot-med  { background: var(--orange); }
 .dot-low  { background: var(--green); }
 .dot-wl   { background: var(--text-dim); }
@@ -821,7 +779,7 @@ RESULT_HTML = COMMON_CSS + """
 
 .right { flex: 1; overflow-y: auto; padding: 28px 36px; }
 .detail-badge { display: inline-flex; align-items: center; gap: 6px;
-                padding: 4px 12px; border-radius: 20px; font-size: 11px;
+                padding: 4px 12px; border-radius: 3px; font-size: 11px; font-family: var(--mono);
                 font-weight: 600; margin-bottom: 14px; }
 .badge-high { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
 .badge-med  { background: var(--orange-bg); color: var(--orange); border: 1px solid var(--orange-border); }
@@ -837,41 +795,41 @@ RESULT_HTML = COMMON_CSS + """
 .detail-text { font-size: 13.5px; color: #e2e8f0; line-height: 1.7; }
 .tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
 .htag { font-size: 11px; color: var(--orange); background: var(--orange-bg);
-        padding: 3px 8px; border-radius: 4px; border: 1px solid var(--orange-border); }
+        padding: 3px 8px; border-radius: 3px; border: 1px solid var(--orange-border); font-family: var(--mono); }
 
 .layer-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 14px; }
-.layer-card { background: rgba(15, 23, 42, 0.45); border: 1px solid var(--border-subtle);
-               border-radius: 9px; padding: 13px 14px; }
+.layer-card { background: var(--bg-card); border: 1px solid var(--border-subtle);
+               border-radius: 3px; padding: 13px 14px; }
 .layer-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
 .layer-name { font-size: 12px; color: var(--text-main); font-weight: 600; }
 .layer-score { font-size: 12px; color: var(--text-main); font-weight: 700; }
 .layer-status { font-size: 11px; color: var(--text-muted); margin-bottom: 7px; line-height: 1.45; }
-.bar { height: 5px; background: rgba(255,255,255,.06); border-radius: 99px; overflow: hidden; }
-.bar-fill { height: 100%; border-radius: 99px; background: var(--blue); transition: width .25s ease; }
+.bar { height: 4px; background: #1a1a1a; border-radius: 2px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 2px; background: var(--green); transition: width .25s ease; }
 .layer-meta { display: flex; justify-content: space-between; gap: 8px; margin-top: 7px; font-size: 10px; color: var(--text-dim); }
 
-.evidence-box { margin-top: 14px; background: rgba(15,23,42,.32); border: 1px solid var(--border-subtle);
-                border-radius: 9px; padding: 14px 16px; }
+.evidence-box { margin-top: 14px; background: var(--bg-card); border: 1px solid var(--border-subtle);
+                border-radius: 3px; padding: 14px 16px; }
 .evidence-title { font-size: 12px; color: var(--text-main); font-weight: 600; margin-bottom: 9px; }
 .evidence-list { display: flex; flex-direction: column; gap: 6px; }
 .evidence-item { font-size: 12px; color: var(--text-muted); line-height: 1.55; padding-left: 13px; position: relative; }
-.evidence-item::before { content: ''; position: absolute; left: 0; top: 8px; width: 5px; height: 5px; border-radius: 50%; background: var(--orange); }
+.evidence-item::before { content: '›'; position: absolute; left: 0; top: -1px; color: var(--text-dim); }
 .fusion-note { margin-top: 12px; font-size: 10.5px; color: var(--text-dim); }
 
 .recommend { font-size: 13px; color: var(--text-main); background: var(--bg-card);
-             border: 1px solid var(--border-subtle); border-radius: 8px;
+             border: 1px solid var(--border-subtle); border-radius: 3px;
              padding: 14px 18px; line-height: 1.6; }
-.ir-box { background: rgba(16, 185, 129, 0.05); border: 1px solid var(--green-border);
-          border-left: 3px solid var(--green); border-radius: 8px;
+.ir-box { background: var(--green-bg); border: 1px solid var(--green-border);
+          border-left: 2px solid var(--green); border-radius: 3px;
           padding: 16px 20px; margin-top: 20px; }
 .ir-label { font-size: 10px; color: var(--green); letter-spacing: 0.08em;
             text-transform: uppercase; margin-bottom: 6px; font-weight: 600; }
-.ir-id { font-size: 11px; color: var(--text-dim); font-family: monospace; margin-bottom: 6px; }
+.ir-id { font-size: 11px; color: var(--text-dim); font-family: var(--mono); margin-bottom: 6px; }
 .ir-impact { font-size: 12px; color: #a7f3d0; line-height: 1.6; }
 .ir-actions { margin-top: 10px; display: flex; flex-direction: column; gap: 4px; }
 .ir-action { font-size: 12px; color: #93c5fd; }
 .ir-meta { display:grid; grid-template-columns: repeat(3, 1fr); gap:8px; margin-top:12px; }
-.ir-meta-item { background: rgba(15,23,42,.35); border:1px solid var(--border-subtle); border-radius:6px; padding:8px; }
+.ir-meta-item { background: #0a0a0a; border:1px solid var(--border-subtle); border-radius:3px; padding:8px; }
 .ir-meta-label { font-size:9px; color:var(--text-dim); text-transform:uppercase; }
 .ir-meta-value { font-size:11px; color:var(--text-main); margin-top:3px; }
 .ir-section { margin-top:12px; }
@@ -880,28 +838,30 @@ RESULT_HTML = COMMON_CSS + """
 .empty-detail { display: flex; align-items: center; justify-content: center;
                 height: 100%; color: var(--text-dim); font-size: 13px;
                 flex-direction: column; gap: 10px; }
-.empty-icon { font-size: 32px; opacity: 0.4; }
+.empty-icon { display: none; }
 
 .why-box { margin-top: 14px; }
-.why-title { font-size: 13px; color: var(--text-main); font-weight: 700; margin-bottom: 10px; }
+.why-title { font-size: 13px; color: var(--text-main); font-weight: 700; margin-bottom: 10px; font-family: var(--mono); }
+.why-title::before { content: "# "; color: var(--text-dim); }
 .why-list { display: flex; flex-direction: column; gap: 8px; }
 .why-item { display: flex; gap: 10px; align-items: flex-start; padding: 11px 12px;
-            border: 1px solid var(--border-subtle); border-radius: 8px;
-            background: rgba(15,23,42,.3); }
+            border: 1px solid var(--border-subtle); border-radius: 3px;
+            background: var(--bg-card); }
 .why-badge { min-width: 42px; text-align: center; font-size: 9px; font-weight: 700;
-             border-radius: 4px; padding: 3px 5px; margin-top: 1px; }
+             border-radius: 3px; padding: 3px 5px; margin-top: 1px; font-family: var(--mono); }
 .why-high { color: var(--red); background: var(--red-bg); border: 1px solid var(--red-border); }
 .why-medium { color: var(--orange); background: var(--orange-bg); border: 1px solid var(--orange-border); }
 .why-low { color: var(--green); background: var(--green-bg); border: 1px solid var(--green-border); }
 
-.safety-box { margin-top: 14px; padding: 14px 16px; border-radius: 10px;
+.safety-box { margin-top: 14px; padding: 14px 16px; border-radius: 3px;
               background: var(--bg-card); border: 1px solid var(--border-subtle); }
-.safety-title { font-size: 12px; font-weight: 600; color: var(--text-main); margin-bottom: 9px; }
+.safety-title { font-size: 12px; font-weight: 600; color: var(--text-main); margin-bottom: 9px; font-family: var(--mono); }
+.safety-title::before { content: "# "; color: var(--text-dim); }
 .safety-list { display: flex; flex-direction: column; gap: 7px; }
 .safety-item { display: flex; gap: 8px; font-size: 11.5px; color: var(--text-muted); line-height: 1.55; }
-.safety-num { width: 18px; height: 18px; border-radius: 50%; border: 1px solid var(--border-subtle);
+.safety-num { width: 18px; height: 18px; border-radius: 3px; border: 1px solid var(--border-subtle);
               display: inline-flex; align-items: center; justify-content: center; flex: 0 0 18px;
-              font-size: 10px; color: var(--text-dim); }
+              font-size: 10px; color: var(--text-dim); font-family: var(--mono); }
 .why-content { min-width: 0; }
 .why-source { font-size: 10px; color: var(--text-dim); margin-bottom: 2px; }
 .why-head { font-size: 12px; color: var(--text-main); font-weight: 600; margin-bottom: 3px; }
@@ -946,12 +906,12 @@ function showDetail(idx, element) {
 
   const panel = document.getElementById('right-panel');
   let badgeClass = d.level === 'high' ? 'badge-high' : d.level === 'medium' ? 'badge-med' : d.level === 'low' ? 'badge-low' : 'badge-wl';
-  let badgeText = d.level === 'high' ? '🚨 高風險' : d.level === 'medium' ? '⚠️ 中風險' : d.level === 'low' ? '✅ 安全' : '🔒 白名單';
+  let badgeText = d.level === 'high' ? '[HIGH] 高風險' : d.level === 'medium' ? '[MED] 中風險' : d.level === 'low' ? '[OK] 安全' : '[WL] 白名單';
   let scoreStr = d.risk_score >= 0 ? ` &nbsp;·&nbsp; ${d.risk_score} / 100` : '';
 
   const layers = d.layers || {};
   const layerOrder = ['rule', 'ml', 'html', 'llm'];
-  const layerIcons = {rule:'🔍', ml:'🤖', html:'🌐', llm:'🧠'};
+  const layerIcons = {rule:'[RULE]', ml:'[ML]', html:'[HTML]', llm:'[LLM]'};
 
   let layerHtml = '';
   let evidenceHtml = '';
@@ -996,7 +956,7 @@ function showDetail(idx, element) {
   const explainable = d.explainable_findings || [];
   const whyHtml = explainable.length ? `
     <div class="why-box">
-      <div class="why-title">🔎 為什麼會被判定為可疑？</div>
+      <div class="why-title">為什麼會被判定為可疑？</div>
       <div class="why-list">
         ${explainable.map(x => {
           const cls = x.severity === 'high' ? 'why-high' : x.severity === 'low' ? 'why-low' : 'why-medium';
@@ -1020,7 +980,7 @@ function showDetail(idx, element) {
   const safetyActions = d.safety_actions || [];
   const safetyHtml = safetyActions.length ? `
     <div class="safety-box">
-      <div class="safety-title">🛡️ 安全處置建議</div>
+      <div class="safety-title">安全處置建議</div>
       <div class="safety-list">
         ${safetyActions.map((x, i) => `<div class="safety-item"><span class="safety-num">${i + 1}</span><span>${escapeHtml(x)}</span></div>`).join('')}
       </div>
@@ -1052,7 +1012,7 @@ function showDetail(idx, element) {
     <div class="sec-label">多層式智慧分析</div>
     <div class="layer-grid">${layerHtml}</div>
     ${d.fusion_formula ? `<div class="fusion-note">風險融合公式：${escapeHtml(d.fusion_formula)}。最終分數由系統固定公式計算，不直接採用單一模型結果。</div>` : ''}
-      ${d.risk_breakdown ? `<div class="score-breakdown"><h4>📊 分數組成</h4>${d.risk_breakdown.components.map(x => `<div class="score-row"><span>${escapeHtml(x.name)}</span><span>${x.score.toFixed(1)} × ${x.weight}% = ${x.contribution.toFixed(1)}</span></div>`).join('')}<div class="score-total">公式計算值：${d.risk_breakdown.raw_total.toFixed(1)} → 最終 ${d.risk_breakdown.rounded_final}/100</div></div>` : ''}
+      ${d.risk_breakdown ? `<div class="score-breakdown"><h4>分數組成</h4>${d.risk_breakdown.components.map(x => `<div class="score-row"><span>${escapeHtml(x.name)}</span><span>${x.score.toFixed(1)} × ${x.weight}% = ${x.contribution.toFixed(1)}</span></div>`).join('')}<div class="score-total">公式計算值：${d.risk_breakdown.raw_total.toFixed(1)} → 最終 ${d.risk_breakdown.rounded_final}/100</div></div>` : ''}
 
     <div class="gold-line"></div>
 
@@ -1080,15 +1040,14 @@ window.addEventListener('DOMContentLoaded', () => {
 
 <div class="hdr">
   <div class="hdr-left">
-    <span class="shield-icon">🛡️</span>
-    <h1>AI 釣魚信件偵測系統 — 掃描結果</h1>
+    <span>phishing-detector / result</span>
   </div>
   <div class="hdr-nav">
     <a href="/history">掃描記錄</a>
     <a href="/whitelist">白名單設定</a>
     <a href="/">重新掃描</a>
   </div>
-  <span class="proj-tag">PROJ-2026</span>
+  <span class="proj-tag">[prototype]</span>
 </div>
 
 <div class="summary">
@@ -1115,7 +1074,6 @@ window.addEventListener('DOMContentLoaded', () => {
   <div class="left" id="left-panel">LIST_PLACEHOLDER</div>
   <div class="right" id="right-panel">
     <div class="empty-detail">
-      <div class="empty-icon">🛡️</div>
       <div>點擊左側信件查看詳細分析</div>
     </div>
   </div>
@@ -1126,31 +1084,31 @@ window.addEventListener('DOMContentLoaded', () => {
 HISTORY_HTML = COMMON_CSS + """
 <style>
 .container { max-width: 860px; margin: 0 auto; padding: 40px 20px; }
-.page-title { font-size: 18px; font-weight: 600; color: var(--text-main); margin-bottom: 24px; }
-table { width: 100%; border-collapse: collapse; background: var(--bg-card); border-radius: 10px; border: 1px solid var(--border-subtle); overflow: hidden; }
-thead tr { border-bottom: 1px solid var(--border-subtle); background: rgba(255, 255, 255, 0.02); }
+.page-title { font-size: 16px; font-weight: 600; color: var(--text-main); margin-bottom: 24px; font-family: var(--mono); }
+.page-title::before { content: "$ "; color: var(--green); }
+table { width: 100%; border-collapse: collapse; background: var(--bg-card); border-radius: 4px; border: 1px solid var(--border-subtle); overflow: hidden; font-family: var(--mono); }
+thead tr { border-bottom: 1px solid var(--border-subtle); background: #050505; }
 th { padding: 14px 18px; font-size: 11px; color: var(--text-dim); letter-spacing: 0.05em;
      text-transform: uppercase; text-align: left; font-weight: 600; }
-td { padding: 14px 18px; font-size: 13px; color: var(--text-main);
+td { padding: 14px 18px; font-size: 12.5px; color: var(--text-main);
      border-bottom: 1px solid var(--border-subtle); }
 tr:last-child td { border-bottom: none; }
 tr:hover td { background: var(--bg-hover); }
 .cell-high { color: var(--red); font-weight: 600; }
 .cell-med { color: var(--orange); }
 .cell-low { color: var(--green); }
-.empty { padding: 60px; text-align: center; color: var(--text-dim); font-size: 13px; background: var(--bg-card); border-radius: 10px; border: 1px solid var(--border-subtle); }
+.empty { padding: 60px; text-align: center; color: var(--text-dim); font-size: 13px; background: var(--bg-card); border-radius: 4px; border: 1px solid var(--border-subtle); }
 </style>
 
 <div class="hdr">
   <div class="hdr-left">
-    <span class="shield-icon">🛡️</span>
-    <h1>AI 釣魚信件偵測系統</h1>
+    <span>phishing-detector / history</span>
   </div>
   <div class="hdr-nav">
     <a href="/">首頁</a>
     <a href="/whitelist">白名單設定</a>
   </div>
-  <span class="proj-tag">PROJ-2026</span>
+  <span class="proj-tag">[prototype]</span>
 </div>
 
 <div class="container">
@@ -1173,7 +1131,7 @@ tr:hover td { background: var(--bg-hover); }
     </tbody>
   </table>
   {% else %}
-  <div class="empty">還沒有掃描記錄，<a href="/" style="color:var(--blue); text-decoration:none;">開始掃描</a>！</div>
+  <div class="empty">還沒有掃描記錄，<a href="/" style="color:var(--text-main); text-decoration:underline;">開始掃描</a>！</div>
   {% endif %}
 </div>
 """
@@ -1182,31 +1140,33 @@ tr:hover td { background: var(--bg-hover); }
 WHITELIST_HTML = COMMON_CSS + """
 <style>
 .container { max-width: 680px; margin: 0 auto; padding: 40px 20px; }
-.page-title { font-size: 18px; font-weight: 600; color: var(--text-main); margin-bottom: 6px; }
+.page-title { font-size: 16px; font-weight: 600; color: var(--text-main); margin-bottom: 6px; font-family: var(--mono); }
+.page-title::before { content: "$ "; color: var(--green); }
 .page-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; line-height: 1.5; }
 .add-row { display: flex; gap: 10px; margin-bottom: 32px; }
 .add-row input { flex: 1; background: var(--bg-card); border: 1px solid var(--border-subtle);
-                 border-radius: 8px; padding: 11px 16px; color: var(--text-main);
-                 font-size: 13.5px; outline: none; transition: border-color 0.2s; }
+                 border-radius: 3px; padding: 11px 16px; color: var(--text-main);
+                 font-size: 13px; outline: none; transition: border-color 0.15s; font-family: var(--mono); }
 .add-row input::placeholder { color: var(--text-dim); }
 .add-row input:focus { border-color: var(--border-accent); }
-.add-btn { background: #ffffff; color: #0f172a; border: none;
-           border-radius: 8px; padding: 11px 22px; font-size: 13.5px; font-weight: 600; cursor: pointer;
-           transition: all 0.2s ease; white-space: nowrap; }
-.add-btn:hover { background: #f8fafc; transform: translateY(-1px); }
-.sec-label { font-size: 11px; color: var(--text-dim); letter-spacing: 0.05em;
-             text-transform: uppercase; margin-bottom: 12px; font-weight: 600; }
+.add-btn { background: #ffffff; color: #000000; border: 1px solid #fff;
+           border-radius: 2px; padding: 11px 22px; font-size: 13px; font-weight: 700; cursor: pointer;
+           transition: all 0.15s ease; white-space: nowrap; font-family: var(--mono); }
+.add-btn:hover { background: #000; color: #fff; }
+.sec-label { font-size: 11px; color: var(--text-dim); letter-spacing: 0;
+             text-transform: none; margin-bottom: 12px; font-weight: 600; font-family: var(--mono); }
+.sec-label::before { content: "# "; color: #444; }
 .domain-item { display: flex; justify-content: space-between; align-items: center;
                background: var(--bg-card); border: 1px solid var(--border-subtle);
-               border-radius: 8px; padding: 14px 18px; margin-bottom: 10px;
-               transition: border-color 0.2s; }
+               border-radius: 3px; padding: 14px 18px; margin-bottom: 10px;
+               transition: border-color 0.15s; }
 .domain-item:hover { border-color: var(--border-accent); }
-.domain-name { font-size: 13.5px; color: var(--text-main); font-family: monospace; font-weight: 500; }
-.domain-time { font-size: 11px; color: var(--text-dim); margin-top: 3px; }
-.del-btn { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border);
-           border-radius: 6px; padding: 5px 12px; font-size: 12px; cursor: pointer;
-           transition: all 0.2s ease; }
-.del-btn:hover { background: rgba(239, 68, 68, 0.2); }
+.domain-name { font-size: 13px; color: var(--text-main); font-family: var(--mono); font-weight: 500; }
+.domain-time { font-size: 11px; color: var(--text-dim); margin-top: 3px; font-family: var(--mono); }
+.del-btn { background: transparent; color: var(--red); border: 1px solid var(--red-border);
+           border-radius: 2px; padding: 5px 12px; font-size: 12px; cursor: pointer;
+           transition: all 0.15s ease; font-family: var(--mono); }
+.del-btn:hover { background: var(--red); color: #000; border-color: var(--red); }
 </style>
 <script>
 function addDomain() {
@@ -1234,14 +1194,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
 <div class="hdr">
   <div class="hdr-left">
-    <span class="shield-icon">🛡️</span>
-    <h1>AI 釣魚信件偵測系統</h1>
+    <span>phishing-detector / whitelist</span>
   </div>
   <div class="hdr-nav">
     <a href="/">首頁</a>
     <a href="/history">掃描記錄</a>
   </div>
-  <span class="proj-tag">PROJ-2026</span>
+  <span class="proj-tag">[prototype]</span>
 </div>
 
 <div class="container">
@@ -2433,7 +2392,7 @@ def result(scan_id):
                 f'<div class="item-subj">{subject}</div>'
                 f'<div class="item-from">{sender}</div>'
                 f'<div class="item-score">{html_lib.escape(score_text)}</div>'
-                f'{f"<div class=\"item-reason {level}\">🔎 {reason}</div>" if reason else ""}'
+                f'{f"<div class=\"item-reason {level}\">› {reason}</div>" if reason else ""}'
                 f'{f"<span class=\"item-cat\">{category}</span>" if category else ""}'
                 f'</div></div>')
 
