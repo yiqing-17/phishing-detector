@@ -554,7 +554,7 @@ html, body {
       <div class="terminal-body">
         <div class="cmd">python scan.py --source gmail</div>
         <div class="terminal-row"><span class="tag">[1/4]</span><span class="step">規則引擎</span><span class="desc">已知釣魚樣式與關鍵字比對</span></div>
-        <div class="terminal-row"><span class="tag">[2/4]</span><span class="step">ML 模型</span><span class="desc">XGBoost + RandomForest + GradientBoosting 投票</span></div>
+        <div class="terminal-row"><span class="tag">[2/4]</span><span class="step">ML 模型</span><span class="desc">TF-IDF + Logistic Regression</span></div>
         <div class="terminal-row"><span class="tag">[3/4]</span><span class="step">URL / HTML 解析</span><span class="desc">連結還原、追蹤像素、隱藏元素偵測</span></div>
         <div class="terminal-row"><span class="tag">[4/4]</span><span class="step">AI 語意判讀</span><span class="desc">交叉比對郵件意圖與敏感資訊索取</span></div>
         <div class="terminal-note"># 白名單機制已啟用，已知安全網域自動略過重複分析<span class="cursor"></span></div>
