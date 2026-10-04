@@ -528,7 +528,8 @@ html, body {
       <span>phishing-detector</span>
     </div>
     <div class="hdr-nav">
-      <span class="proj-tag">[prototype]</span>
+      <a href="/rules">偵測規則</a>
+      <a href="/whitelist">白名單</a>
     </div>
   </div>
 
@@ -660,8 +661,7 @@ PASTE_HTML = COMMON_CSS + """
   <div class="hdr-left">
     <span>phishing-detector / paste</span>
   </div>
-  <div class="hdr-nav"><a href="/">回首頁</a></div>
-  <span class="proj-tag">[prototype]</span>
+  <div class="hdr-nav"><a href="/rules">偵測規則</a><a href="/whitelist">白名單</a><a href="/">回首頁</a></div>
 </div>
 
 <div class="paste-wrap">
@@ -677,6 +677,8 @@ PASTE_HTML = COMMON_CSS + """
         <option value="prize" SELECT_PRIZE>中獎詐騙信</option>
         <option value="delivery" SELECT_DELIVERY>假物流通知</option>
         <option value="normal" SELECT_NORMAL>正常商業信件</option>
+        <option value="wl_real" SELECT_WL_REAL>白名單演示 ①：google.com 官方寄件者（會被略過）</option>
+        <option value="wl_fake" SELECT_WL_FAKE>白名單演示 ②：偽冒網域 google.com.verify-login.xyz（不會被略過）</option>
       </select>
       <button type="submit" class="sample-btn">載入範例</button>
     </div>
@@ -709,6 +711,8 @@ SAMPLE_EMAILS = {
     'account': {'sender':'security@example-security.com','subject':'【緊急】您的帳戶即將被停用，請立即驗證','body':'親愛的使用者：\n\n我們偵測到您的帳戶有異常登入活動。若未在 24 小時內完成驗證，您的帳戶將被暫停。\n\n請立即登入以下連結：\nhttps://secure-account-verify.example.xyz/login\n\n請輸入您的帳號、密碼、信用卡資訊及簡訊驗證碼，以完成身分驗證。\n\n若未完成驗證，系統將自動限制您的帳戶。','html':'<a href="https://secure-account-verify.example.xyz/login">立即驗證帳戶</a><form><input type="password"></form>'},
     'prize': {'sender':'winner@reward-notice.example.xyz','subject':'🎉 恭喜您獲得限時獎金，請立即領取！','body':'恭喜您！您的電子郵件已被抽中獲得新台幣 50,000 元獎金。\n\n請於今日 23:59 前點擊下方連結完成領取，逾期資格將自動失效：\nhttps://claim-reward.example.xyz/prize\n\n為了確認身分，請提供姓名、身分資料及銀行帳戶資訊。','html':'<a href="https://claim-reward.example.xyz/prize">立即領取獎金</a>'},
     'delivery': {'sender':'delivery@shipping-update.example.xyz','subject':'【物流通知】您的包裹配送地址需要確認','body':'您好，您的包裹目前無法完成配送。\n\n請在 12 小時內確認配送地址，否則包裹將退回寄件地：\nhttps://delivery-check.example.xyz/verify\n\n請輸入收件資訊與信用卡資料以支付重新配送費用。','html':'<a href="https://delivery-check.example.xyz/verify">確認配送資訊</a><img src="https://delivery-check.example.xyz/p.gif" width="1" height="1">'},
+    'wl_real': {'sender':'Google <no-reply@accounts.google.com>','subject':'【緊急】請立即驗證您的帳戶密碼','body':'您好：\n\n我們偵測到新的登入活動，請立即確認是否為本人操作。\n\n如非本人，請前往 https://accounts.google.com/security 重設密碼並檢查帳戶。','html':''},
+    'wl_fake': {'sender':'Google <no-reply@accounts.google.com.verify-login.xyz>','subject':'【緊急】請立即驗證您的帳戶密碼','body':'您好：\n\n我們偵測到新的登入活動，請立即確認是否為本人操作。\n\n如非本人，請前往 https://accounts.google.com.verify-login.xyz/security 重設密碼並檢查帳戶。','html':'<a href="https://accounts.google.com.verify-login.xyz/security">立即驗證</a><form><input type="password"></form>'},
     'normal': {'sender':'service@company.example.com','subject':'本月電子帳單與服務通知','body':'您好，您的本月服務帳單已產生。\n\n您可以登入官方網站查看帳單與使用明細。若您近期沒有使用相關服務，請透過官方客服管道聯繫我們。\n\n謝謝您的使用。','html':'<p>您好，您的本月服務帳單已產生。</p>'}
 }
 
@@ -746,7 +750,7 @@ RESULT_HTML = COMMON_CSS + """
 .risk-seg-low { background: var(--green); }
 .risk-seg-wl { background: var(--text-dim); }
 .overview-meta { display:flex; justify-content:space-between; gap:10px; margin-top:7px; font-size:10px; color:var(--text-muted); }
-.item-reason { font-size: 10.5px; color: var(--text-muted); margin-top: 6px; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.item-reason { font-size: 10px; color: var(--text-muted); margin-top: 2px; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .item-reason.high { color: #fca5a5; }
 .item-reason.medium { color: #fdba74; }
 .item-reason.low { color: #86efac; }
@@ -754,14 +758,14 @@ RESULT_HTML = COMMON_CSS + """
 
 
 .main { display: flex; height: calc(100vh - 120px); }
-.left { width: 320px; border-right: 1px solid var(--border-subtle); overflow-y: auto; flex-shrink: 0; }
-.list-sec { padding: 12px 18px 8px; font-size: 10px; color: var(--text-dim);
+.left { width: 290px; border-right: 1px solid var(--border-subtle); overflow-y: auto; flex-shrink: 0; }
+.list-sec { padding: 8px 14px 5px; font-size: 10px; color: var(--text-dim);
             letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600;
             border-bottom: 1px solid var(--border-subtle); }
 
-.email-item { padding: 14px 18px; border-bottom: 1px solid var(--border-subtle);
+.email-item { padding: 7px 14px; border-bottom: 1px solid var(--border-subtle);
               cursor: pointer; transition: all 0.15s ease;
-              display: flex; align-items: flex-start; gap: 10px; border-left: 3px solid transparent; }
+              display: flex; align-items: flex-start; gap: 8px; border-left: 3px solid transparent; }
 .email-item:hover { background: var(--bg-hover); }
 .email-item.active { background: var(--bg-hover); border-left-color: var(--green); }
 
@@ -771,13 +775,21 @@ RESULT_HTML = COMMON_CSS + """
 .dot-low  { background: var(--green); }
 .dot-wl   { background: var(--text-dim); }
 .item-body { flex: 1; min-width: 0; }
-.item-subj { font-size: 13px; color: var(--text-main); white-space: nowrap;
-              overflow: hidden; text-overflow: ellipsis; margin-bottom: 3px; font-weight: 500; }
+.item-subj { font-size: 12.5px; color: var(--text-main); white-space: nowrap;
+              overflow: hidden; text-overflow: ellipsis; margin-bottom: 1px; font-weight: 500; }
 .item-from { font-size: 11px; color: var(--text-muted); white-space: nowrap;
               overflow: hidden; text-overflow: ellipsis; }
-.item-score { font-size: 10px; color: var(--text-dim); margin-top: 3px; }
+.item-score { font-size: 10px; color: var(--text-dim); margin-top: 1px; }
 
 .right { flex: 1; overflow-y: auto; padding: 28px 36px; }
+.ir-statusnote { font-size: 11.5px; color: var(--text-muted); line-height: 1.6; margin: 12px 0 4px;
+                 padding: 8px 10px; border-left: 2px solid var(--orange); background: rgba(255,255,255,.03); }
+.ir-statusnote b { color: var(--text-main); }
+.ir-dl { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+.ir-dl-btn { background: transparent; color: var(--text-main); border: 1px solid var(--border-accent);
+             border-radius: 2px; padding: 7px 14px; font-size: 12px; cursor: pointer; font-family: var(--mono);
+             transition: all .15s ease; }
+.ir-dl-btn:hover { background: #fff; color: #000; border-color: #fff; }
 .detail-badge { display: inline-flex; align-items: center; gap: 6px;
                 padding: 4px 12px; border-radius: 3px; font-size: 11px; font-family: var(--mono);
                 font-weight: 600; margin-bottom: 14px; }
@@ -892,6 +904,60 @@ function escapeHtml(value) {
 }
 
 
+function downloadIR(idx, fmt) {
+  const d = emailData[idx];
+  if (!d || !d.ir) return;
+  const ir = d.ir;
+  const actions = (ir.actions_full && ir.actions_full.length ? ir.actions_full : ir.actions) || [];
+  const findings = (d.explainable_findings || []).map(x => `- [${x.source || ''}] ${x.title || ''}：${x.detail || ''}`);
+  let content, mime;
+  if (fmt === 'json') {
+    content = JSON.stringify({
+      incident_id: ir.id, status: ir.status, severity: ir.severity, risk_score: ir.risk_score,
+      created_at: ir.created_at, email_sender: ir.email_sender || d.sender, email_subject: ir.email_subject || d.subject,
+      impact_assessment: ir.impact_full || ir.impact, immediate_actions: actions,
+      containment: ir.containment, verification: ir.verification, recovery: ir.recovery,
+      explainable_findings: d.explainable_findings || []
+    }, null, 2);
+    mime = 'application/json;charset=utf-8';
+  } else {
+    content = [
+      '資安事件回應報告 (Incident Response Report)',
+      '==========================================',
+      `事件編號：${ir.id}`,
+      `事件狀態：${ir.status || 'Open'}（Open = 已建立、尚待處理）`,
+      `嚴重等級：${ir.severity}`,
+      `風險分數：${ir.risk_score} / 100`,
+      `建立時間：${ir.created_at}`,
+      `寄件者：${ir.email_sender || d.sender}`,
+      `主旨：${ir.email_subject || d.subject}`,
+      '',
+      '【影響評估】', ir.impact_full || ir.impact || '—',
+      '',
+      '【立即行動】', ...(actions.length ? actions.map((a, i) => `${i + 1}. ${a}`) : ['—']),
+      '',
+      '【隔離 Containment】', ir.containment || '—',
+      '',
+      '【驗證 Verification】', ir.verification || '—',
+      '',
+      '【復原 Recovery】', ir.recovery || '—',
+      '',
+      '【偵測依據】', ...(findings.length ? findings : ['—']),
+      '',
+      '※ 本報告由 phishing-detector 自動產生，僅供輔助參考，實際處置請依組織資安流程。'
+    ].join('\\r\\n');
+    mime = 'text/plain;charset=utf-8';
+  }
+  const blob = new Blob(['\\ufeff' + content], {type: mime});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${ir.id}.${fmt}`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
 function showDetail(idx, element) {
   const d = emailData[idx];
   if (!d) return;
@@ -993,13 +1059,15 @@ function showDetail(idx, element) {
       <div class="ir-impact">${escapeHtml(d.ir.impact)}</div>
       ${d.ir.actions && d.ir.actions.length ? `<div class="ir-actions">${d.ir.actions.map(a=>`<div class="ir-action">• ${escapeHtml(a)}</div>`).join('')}</div>` : ''}
        <div class="ir-meta">
-         <div class="ir-meta-item"><div class="ir-meta-label">Status</div><div class="ir-meta-value">${escapeHtml(d.ir.status || 'Open')}</div></div>
+         <div class="ir-meta-item"><div class="ir-meta-label">Status 事件狀態</div><div class="ir-meta-value">${escapeHtml(d.ir.status || 'Open')}（待處理）</div></div>
          <div class="ir-meta-item"><div class="ir-meta-label">Risk</div><div class="ir-meta-value">${escapeHtml(String(d.ir.risk_score ?? '—'))}/100</div></div>
          <div class="ir-meta-item"><div class="ir-meta-label">Created</div><div class="ir-meta-value">${escapeHtml(d.ir.created_at || '—')}</div></div>
        </div>
+       <div class="ir-statusnote">Status = Open 代表此事件<b>已建立、尚待人員處理</b>；本系統只負責產生處置建議，不會自動通知他人或關閉事件，處理完成後由資安人員自行結案（Closed）。</div>
        <div class="ir-section"><div class="ir-section-title">隔離 / Containment</div><div class="ir-text">${escapeHtml(d.ir.containment || '—')}</div></div>
        <div class="ir-section"><div class="ir-section-title">驗證 / Verification</div><div class="ir-text">${escapeHtml(d.ir.verification || '—')}</div></div>
        <div class="ir-section"><div class="ir-section-title">復原 / Recovery</div><div class="ir-text">${escapeHtml(d.ir.recovery || '—')}</div></div>
+       <div class="ir-dl"><button class="ir-dl-btn" onclick="downloadIR(${idx}, 'txt')">⬇ 下載 IR 報告 (.txt)</button><button class="ir-dl-btn" onclick="downloadIR(${idx}, 'json')">⬇ 下載 (.json)</button></div>
     </div>` : '';
 
   panel.innerHTML = `
@@ -1043,11 +1111,11 @@ window.addEventListener('DOMContentLoaded', () => {
     <span>phishing-detector / result</span>
   </div>
   <div class="hdr-nav">
+    <a href="/rules">偵測規則</a>
     <a href="/history">掃描記錄</a>
     <a href="/whitelist">白名單設定</a>
     <a href="/">重新掃描</a>
   </div>
-  <span class="proj-tag">[prototype]</span>
 </div>
 
 <div class="summary">
@@ -1106,9 +1174,9 @@ tr:hover td { background: var(--bg-hover); }
   </div>
   <div class="hdr-nav">
     <a href="/">首頁</a>
+    <a href="/rules">偵測規則</a>
     <a href="/whitelist">白名單設定</a>
   </div>
-  <span class="proj-tag">[prototype]</span>
 </div>
 
 <div class="container">
@@ -1135,6 +1203,119 @@ tr:hover td { background: var(--bg-hover); }
   {% endif %}
 </div>
 """
+
+# ── 偵測規則展示頁 ────────────────────────────────────────────
+RULES_HTML = COMMON_CSS + """
+<style>
+.container { max-width: 980px; margin: 0 auto; padding: 36px 20px 60px; }
+.page-title { font-size: 16px; font-weight: 600; color: var(--text-main); margin-bottom: 6px; font-family: var(--mono); }
+.page-title::before { content: "$ "; color: var(--green); }
+.page-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 26px; line-height: 1.6; }
+.sec { margin-top: 30px; }
+.sec-h { font-size: 12px; color: var(--text-main); font-weight: 600; font-family: var(--mono); margin-bottom: 4px; }
+.sec-h::before { content: "# "; color: #555; }
+.sec-d { font-size: 12px; color: var(--text-muted); margin-bottom: 10px; line-height: 1.6; }
+table.rt { width: 100%; border-collapse: collapse; background: var(--bg-card); border: 1px solid var(--border-subtle); font-family: var(--mono); }
+table.rt th { padding: 9px 12px; font-size: 10.5px; color: var(--text-dim); text-align: left; background: #050505; border-bottom: 1px solid var(--border-subtle); }
+table.rt td { padding: 9px 12px; font-size: 12px; color: var(--text-main); border-bottom: 1px solid var(--border-subtle); vertical-align: top; line-height: 1.6; }
+table.rt tr:last-child td { border-bottom: none; }
+.rid { color: var(--green); font-weight: 700; white-space: nowrap; }
+.pts { color: var(--orange); white-space: nowrap; }
+.kw { display: inline-block; margin: 2px 4px 2px 0; padding: 1px 7px; border: 1px solid var(--border-subtle); border-radius: 3px; font-size: 11px; color: var(--text-muted); background: rgba(255,255,255,.03); }
+.note { margin-top: 12px; font-size: 12px; color: var(--text-muted); line-height: 1.7; border-left: 2px solid var(--border-accent); padding: 4px 12px; }
+.note b { color: var(--text-main); }
+.stats { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+.stat-chip { border: 1px solid var(--border-subtle); background: var(--bg-card); padding: 8px 14px; font-size: 12px; font-family: var(--mono); color: var(--text-muted); }
+.stat-chip b { color: var(--text-main); font-size: 16px; margin-right: 4px; }
+</style>
+
+<div class="hdr">
+  <div class="hdr-left"><span>phishing-detector / rules</span></div>
+  <div class="hdr-nav">
+    <a href="/">首頁</a>
+    <a href="/whitelist">白名單設定</a>
+    <a href="/history">掃描記錄</a>
+  </div>
+</div>
+
+<div class="container">
+  <a href="/" class="back">← 返回首頁</a>
+  <div class="page-title">偵測規則一覽</div>
+  <p class="page-sub">以下為系統實際使用中的規則（關鍵字清單直接讀取自偵測程式，與實際判斷同源）。規則引擎僅是四層分析中的第一層，其分數會再與 ML、HTML/URL、AI 判讀依固定權重融合。</p>
+
+  <div class="stats">
+    <div class="stat-chip"><b>{{ kw_total }}</b>關鍵字（4 類）</div>
+    <div class="stat-chip"><b>{{ url_items|length }}</b>URL 結構規則</div>
+    <div class="stat-chip"><b>{{ html_items|length }}</b>HTML 結構規則</div>
+    <div class="stat-chip"><b>{{ whitelist_count }}</b>白名單網域</div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-h">第一層：規則引擎（郵件文字）</div>
+    <div class="sec-d">命中即累加原始規則分數，並將觸發的規則與命中詞記錄於結果頁。關鍵字比對皆不分大小寫，同時涵蓋英文與繁體中文。</div>
+    <table class="rt">
+      <thead><tr><th>編號</th><th>規則</th><th>判斷意義</th><th>關鍵字</th><th>計分</th></tr></thead>
+      <tbody>
+      {% for rid, name, meaning, words, pts in groups %}
+        <tr>
+          <td class="rid">{{ rid }}</td><td>{{ name }}</td><td>{{ meaning }}</td>
+          <td>{% for w in words %}<span class="kw">{{ w }}</span>{% endfor %}</td>
+          <td class="pts">{{ pts }}</td>
+        </tr>
+      {% endfor %}
+        <tr>
+          <td class="rid">R5</td><td>含有連結</td><td>郵件內文出現 http(s) 網址</td>
+          <td><span class="kw">https?://…</span></td><td class="pts">+min(3 + 連結數, 8)</td>
+        </tr>
+        <tr>
+          <td class="rid">R6</td><td>URL 風險</td><td>對內文每個網址（最多 10 個）套用下方 U1–U8</td>
+          <td><span class="kw">U1 – U8</span></td><td class="pts">每個網址 +min(2×命中數, 8)</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="note">規則分數會正規化為 <b>min(原始分數 × 5, 100)</b> 後再進入融合。</div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-h">URL 結構規則 U1–U8（只解析網址字串，不連線、不開啟目標網站）</div>
+    <table class="rt">
+      <thead><tr><th>編號</th><th>規則</th><th>觸發條件</th></tr></thead>
+      <tbody>
+      {% for rid, name, cond in url_items %}
+        <tr><td class="rid">{{ rid }}</td><td>{{ name }}</td><td>{{ cond }}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="sec">
+    <div class="sec-h">第三層：HTML 結構規則 H1–H7（僅在郵件含 HTML 時執行）</div>
+    <table class="rt">
+      <thead><tr><th>編號</th><th>規則</th><th>觸發條件</th><th>計分</th></tr></thead>
+      <tbody>
+      {% for rid, name, cond, pts in html_items %}
+        <tr><td class="rid">{{ rid }}</td><td>{{ name }}</td><td>{{ cond }}</td><td class="pts">{{ pts }}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    <div class="note">HTML 分數會正規化為 <b>min(HTML 分數 × 8, 100)</b> 後再進入融合。</div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-h">融合與分級</div>
+    <table class="rt">
+      <thead><tr><th>情況</th><th>權重</th><th>觸發條件</th></tr></thead>
+      <tbody>
+        <tr><td>有 AI 判讀</td><td>規則 35% + ML 35% + HTML/URL 15% + AI 15%</td>
+            <td>rule_score ≥ 4、ML 機率 ≥ 0.30、html_score ≥ 4 任一成立才呼叫 AI</td></tr>
+        <tr><td>無 AI 判讀</td><td>規則 42.5% + ML 42.5% + HTML/URL 15%</td><td>AI 未觸發或失敗時自動改用</td></tr>
+      </tbody>
+    </table>
+    <div class="note">風險等級：<b>High ≥ 70</b>、<b>Medium 40–69</b>、<b>Low &lt; 40</b>。寄件網域命中<a href="/whitelist" style="color:var(--text-main);text-decoration:underline;">白名單</a>者直接略過全部分析。</div>
+  </div>
+</div>
+"""
+
 
 # ── 白名單 HTML ──────────────────────────────────────────────
 WHITELIST_HTML = COMMON_CSS + """
@@ -1167,6 +1348,20 @@ WHITELIST_HTML = COMMON_CSS + """
            border-radius: 2px; padding: 5px 12px; font-size: 12px; cursor: pointer;
            transition: all 0.15s ease; font-family: var(--mono); }
 .del-btn:hover { background: var(--red); color: #000; border-color: var(--red); }
+.demo-box { background: var(--bg-card); border: 1px solid var(--border-accent); border-radius: 3px; padding: 16px 18px; margin-bottom: 30px; }
+.demo-title { font-size: 12px; font-weight: 600; color: var(--text-main); margin-bottom: 4px; font-family: var(--mono); }
+.demo-title::before { content: "$ whitelist-check  "; color: var(--green); }
+.demo-desc { font-size: 12px; color: var(--text-muted); line-height: 1.6; margin-bottom: 12px; }
+.demo-row { display: flex; gap: 10px; }
+.demo-row input { flex: 1; min-width: 0; background: #0a0a0a; border: 1px solid var(--border-subtle); border-radius: 3px; padding: 10px 14px;
+                  color: var(--text-main); font-size: 13px; outline: none; font-family: var(--mono); }
+.demo-row input:focus { border-color: var(--border-accent); }
+.demo-result { margin-top: 12px; font-size: 12.5px; line-height: 1.7; font-family: var(--mono); min-height: 18px; }
+.demo-result.ok { color: var(--green); }
+.demo-result.no { color: var(--orange); }
+.demo-links { margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; }
+.demo-links a, .demo-chip { font-size: 11.5px; color: var(--text-muted); text-decoration: none; border: 1px solid var(--border-subtle); padding: 5px 10px; border-radius: 2px; cursor: pointer; background: transparent; font-family: var(--mono); }
+.demo-links a:hover, .demo-chip:hover { color: #000; background: #fff; border-color: #fff; }
 </style>
 <script>
 function addDomain() {
@@ -1178,10 +1373,34 @@ function addDomain() {
     else alert(d.error || '新增失敗');
   });
 }
+function checkSender(value) {
+  const sender = (value !== undefined ? value : document.getElementById('check-input').value).trim();
+  const out = document.getElementById('check-result');
+  if (value !== undefined) document.getElementById('check-input').value = value;
+  if (!sender) { out.className = 'demo-result'; out.textContent = '請輸入寄件者信箱'; return; }
+  fetch('/whitelist/check', {method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({sender})}).then(r => r.json()).then(d => {
+    if (!d.success) { out.className = 'demo-result no'; out.textContent = d.error || '檢查失敗'; return; }
+    if (d.matched) {
+      out.className = 'demo-result ok';
+      out.textContent = '✔ 寄件網域 ' + d.domain + ' 命中白名單「' + d.whitelist_domain + '」（' + d.mode + '）→ 系統將略過分析，直接判定為安全。';
+    } else {
+      out.className = 'demo-result no';
+      out.textContent = '✘ 寄件網域 ' + d.domain + ' 未命中任何白名單網域 → 將進入完整四層分析。';
+    }
+  });
+}
 function deleteDomain(domain) {
   if (!confirm('確定要刪除 ' + domain + '？')) return;
   fetch('/whitelist/delete', {method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({domain})}).then(r => r.json()).then(d => {
+    if (d.success) location.reload();
+    else alert(d.error || '刪除失敗');
+  }).catch(() => alert('刪除失敗，請稍後再試'));
+}
+function resetWhitelist() {
+  if (!confirm('要還原預設白名單嗎？（只會補回被刪除的預設網域，不會刪除你新增的網域）')) return;
+  fetch('/whitelist/reset', {method:'POST'}).then(r => r.json()).then(d => {
     if (d.success) location.reload();
   });
 }
@@ -1198,9 +1417,9 @@ document.addEventListener('DOMContentLoaded', () => {
   </div>
   <div class="hdr-nav">
     <a href="/">首頁</a>
+    <a href="/rules">偵測規則</a>
     <a href="/history">掃描記錄</a>
   </div>
-  <span class="proj-tag">[prototype]</span>
 </div>
 
 <div class="container">
@@ -1213,7 +1432,24 @@ document.addEventListener('DOMContentLoaded', () => {
     <button class="add-btn" onclick="addDomain()">新增</button>
   </div>
 
-  <div class="sec-label">目前白名單（{{count}} 個）</div>
+  <div class="demo-box">
+    <div class="demo-title">白名單比對演示</div>
+    <div class="demo-desc">輸入任一寄件者信箱，即時顯示是否命中白名單。比對規則：寄件網域「完全相同」或為白名單網域的「子網域」才算命中；開頭相似、後面接其他網域的偽冒網域不會命中。</div>
+    <div class="demo-row">
+      <input type="text" id="check-input" placeholder="例如：no-reply@accounts.google.com" onkeydown="if(event.key==='Enter')checkSender()">
+      <button class="add-btn" onclick="checkSender()">檢測</button>
+    </div>
+    <div class="demo-result" id="check-result"></div>
+    <div class="demo-links">
+      <button class="demo-chip" onclick="checkSender('no-reply@accounts.google.com')">範例①：官方網域（命中）</button>
+      <button class="demo-chip" onclick="checkSender('alert@mail.google.com')">範例②：子網域（命中）</button>
+      <button class="demo-chip" onclick="checkSender('no-reply@accounts.google.com.verify-login.xyz')">範例③：偽冒網域（不命中）</button>
+      <a href="/paste?sample=wl_real">完整演示①：白名單信件</a>
+      <a href="/paste?sample=wl_fake">完整演示②：偽冒信件</a>
+    </div>
+  </div>
+
+  <div class="sec-label">目前白名單（{{count}} 個）　<button class="demo-chip" onclick="resetWhitelist()">還原預設白名單</button></div>
   {% for d in domains %}
   <div class="domain-item">
     <div>
@@ -1234,11 +1470,14 @@ def init_db():
          high INTEGER, medium INTEGER, low INTEGER, whitelist INTEGER, skipped INTEGER)''')
     c.execute('''CREATE TABLE IF NOT EXISTS whitelist
         (id INTEGER PRIMARY KEY AUTOINCREMENT, domain TEXT UNIQUE, added_time TEXT)''')
-    for domain in DEFAULT_WHITELIST:
-        try:
+    c.execute('CREATE TABLE IF NOT EXISTS app_meta (key TEXT PRIMARY KEY, value TEXT)')
+    c.execute("SELECT value FROM app_meta WHERE key='whitelist_seeded'")
+    if not c.fetchone():
+        # 預設白名單只在首次建立時寫入，之後使用者刪除的網域不會在重啟後復原
+        for domain in DEFAULT_WHITELIST:
             c.execute('INSERT OR IGNORE INTO whitelist (domain, added_time) VALUES (?, ?)',
                      (domain, datetime.now().isoformat()))
-        except: pass
+        c.execute("INSERT OR REPLACE INTO app_meta (key, value) VALUES ('whitelist_seeded', '1')")
     conn.commit()
     conn.close()
 
@@ -1277,14 +1516,20 @@ def normalize_whitelist_domain(value):
         return ''
     return value
 
-def is_whitelisted(sender):
+def whitelist_match(sender):
+    """回傳 (寄件網域, 命中的白名單網域, 比對方式)；未命中時命中網域為空字串。"""
     domain = extract_sender_domain(sender)
     if not domain:
-        return False
-    return any(
-        domain == d or domain.endswith('.' + d)
-        for d in get_whitelist()
-    )
+        return '', '', ''
+    for d in get_whitelist():
+        if domain == d:
+            return domain, d, '精確網域比對'
+        if domain.endswith('.' + d):
+            return domain, d, '子網域比對'
+    return domain, '', ''
+
+def is_whitelisted(sender):
+    return bool(whitelist_match(sender)[1])
 
 def is_system_report(sender, subject):
     if any(kw in subject for kw in SKIP_SUBJECTS): return True
@@ -1392,16 +1637,30 @@ def analyze_url(url):
     return findings
 
 
+URGENT_WORDS = [
+    'urgent', 'immediately', 'expire', 'suspended', 'verify now', 'act now',
+    '立即', '緊急', '即將停用', '馬上', '限時', '暫停', '停用'
+]
+BAIT_WORDS = [
+    'free', 'winner', 'won', 'prize', 'claim', 'lucky', 'reward', 'gift',
+    '中獎', '免費', '領取', '恭喜', '退款', '補助'
+]
+PERSONAL_WORDS = [
+    'password', 'credit card', 'bank account', 'pin',
+    '密碼', '帳號', '信用卡', '身分證', '帳戶'
+]
+MONEY_WORDS = [
+    '$', 'cash', 'money', 'transfer', 'wire', 'payment', 'invoice',
+    '匯款', '轉帳', '付款', 'NT$', '退款'
+]
+
+
 def rule_based_score(text):
     score = 0
     triggered = []
     t = (text or '').lower()
 
-    urgent = [
-        'urgent', 'immediately', 'expire', 'suspended', 'verify now', 'act now',
-        '立即', '緊急', '即將停用', '馬上', '限時', '暫停', '停用'
-    ]
-    hits = [w for w in urgent if w in t]
+    hits = [w for w in URGENT_WORDS if w in t]
     if hits:
         score += len(hits) * 2
         triggered.append(f'緊急語句: {hits}')
@@ -1417,34 +1676,50 @@ def rule_based_score(text):
                 score += min(len(url_findings) * 2, 8)
                 triggered.append(f'URL 風險: {url_findings[:4]}')
 
-    bait = [
-        'free', 'winner', 'won', 'prize', 'claim', 'lucky', 'reward', 'gift',
-        '中獎', '免費', '領取', '恭喜', '退款', '補助'
-    ]
-    hits2 = [w for w in bait if w in t]
+    hits2 = [w for w in BAIT_WORDS if w in t]
     if hits2:
         score += len(hits2) * 2
         triggered.append(f'誘騙話術: {hits2}')
 
-    personal = [
-        'password', 'credit card', 'bank account', 'pin',
-        '密碼', '帳號', '信用卡', '身分證', '帳戶'
-    ]
-    hits3 = [w for w in personal if w in t]
+    hits3 = [w for w in PERSONAL_WORDS if w in t]
     if hits3:
         score += len(hits3) * 3
         triggered.append(f'索取個資: {hits3}')
 
-    money = [
-        '$', 'cash', 'money', 'transfer', 'wire', 'payment', 'invoice',
-        '匯款', '轉帳', '付款', 'NT$', '退款'
-    ]
-    hits4 = [w for w in money if w in t]
+    hits4 = [w for w in MONEY_WORDS if w in t]
     if hits4:
         score += len(hits4) * 2
         triggered.append(f'金錢相關: {hits4}')
 
     return score, triggered
+
+
+# 規則展示頁使用的規則目錄（關鍵字直接引用上方常數，與實際偵測邏輯同源）
+RULE_KEYWORD_GROUPS = [
+    ('R1', '緊急語句', '製造時間壓力，逼迫收件者倉促行動', URGENT_WORDS, '每命中 1 個詞 +2'),
+    ('R2', '誘騙話術', '以獎金、免費、退款等利益誘使點擊', BAIT_WORDS, '每命中 1 個詞 +2'),
+    ('R3', '索取個資', '要求提供密碼、卡號、帳戶等敏感資料', PERSONAL_WORDS, '每命中 1 個詞 +3'),
+    ('R4', '金錢相關', '涉及匯款、付款、轉帳等金流指示', MONEY_WORDS, '每命中 1 個詞 +2'),
+]
+RULE_URL_ITEMS = [
+    ('U1', 'URL 使用 IP 位址', '主機名稱為 IP 而非網域'),
+    ('U2', 'URL 含有 @', '以 @ 隱藏真正目的地'),
+    ('U3', '網域含 Punycode', '網域以 xn-- 開頭，可能為仿冒字元網域'),
+    ('U4', '高風險網域後綴', '.xyz / .top / .click / .zip / .mov / .work / .biz'),
+    ('U5', 'URL 過長', '網址長度超過 100 字元'),
+    ('U6', '子網域層級過深', '主機名稱中的「.」達 4 個以上'),
+    ('U7', '短網址服務', 'bit.ly、tinyurl.com、t.co 等 9 種短網址'),
+    ('U8', '登入／驗證誘導字樣', 'login、verify、secure、update、account、password、signin、confirm、wallet'),
+]
+RULE_HTML_ITEMS = [
+    ('H1', '網址結構風險', '連結 href 觸發 U1–U8 任一項', '每個連結 +3×命中數（上限 10）'),
+    ('H2', '偽裝連結', '連結顯示文字的網域與實際 href 網域不同', '+6'),
+    ('H3', '像素追蹤', '寬或高為 0 / 1 的圖片', '每個 +2（上限 8）'),
+    ('H4', '隱藏元素', 'style 含 display:none 或 visibility:hidden', '+3'),
+    ('H5', '表單元素', '含 <form>', '+3'),
+    ('H6', '密碼輸入欄位', '含 type="password" 的 <input>', '+5'),
+    ('H7', '品牌偵測', '內文出現 paypal / microsoft / apple / amazon / facebook / netflix / google', '+2'),
+]
 
 
 def ai_agent_analyze(text, rule_score, triggered_rules):
@@ -1985,6 +2260,16 @@ def gen_ir(email_data, report):
     return incident_id, ir
 
 
+def ir_download_fields(ir_detail, sender, subject):
+    """供前端「下載 IR 報告」使用的完整欄位（畫面上的摘要有截斷，下載檔不截斷）。"""
+    return {
+        'impact_full': ir_detail.get('impact_assessment', ''),
+        'actions_full': ir_detail.get('immediate_actions', []),
+        'email_sender': sender,
+        'email_subject': subject,
+    }
+
+
 def get_header(msg, name):
     for h in msg['payload']['headers']:
         if h['name'].lower() == name.lower(): return h['value']
@@ -2231,6 +2516,7 @@ def do_scan(token_data, scan_id):
                     'containment': ir_detail.get('containment',''),
                     'verification': ir_detail.get('verification',''),
                     'recovery': ir_detail.get('recovery',''),
+                    **ir_download_fields(ir_detail, sender, subject),
                 }
                 high_list.append(entry)
             elif report['risk_level'] == 'medium':
@@ -2291,9 +2577,11 @@ def paste_analyze():
     text = f"From: {sender}\nSubject: {subject}\nBody: {body}"
 
     try:
-        if is_whitelisted(sender):
+        wl_domain, wl_hit, wl_mode = whitelist_match(sender)
+        if wl_hit:
             entry = {'level': 'wl', 'risk_score': -1, 'subject': subject[:55],
-                     'sender': sender[:60], 'explanation': '來自白名單寄件者，系統判定為安全。',
+                     'sender': sender[:60],
+                     'explanation': f'寄件網域 {wl_domain} 命中白名單「{wl_hit}」（{wl_mode}），系統略過規則、ML、HTML 與 AI 分析，直接判定為安全。',
                      'action': '可安全閱讀', 'tags': [], 'scores': [],
                      'category': '白名單安全信件', 'ir': None}
             high = med = low = 0
@@ -2337,7 +2625,7 @@ def paste_analyze():
                     'containment': ir_detail.get('containment',''),
                     'verification': ir_detail.get('verification',''),
                     'recovery': ir_detail.get('recovery',''),
-
+                    **ir_download_fields(ir_detail, sender, subject),
                 }
                 high = 1
             elif report['risk_level'] == 'medium':
@@ -2393,7 +2681,6 @@ def result(scan_id):
                 f'<div class="item-from">{sender}</div>'
                 f'<div class="item-score">{html_lib.escape(score_text)}</div>'
                 f'{f"<div class=\"item-reason {level}\">› {reason}</div>" if reason else ""}'
-                f'{f"<span class=\"item-cat\">{category}</span>" if category else ""}'
                 f'</div></div>')
 
     high_items  = [make_item(e,i) for i,e in enumerate(all_emails) if e['level']=='high']
@@ -2435,6 +2722,25 @@ def history():
     rows = get_history()
     return render_template_string(HISTORY_HTML, history=rows)
 
+@app.route('/rules')
+def rules_page():
+    kw_total = sum(len(g[3]) for g in RULE_KEYWORD_GROUPS)
+    return render_template_string(
+        RULES_HTML, groups=RULE_KEYWORD_GROUPS, url_items=RULE_URL_ITEMS,
+        html_items=RULE_HTML_ITEMS, kw_total=kw_total,
+        whitelist_count=len(get_whitelist()))
+
+@app.route('/whitelist/check', methods=['POST'])
+def whitelist_check():
+    """白名單檢測：輸入寄件者，回傳是否命中及命中的規則（供展示用，不寫入資料庫）。"""
+    data = request.get_json(silent=True) or {}
+    sender = str(data.get('sender', ''))[:200]
+    domain, hit, mode = whitelist_match(sender)
+    if not domain:
+        return jsonify({'success': False, 'error': '無法從輸入中解析出寄件網域，請輸入如 name@example.com'}), 400
+    return jsonify({'success': True, 'domain': domain, 'matched': bool(hit),
+                    'whitelist_domain': hit, 'mode': mode})
+
 @app.route('/whitelist')
 def whitelist_page():
     conn = sqlite3.connect('phishing.db')
@@ -2463,14 +2769,23 @@ def whitelist_add():
     except Exception as e:
         return jsonify({'success':False,'error':'新增白名單失敗'})
 
+@app.route('/whitelist/reset', methods=['POST'])
+def whitelist_reset():
+    """還原預設白名單（補回被刪除的預設網域，不影響使用者自行新增的網域）。"""
+    conn = sqlite3.connect('phishing.db')
+    c = conn.cursor()
+    for domain in DEFAULT_WHITELIST:
+        c.execute('INSERT OR IGNORE INTO whitelist (domain, added_time) VALUES (?, ?)',
+                 (domain, datetime.now().isoformat()))
+    conn.commit(); conn.close()
+    return jsonify({'success': True})
+
 @app.route('/whitelist/delete', methods=['POST'])
 def whitelist_delete():
     data = request.get_json(silent=True) or {}
     domain = normalize_whitelist_domain(data.get('domain', ''))
     if not domain:
         return jsonify({'success':False,'error':'網域格式不正確'}), 400
-    if domain in DEFAULT_WHITELIST:
-        return jsonify({'success':False,'error':'預設安全網域不建議刪除'}), 400
     conn = sqlite3.connect('phishing.db')
     c = conn.cursor()
     c.execute('DELETE FROM whitelist WHERE domain=?', (domain,))
