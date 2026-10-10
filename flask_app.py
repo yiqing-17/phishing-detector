@@ -68,22 +68,27 @@ else:
 COMMON_CSS = """
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@700;900&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
-  --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  --bg-main: #000000;
-  --bg-card: #0a0a0a;
-  --bg-hover: #151515;
-  --border-subtle: #262626;
-  --border-accent: #444444;
-  --text-main: #f2f2f2;
-  --text-muted: #8a8a8a;
-  --text-dim: #616161;
-  --red: #ef4444; --red-bg: rgba(239, 68, 68, 0.08); --red-border: rgba(239, 68, 68, 0.3);
-  --orange: #f59e0b; --orange-bg: rgba(245, 158, 11, 0.08); --orange-border: rgba(245, 158, 11, 0.3);
-  --green: #4ade80; --green-bg: rgba(74, 222, 128, 0.08); --green-border: rgba(74, 222, 128, 0.3);
-  --blue: #e5e5e5; --blue-bg: rgba(229, 229, 229, 0.08);
+  --sans: 'Noto Sans TC', system-ui, sans-serif;
+  --serif: 'Noto Serif TC', 'Songti TC', serif;
+  --accent: #141414;
+  --mono: 'IBM Plex Mono', 'Noto Sans TC', ui-monospace, Menlo, monospace;
+  --hl: #ffb6d5;
+  --paper: #faf8f3;
+  --bg-main: #faf8f3;
+  --bg-card: #f2efe7;
+  --bg-hover: #ebe7dc;
+  --border-subtle: #dcd7ca;
+  --border-accent: #a8a291;
+  --text-main: #141414;
+  --text-muted: #55524a;
+  --text-dim: #8a8678;
+  --red: #c8321e; --red-bg: rgba(200,50,30,0.07); --red-border: rgba(200,50,30,0.35);
+  --orange: #a8650f; --orange-bg: rgba(178,106,0,0.08); --orange-border: rgba(178,106,0,0.35);
+  --green: #2e6a4d; --green-bg: rgba(30,122,79,0.08); --green-border: rgba(30,122,79,0.35);
+  --blue: #2b4c8c; --blue-bg: rgba(43,76,140,0.07);
 }
 * { 
   box-sizing: border-box; 
@@ -109,11 +114,11 @@ body {
 }
 ::-webkit-scrollbar-thumb {
   background: #333;
-  border-radius: 2px;
+  border-radius:0;
   transition: background 0.2s ease;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #4a4a4a;
+  background: #cfcfcf;
 }
 
 /* 全站統一導航列 */
@@ -134,36 +139,36 @@ body {
   color: var(--text-muted); 
   text-decoration: none;
   padding: 6px 12px; 
-  border-radius: 2px; 
+  border-radius:0; 
   border: 1px solid var(--border-subtle);
   transition: all 0.15s ease; 
 }
-.hdr-nav a:hover { color: #000; border-color: #fff; background: #fff; }
+.hdr-nav a:hover { color: #fff; border-color: #0a0a0a; background: #0a0a0a; }
 .proj-tag { 
   background: transparent; 
   border: 1px solid var(--border-subtle);
   color: var(--text-dim); 
   font-size: 11px; 
   padding: 4px 10px; 
-  border-radius: 2px; 
+  border-radius:0; 
   font-family: var(--mono); 
 }
 .back { 
   display: inline-flex; align-items: center; gap: 6px; font-size: 12px;
   color: var(--text-muted); text-decoration: none; padding: 6px 14px;
-  border-radius: 2px; border: 1px solid var(--border-subtle);
+  border-radius:0; border: 1px solid var(--border-subtle);
   margin-bottom: 20px; transition: all 0.15s ease; font-family: var(--mono);
 }
-.back:hover { color: #000; border-color: #fff; background: #fff; }
+.back:hover { color: #fff; border-color: #0a0a0a; background: #0a0a0a; }
 
-.score-breakdown{margin-top:14px;padding:16px 18px;border:1px solid var(--border-subtle);border-radius:4px;background:var(--bg-card);color:var(--text-main)}
+.score-breakdown{margin-top:14px;padding:16px 18px;border:1px solid var(--border-subtle);border-radius:0;background:var(--bg-card);color:var(--text-main)}
 .score-breakdown h4{margin:0 0 12px;color:var(--text-main);font-size:13px;font-weight:600;letter-spacing:0}.score-breakdown h4::before{content:"# ";color:var(--text-dim)}.score-row{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:9px 0;border-bottom:1px solid var(--border-subtle);font-size:12.5px;color:var(--text-muted);font-family:var(--mono)}.score-row span:first-child{color:var(--text-main)!important;font-weight:500}.score-row span:last-child{color:var(--text-muted)!important;text-align:right;font-family:var(--mono)}.score-total{margin-top:12px;padding-top:2px;font-weight:600;color:var(--text-main);font-family:var(--mono)}
 
 /* STEP 12：分析結果頁 UI（單一色階、直角為主） */
 .result-hero{
     background:var(--bg-card);
     border:1px solid var(--border-subtle);
-    border-radius:4px;
+    border-radius:0;
     padding:28px;
     margin-bottom:22px;
 }
@@ -176,12 +181,12 @@ body {
 .risk-score-box{
     min-height:150px;
     border:1px solid var(--border-subtle);
-    border-radius:4px;
+    border-radius:0;
     display:flex;
     flex-direction:column;
     align-items:center;
     justify-content:center;
-    background:#000;
+    background:var(--bg-main);
 }
 .risk-score-number{
     font-size:48px;
@@ -211,7 +216,7 @@ body {
 .result-focus{
     margin-top:18px;
     padding:14px 16px;
-    border-radius:4px;
+    border-radius:0;
     background:var(--bg-card);
     border-left:2px solid var(--text-dim);
 }
@@ -245,7 +250,7 @@ body {
     min-width:0;
     border:1px solid var(--border-subtle);
     background:var(--bg-card);
-    border-radius:4px;
+    border-radius:0;
     padding:16px;
     transition:border-color .15s ease;
 }
@@ -276,19 +281,19 @@ body {
 }
 .layer-bar{
     height:4px;
-    background:#1a1a1a;
-    border-radius:2px;
+    background:var(--border-subtle);
+    border-radius:0;
     overflow:hidden;
 }
 .layer-bar-fill{
     height:100%;
-    border-radius:2px;
+    border-radius:0;
     background:currentColor;
 }
 .result-panel{
     border:1px solid var(--border-subtle);
     background:var(--bg-card);
-    border-radius:4px;
+    border-radius:0;
     padding:20px;
 }
 .result-panel + .result-panel{
@@ -300,8 +305,8 @@ body {
 }
 .finding-item{
     padding:11px 14px;
-    border-radius:3px;
-    background:#111;
+    border-radius:0;
+    background:var(--bg-hover);
     color:var(--text-muted);
     line-height:1.65;
     font-size:13px;
@@ -326,15 +331,15 @@ body {
 .history-header h1{margin:0 0 6px;font-size:22px;font-family:var(--mono)}
 .history-header p{margin:0;color:var(--text-muted);font-size:13px}
 .history-toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
-.history-filter{min-width:180px;padding:10px 13px;border-radius:3px;border:1px solid var(--border-subtle);background:#0a0a0a;color:var(--text-main);font-family:var(--mono)}
+.history-filter{min-width:180px;padding:10px 13px;border-radius:0;border:1px solid var(--border-subtle);background:var(--bg-card);color:var(--text-main);font-family:var(--mono)}
 .history-list{display:grid;gap:10px}
-.history-item{display:grid;grid-template-columns:72px 1fr auto;gap:16px;align-items:center;padding:16px 18px;border:1px solid var(--border-subtle);border-radius:4px;background:var(--bg-card);transition:border-color .15s ease}
+.history-item{display:grid;grid-template-columns:72px 1fr auto;gap:16px;align-items:center;padding:16px 18px;border:1px solid var(--border-subtle);border-radius:0;background:var(--bg-card);transition:border-color .15s ease}
 .history-item:hover{border-color:var(--border-accent)}
-.history-score{width:54px;height:54px;border-radius:3px;display:flex;align-items:center;justify-content:center;background:#000;border:1px solid var(--border-subtle);font-weight:800;font-size:16px;font-family:var(--mono)}
+.history-score{width:54px;height:54px;border-radius:0;display:flex;align-items:center;justify-content:center;background:var(--bg-main);border:1px solid var(--border-subtle);font-weight:800;font-size:16px;font-family:var(--mono)}
 .history-subject{font-weight:700;color:var(--text-main);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .history-meta{margin-top:5px;color:var(--text-muted);font-size:12.5px;font-family:var(--mono)}
 .history-actions{display:flex;gap:8px;align-items:center}
-.history-empty{text-align:center;padding:45px 20px;border:1px dashed var(--border-subtle);border-radius:4px;color:var(--text-muted)}
+.history-empty{text-align:center;padding:45px 20px;border:1px dashed var(--border-subtle);border-radius:0;color:var(--text-muted)}
 @media(max-width:700px){.history-header{align-items:flex-start;flex-direction:column}.history-item{grid-template-columns:58px 1fr}.history-actions{grid-column:2}}
 
 
@@ -342,24 +347,24 @@ body {
 .app-nav{
     display:flex;align-items:center;justify-content:space-between;
     gap:18px;padding:12px 18px;margin-bottom:22px;
-    border:1px solid var(--border-subtle);border-radius:4px;
+    border:1px solid var(--border-subtle);border-radius:0;
     background:var(--bg-card);
 }
 .app-brand{display:flex;align-items:center;gap:10px;font-weight:800;color:var(--text-main);text-decoration:none;font-family:var(--mono)}
-.app-brand-icon{width:30px;height:30px;border-radius:3px;display:flex;align-items:center;justify-content:center;background:#000;border:1px solid var(--border-subtle)}
+.app-brand-icon{width:30px;height:30px;border-radius:0;display:flex;align-items:center;justify-content:center;background:var(--bg-main);border:1px solid var(--border-subtle)}
 .app-nav-links{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
 .app-nav-link{
-    padding:7px 11px;border-radius:3px;color:var(--text-muted);
+    padding:7px 11px;border-radius:0;color:var(--text-muted);
     text-decoration:none;font-size:12.5px;transition:.15s ease;font-family:var(--mono);
 }
-.app-nav-link:hover,.app-nav-link.active{color:#000;background:#fff}
+.app-nav-link:hover,.app-nav-link.active{color:#fff;background:#0a0a0a}
 .dashboard-summary{
     display:grid;grid-template-columns:repeat(5,minmax(0,1fr));
     gap:10px;margin-bottom:18px;
 }
 .dashboard-stat{
     padding:14px;border:1px solid var(--border-subtle);
-    border-radius:4px;background:var(--bg-card);
+    border-radius:0;background:var(--bg-card);
 }
 .dashboard-stat-label{font-size:11px;color:var(--text-muted);font-family:var(--mono)}
 .dashboard-stat-value{margin-top:5px;font-size:22px;font-weight:800;color:var(--text-main);font-family:var(--mono)}
@@ -373,14 +378,14 @@ body {
 .scan-email-card{
     display:grid;grid-template-columns:52px 1fr auto;
     gap:14px;align-items:center;padding:13px 16px;margin-bottom:8px;
-    border:1px solid var(--border-subtle);border-radius:4px;
+    border:1px solid var(--border-subtle);border-radius:0;
     background:var(--bg-card);transition:.15s ease;
 }
 .scan-email-card:hover{border-color:var(--border-accent)}
 .scan-risk{
-    width:42px;height:42px;border-radius:3px;
+    width:42px;height:42px;border-radius:0;
     display:flex;align-items:center;justify-content:center;
-    background:#000;border:1px solid var(--border-subtle);
+    background:var(--bg-main);border:1px solid var(--border-subtle);
     font-weight:800;font-size:13px;font-family:var(--mono);
 }
 .scan-email-subject{font-weight:700;color:var(--text-main);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -393,176 +398,275 @@ body {
     .scan-email-card{grid-template-columns:44px 1fr}
 }
 
+
+/* ── 統一視覺：「被批註的可疑郵件」——螢光筆、色條遮蔽、印章、檔案標籤 ── */
+body { font-family: var(--sans); background: var(--paper); color: var(--text-main); }
+::selection { background: var(--hl); color: #141414; }
+body :focus-visible { outline: 2px solid #141414; outline-offset: 3px; }
+body .hdr { display: flex; align-items: center; justify-content: space-between; height: 3rem; padding: 0 2rem; background: var(--paper); border-bottom: 1px solid #141414; }
+body .hdr-left { font-family: var(--mono); font-weight: 500; font-size: 12.5px; color: #141414; }
+body .hdr-left::before { content: none; }
+body .hdr-nav { display: flex; align-items: center; gap: 2rem; }
+body .hdr-nav a { display: inline-flex; align-items: center; gap: .55rem; border: 0; border-radius: 0; padding: 0; background: transparent; font-family: var(--mono); font-size: 12.5px; color: #141414; }
+body .hdr-nav a:hover { background: transparent; color: #141414; text-decoration: underline; text-decoration-color: #ff6fae; text-decoration-thickness: 3px; text-underline-offset: 4px; }
+kbd.k { display: inline-flex; align-items: center; justify-content: center; min-width: 1.25rem; height: 1.25rem; padding: 0 3px; background: #141414; color: var(--paper); border: 0; border-radius: 0; font-family: var(--mono); font-size: 10.5px; font-weight: 600; line-height: 1; text-transform: uppercase; }
+body .container, body .paste-wrap { margin-left: 0; margin-right: 0; padding-left: 2rem; padding-right: 2rem; }
+body .back { display: flex; width: fit-content; border: 0; padding: 0; background: transparent; color: #141414; font-family: var(--mono); font-size: 12.5px; margin-bottom: 2.25rem; }
+body .back:hover { background: transparent; text-decoration: underline; text-decoration-color: #ff6fae; text-decoration-thickness: 3px; text-underline-offset: 4px; }
+.ftab { display: inline-flex; align-items: center; gap: .6rem; font-family: var(--mono); font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 1.1rem; }
+.ftab mark { background: var(--hl); color: #141414; padding: 1px 7px; font-weight: 600; }
+.hl { background: linear-gradient(transparent 58%, var(--hl) 58%); -webkit-box-decoration-break: clone; box-decoration-break: clone; padding: 0 .08em; }
+body .page-title, body .paste-title { font-family: var(--serif); font-weight: 900; font-size: clamp(2rem, 4.6vw, 3.9rem); line-height: 1.22; letter-spacing: -.01em; color: #141414; margin-bottom: 1.4rem; text-wrap: balance; }
+body .page-title::before, body .page-title::after, body .paste-title::after { content: none; }
+body .page-sub, body .paste-sub { font-family: var(--sans); font-size: 14.5px; line-height: 1.85; max-width: 62ch; color: var(--text-muted); }
+body .submit-btn, body .add-btn { background: #141414; color: var(--paper); border: 1px solid #141414; border-radius: 0; font-family: var(--mono); font-size: 12.5px; font-weight: 500; padding: .55rem .9rem; }
+body .submit-btn:hover, body .add-btn:hover { background: var(--hl); color: #141414; border-color: #141414; }
+body .sample-btn, body .ir-dl-btn { background: transparent; color: #141414; border: 1px solid #141414; border-radius: 0; font-family: var(--mono); font-size: 12px; }
+body .sample-btn:hover, body .ir-dl-btn:hover { background: var(--hl); color: #141414; border-color: #141414; }
+body input, body textarea, body select { border-radius: 0; font-family: var(--mono); background: #fff; }
+body input:focus, body textarea:focus, body select:focus { border-color: #141414; outline: none; box-shadow: 0 0 0 3px var(--hl); }
+body .field-label::before, body .sample-title::before, body .why-title::before, body .safety-title::before,
+body .sec-h::before, body .sec-label::before, body .demo-title::before, body .loading-title::before, body .score-breakdown h4::before { content: none; }
+body .sample-title, body .demo-title, body .sec-h, body .sec-label, body .why-title, body .safety-title, body .field-label {
+  font-family: var(--mono); font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: #141414; }
+body table.rt th, body thead tr { background: #141414; color: var(--paper); }
+body table.rt th { border-bottom: 0; font-family: var(--mono); font-weight: 500; }
+body .kw, body .tag, body .chip { border-radius: 0; background: var(--hl); border: 0; color: #141414; font-family: var(--mono); }
+body .stat, body .stat-box { background: transparent; border: 1px solid #141414; border-radius: 0; }
+footer.f { background: #141414; color: var(--paper); padding: 3rem 2rem 2.25rem; margin-top: 6rem; font-family: var(--mono); font-size: 12.5px; }
+footer.f .big { font-family: var(--serif); font-weight: 900; font-size: clamp(2rem, 6vw, 4.5rem); line-height: 1.1; margin-bottom: 2.5rem; }
+footer.f .big span { background: var(--hl); color: #141414; padding: 0 .12em; }
+footer.f nav { display: flex; flex-wrap: wrap; gap: .75rem 2rem; }
+footer.f a { color: var(--paper); text-decoration: none; }
+footer.f a:hover { text-decoration: underline; text-decoration-color: var(--hl); text-decoration-thickness: 3px; text-underline-offset: 4px; }
+footer.f .cp { margin-top: 2.25rem; color: #8a8678; }
+
+/* ── 檔案版面：左側固定欄 + 右側主內容（規則／白名單／記錄共用） ── */
+.dz { display: grid; grid-template-columns: minmax(0,1fr); }
+@media (min-width: 1000px) { .dz { grid-template-columns: 23rem minmax(0,1fr); } }
+.dz-side { padding: 1.75rem 2rem 2rem; border-bottom: 1px solid #141414; }
+@media (min-width: 1000px) { .dz-side { position: sticky; top: 0; align-self: start; height: calc(100svh - 3rem); overflow-y: auto; border-bottom: 0; border-right: 1px solid #141414; } }
+.dz-main { padding: 2rem clamp(1.25rem,4vw,3.5rem) 4rem; min-width: 0; }
+.dz + footer.f { margin-top: 0; }
+.pg-title { font-family: var(--serif); font-weight: 900; font-size: clamp(2rem,3.2vw,3rem); line-height: 1.22; margin: .1rem 0 1rem; text-wrap: balance; }
+.pg-sub { font-size: 13.5px; line-height: 1.85; color: var(--text-muted); }
+.nums { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: #141414; border: 1px solid #141414; margin-top: 1.5rem; }
+.nums div { background: var(--paper); padding: .8rem .9rem; }
+.nums b { display: block; font-family: var(--serif); font-weight: 900; font-size: 2.1rem; line-height: 1.05; }
+.nums span { font-family: var(--mono); font-size: 11px; color: var(--text-muted); }
+.idx { list-style: none; margin: 1.5rem 0 0; padding: 0; font-family: var(--mono); font-size: 12px; }
+.idx a { display: flex; gap: .7rem; padding: .4rem 0; border-top: 1px solid #dcd7ca; color: #141414; text-decoration: none; }
+.idx a em { font-style: normal; color: var(--text-dim); }
+.idx a.on span, .idx a:hover span { background: var(--hl); }
+.sh { display: flex; flex-wrap: wrap; align-items: baseline; gap: .4rem 1rem; margin: 3.2rem 0 1.1rem; padding-top: 1rem; border-top: 1px solid #141414; }
+.sh:first-child { margin-top: 0; }
+.sh .n { font-family: var(--mono); font-size: 12px; font-weight: 600; background: var(--hl); padding: 0 .45rem; }
+.sh h2 { font-family: var(--serif); font-weight: 900; font-size: 1.55rem; line-height: 1.3; }
+.sh p { flex-basis: 100%; font-family: var(--mono); font-size: 12px; color: var(--text-muted); line-height: 1.7; max-width: 70ch; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr)); gap: 1rem; }
+.card { position: relative; display: flex; flex-direction: column; gap: .55rem; background: #fff; border: 1px solid #141414; padding: 1rem 1.1rem 1.15rem; }
+.card .rid { font-family: var(--serif); font-weight: 900; font-size: 2.3rem; line-height: 1; }
+.card h3 { font-size: 1.05rem; font-weight: 700; }
+.card p { font-size: 13px; line-height: 1.7; color: var(--text-muted); }
+.card .kws { display: flex; flex-wrap: wrap; gap: .3rem; margin-top: .2rem; }
+.card .kws span { background: var(--hl); font-family: var(--mono); font-size: 11.5px; padding: 0 .38rem; }
+.st { display: inline-block; border: 2px solid currentColor; padding: .02rem .5rem; font-family: var(--serif); font-weight: 900; font-size: .85rem; line-height: 1.4; transform: rotate(-4deg); mix-blend-mode: multiply; }
+.st.red { color: #c8321e; } .st.grn { color: #2e6a4d; } .st.org { color: #a8650f; } .st.ink { color: #141414; }
+.card .st { position: absolute; right: .85rem; top: .95rem; font-size: .75rem; max-width: 11rem; text-align: center; }
+.note2 { margin-top: .9rem; font-family: var(--mono); font-size: 12px; color: var(--text-muted); line-height: 1.8; }
+.note2 b { background: var(--hl); font-weight: 500; padding: 0 .25rem; }
 </style>
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  var path=location.pathname,map={'/rules':'R','/whitelist':'W','/':'H','/history':'L','/paste':'P','/login':'S'};
+  var keys={};
+  document.querySelectorAll('.hdr-nav a').forEach(function(a){
+    var k=map[new URL(a.href,location.href).pathname];
+    if(!k||keys[k.toLowerCase()])return;
+    var e=document.createElement('kbd');e.className='k';e.textContent=k;a.appendChild(e);keys[k.toLowerCase()]=a.href;
+  });
+  document.querySelectorAll('[data-key]').forEach(function(el){keys[el.getAttribute('data-key')]=el.href;});
+  var names={'/rules':'rules','/whitelist':'whitelist','/history':'history','/paste':'paste'};
+  var t=document.querySelector('.page-title, .paste-title');
+  if(names[path]&&t&&!t.querySelector('.hl')){
+    var tab=document.createElement('div');tab.className='ftab';tab.innerHTML='<mark>FILE</mark><span>'+names[path]+'</span>';
+    t.parentNode.insertBefore(tab,t);
+    t.innerHTML='<span class="hl">'+t.innerHTML+'</span>';
+  }
+  if(path!=='/'&&!document.querySelector('footer.f')&&!document.querySelector('.main')){
+    var f=document.createElement('footer');f.className='f';
+    f.innerHTML='<div class="big"><span>phishing</span>-detector</div><nav><a href="/rules">偵測規則</a><a href="/whitelist">白名單</a><a href="/paste">貼上分析</a><a href="/login">Google 登入</a></nav>';
+    document.body.appendChild(f);
+  }
+  document.addEventListener('keydown',function(ev){
+    if(ev.metaKey||ev.ctrlKey||ev.altKey)return;
+    var t2=ev.target,tn=t2&&t2.tagName;
+    if(tn==='INPUT'||tn==='TEXTAREA'||tn==='SELECT'||(t2&&t2.isContentEditable))return;
+    var h=keys[(ev.key||'').toLowerCase()];
+    if(h)location.href=h;
+  });
+});
+</script>
+
 """
 
 # ── 首頁 HTML (極簡工程風／終端機質感，單頁固定 100vh 滿版，無滾輪) ─────
 HOME_HTML = COMMON_CSS + """
 <style>
-html, body {
-  height: 100vh;
-  overflow: hidden !important;
-  margin: 0;
-  padding: 0;
-}
-
-.landing-container {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  width: 100vw;
-  background-color: #000000;
-  color: #e9e9e9;
-  box-sizing: border-box;
-}
-
-.main-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 0 24px;
-  max-width: 720px;
-  margin: 0 auto;
-  width: 100%;
-}
-
-.prompt-line {
-  font-size: 12.5px;
-  color: var(--text-dim);
-  margin-bottom: 10px;
-}
-.prompt-line::before { content: "$ "; color: var(--green); }
-
-.title {
-  font-size: 26px;
-  font-weight: 700;
-  color: #ffffff;
-  margin-bottom: 14px;
-  letter-spacing: -0.3px;
-  text-align: left;
-  line-height: 1.4;
-}
-
-.subtitle {
-  font-size: 13px;
-  color: var(--text-muted);
-  line-height: 1.7;
-  text-align: left;
-  margin-bottom: 28px;
-  max-width: 560px;
-}
-
-.cta-row { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; margin-bottom: 30px; }
-
-.google-btn-white {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  background: transparent;
-  color: #ffffff;
-  font-size: 13px;
-  font-weight: 700;
-  padding: 11px 20px;
-  border-radius: 2px;
-  text-decoration: none;
-  transition: background 0.15s ease, color 0.15s ease;
-  border: 1px solid #ffffff;
-  font-family: var(--mono);
-}
-.google-btn-white:hover {
-  background: #ffffff;
-  color: #000000;
-}
-
-.paste-link {
-  display: inline-block; font-size: 12.5px; color: var(--text-muted);
-  text-decoration: none;
-  border-bottom: 1px dashed var(--border-accent); padding-bottom: 1px;
-  transition: color 0.15s ease;
-}
-.paste-link:hover { color: #ffffff; border-color: #888; }
-.paste-link::before { content: "# "; color: var(--text-dim); }
-
-.terminal {
-  width: 100%;
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  border-radius: 4px;
-  margin-bottom: 22px;
-  overflow: hidden;
-}
-.terminal-bar {
-  display: flex; align-items: center; gap: 6px;
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--border-subtle);
-}
-.terminal-dot { width: 8px; height: 8px; border-radius: 50%; background: #333; }
-.terminal-title { margin-left: 8px; font-size: 11px; color: var(--text-dim); }
-.terminal-body { padding: 14px 16px; font-size: 12px; line-height: 1.85; }
-.terminal-body .cmd { color: #ffffff; }
-.terminal-body .cmd::before { content: "$ "; color: var(--green); }
-.terminal-row { display: flex; gap: 10px; color: var(--text-muted); }
-.terminal-row .tag { color: var(--green); flex-shrink: 0; }
-.terminal-row .step { color: #d4d4d4; flex-shrink: 0; width: 130px; }
-.terminal-row .desc { color: var(--text-dim); }
-.terminal-note { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border-subtle); color: var(--text-dim); }
-.terminal-note .cursor { display: inline-block; width: 6px; height: 12px; background: var(--green); margin-left: 4px; animation: blink 1s step-start infinite; vertical-align: -2px; }
-@keyframes blink { 50% { opacity: 0; } }
-
-@media (max-width: 700px) {
-  html, body { overflow: auto !important; height: auto; min-height: 100%; }
-  .landing-container { min-height: 100vh; height: auto; }
-  .hdr { padding: 14px 18px; }
-  .main-content { padding: 42px 18px 36px; }
-  .title { font-size: 21px; }
-  .terminal-row { flex-direction: column; gap: 2px; }
-  .terminal-row .step { width: auto; }
-}
+html,body{background:var(--paper);color:#141414;font-family:var(--sans);-webkit-font-smoothing:antialiased;scroll-behavior:smooth}
+.wrap{max-width:1560px;margin:0 auto;padding:0 2rem}
+.mono{font-family:var(--mono)}
+.hero{padding:clamp(2.5rem,7vh,5rem) 0 clamp(3rem,8vh,6rem)}
+.hero .wrap{display:grid;gap:3rem;align-items:center}
+@media(min-width:1000px){.hero .wrap{grid-template-columns:1fr 1.02fr;gap:4.5rem;min-height:calc(100svh - 3rem - 8rem)}}
+h1{font-family:var(--serif);font-weight:900;font-size:clamp(2.3rem,4.7vw,4.4rem);line-height:1.2;letter-spacing:-.01em;text-wrap:balance}
+h1 .hl{background:linear-gradient(transparent 56%,var(--hl) 56%)}
+.sub{margin-top:1.5rem;max-width:44ch;color:#55524a;font-size:16px;line-height:1.85}
+.cta{margin-top:2.25rem;display:flex;flex-direction:column;gap:.6rem;max-width:25rem}
+.btn{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.7rem .8rem;border:1px solid #141414;background:#141414;color:var(--paper);font-family:var(--mono);font-size:12.5px;text-decoration:none;transition:background .15s,color .15s}
+.btn.o{background:transparent;color:#141414}
+.btn .key{display:flex;align-items:center;justify-content:center;min-width:1.35rem;height:1.35rem;background:var(--paper);color:#141414;font-weight:600;font-size:11px;text-transform:uppercase}
+.btn.o .key{background:#141414;color:var(--paper)}
+.btn:hover{background:var(--hl);color:#141414}.btn:hover .key{background:#141414;color:var(--paper)}
+/* 被批註的示意郵件 */
+.docwrap{position:relative}
+.doc{position:relative;background:#fff;border:1px solid #141414;padding:1.75rem 1.9rem 1.5rem;font-family:var(--mono);font-size:13.5px;line-height:2;transform:rotate(-1deg);box-shadow:0 22px 34px -26px rgba(20,20,20,.55)}
+.doc dl{margin:0 0 1rem;padding-bottom:1rem;border-bottom:1px solid #dcd7ca}
+.doc dl div{display:grid;grid-template-columns:4.2em 1fr;gap:.5rem}
+.doc dt{color:#8a8678;font-size:11.5px;letter-spacing:.06em}
+.doc dd{margin:0;word-break:break-all}
+.doc p{margin:0 0 .6rem;font-family:var(--sans);font-size:15px;line-height:2.1}
+mark.m{position:relative;color:#141414;background:linear-gradient(var(--hl),var(--hl)) no-repeat;background-size:100% 100%;padding:.05em .12em;cursor:default;animation:draw .55s cubic-bezier(.3,.7,.3,1) both;animation-delay:calc(var(--i) * .38s + .3s)}
+mark.m::after{content:attr(data-n);position:relative;top:-.7em;margin-left:.15em;display:inline-grid;place-items:center;width:1.25em;height:1.25em;border-radius:50%;background:#141414;color:var(--paper);font:600 10px/1 var(--mono)}
+@keyframes draw{from{background-size:0% 100%}to{background-size:100% 100%}}
+.bar{display:inline-block;background:#141414;color:#141414;padding:0 .2em;transition:background .2s,color .2s;user-select:none;cursor:help}
+.bar:hover{background:transparent;color:#141414}
+.notes{margin:1.1rem 0 0;padding:1rem 0 0;border-top:1px dashed #a8a291;list-style:none;font-family:var(--sans);font-size:13px;line-height:1.7;color:#55524a}
+.notes li{display:flex;gap:.65rem;padding:.12rem 0;transition:color .15s}
+.notes li b{flex:none;display:grid;place-items:center;width:1.25rem;height:1.25rem;margin-top:.2rem;border-radius:50%;background:#141414;color:var(--paper);font:600 10px/1 var(--mono)}
+.notes li.on{color:#141414}.notes li.on span{background:var(--hl)}
+.stamp{position:absolute;right:-1.1rem;top:-1.6rem;z-index:2;padding:.2rem .75rem .25rem;border:3px solid #c8321e;color:#c8321e;text-align:center;font-family:var(--serif);font-weight:900;font-size:1.7rem;line-height:1.15;transform:rotate(9deg);mix-blend-mode:multiply;background:rgba(250,248,243,.35);animation:stamp .45s cubic-bezier(.2,1.7,.4,1) 2.1s both}
+.stamp small{display:block;font-family:var(--mono);font-size:.62rem;letter-spacing:.2em;font-weight:600}
+@keyframes stamp{from{opacity:0;transform:rotate(22deg) scale(2.4)}to{opacity:.92;transform:rotate(9deg) scale(1)}}
+.cap{margin-top:1.1rem;font-family:var(--mono);font-size:11px;color:#8a8678}
+@media(prefers-reduced-motion:reduce){mark.m,.stamp{animation:none}.stamp{opacity:.92}}
+/* sections */
+.sec{border-top:1px solid #141414;padding:clamp(3rem,8vh,5.5rem) 0}
+h2{font-family:var(--serif);font-weight:900;font-size:clamp(1.8rem,3.4vw,3rem);line-height:1.25;margin-top:.4rem;max-width:26ch;text-wrap:balance}
+h2 .hl{white-space:nowrap}
+.rows{margin-top:2.5rem}
+.row{display:grid;grid-template-columns:3.2rem 1fr;gap:.2rem 1rem;padding:1.4rem 0;border-top:1px solid #dcd7ca}
+.row:last-child{border-bottom:1px solid #dcd7ca}
+@media(min-width:800px){.row{grid-template-columns:3.2rem 15rem 1fr 1fr;align-items:baseline}}
+.row p,.row .eg{grid-column:2}
+@media(min-width:800px){.row p,.row .eg{grid-column:auto}}
+.row .n{display:grid;place-items:center;width:1.9rem;height:1.9rem;border-radius:50%;background:#141414;color:var(--paper);font:600 12px/1 var(--mono)}
+.row h3{font-family:var(--serif);font-weight:700;font-size:1.3rem}
+.row p{color:#55524a;font-size:14.5px}
+.row .eg{font-family:var(--mono);font-size:12px;color:#8a8678}
+.row .eg mark{background:var(--hl);color:#141414;padding:0 .3em}
+table.m{width:100%;border-collapse:collapse;margin-top:2.25rem;font-family:var(--mono);font-size:12.5px}
+table.m th{background:#141414;color:var(--paper);text-align:left;font-weight:500;padding:.65rem .9rem}
+table.m td{padding:.65rem .9rem;border-bottom:1px solid #dcd7ca;vertical-align:top}
+.tw{overflow-x:auto}
+.note{margin-top:.8rem;font-family:var(--mono);font-size:11.5px;color:#8a8678;max-width:64ch;line-height:1.7}
+.clear{display:grid}
+@media(min-width:900px){.clear{grid-template-columns:1fr 1fr}}
+.clear>div{padding:clamp(2rem,6vw,4rem) 2rem;position:relative}
+.clear .l{background:#ebe7dc}
+.clear .r{background:#141414;color:var(--paper);display:flex;flex-direction:column;justify-content:space-between;gap:2.5rem}
+.clear .stamp2{position:absolute;right:2rem;top:2rem;border:3px solid #2e6a4d;color:#2e6a4d;padding:.15rem .7rem;font-family:var(--serif);font-weight:900;font-size:1.3rem;transform:rotate(-6deg);mix-blend-mode:multiply}
+.clear .stamp2 small{display:block;font-family:var(--mono);font-size:.55rem;letter-spacing:.2em;font-weight:600;text-align:center}
+.clear .acts{display:flex;flex-direction:column;gap:.6rem;max-width:20rem}
+.clear .btn{background:transparent;color:var(--paper);border-color:var(--paper)}.clear .btn .key{background:var(--paper);color:#141414}
+.clear .btn:hover{background:var(--hl);color:#141414;border-color:var(--hl)}
+footer.f{margin-top:0;padding:3rem 2rem 2.25rem}
 </style>
-
-<div class="landing-container">
-  <div class="hdr">
-    <div class="hdr-left">
-      <span>phishing-detector</span>
-    </div>
-    <div class="hdr-nav">
-      <a href="/rules">偵測規則</a>
-      <a href="/whitelist">白名單</a>
-    </div>
-  </div>
-
-  <div class="main-content">
-    <div class="prompt-line">whoami --scan gmail --limit 15</div>
-    <h1 class="title">安全掃描 Gmail，快速找出可疑郵件</h1>
-    <p class="subtitle">
-      授權 Google 後掃描最新 15 封郵件，結合規則引擎、機器學習、URL / HTML 解析與 AI 語意判讀，快速找出可疑信件。
-    </p>
-
-    <div class="cta-row">
-      <a href="/login" class="google-btn-white">
-        使用 Google 帳號開始掃描
-      </a>
-      <a href="/paste" class="paste-link">不想連接 Gmail？直接貼上郵件內容分析</a>
-    </div>
-
-    <div class="terminal">
-      <div class="terminal-bar">
-        <span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span>
-        <span class="terminal-title">pipeline.log</span>
-      </div>
-      <div class="terminal-body">
-        <div class="cmd">python scan.py --source gmail</div>
-        <div class="terminal-row"><span class="tag">[1/4]</span><span class="step">規則引擎</span><span class="desc">已知釣魚樣式與關鍵字比對</span></div>
-        <div class="terminal-row"><span class="tag">[2/4]</span><span class="step">ML 模型</span><span class="desc">TF-IDF + Logistic Regression</span></div>
-        <div class="terminal-row"><span class="tag">[3/4]</span><span class="step">URL / HTML 解析</span><span class="desc">連結還原、追蹤像素、隱藏元素偵測</span></div>
-        <div class="terminal-row"><span class="tag">[4/4]</span><span class="step">AI 語意判讀</span><span class="desc">交叉比對郵件意圖與敏感資訊索取</span></div>
-        <div class="terminal-note"># 白名單機制已啟用，已知安全網域自動略過重複分析<span class="cursor"></span></div>
-      </div>
+<header class="hdr"><div class="hdr-left"><a href="/" style="color:inherit;text-decoration:none">phishing-detector</a></div>
+<div class="hdr-nav"><a href="/rules">偵測規則</a><a href="/whitelist">白名單</a></div></header>
+<main>
+<section class="hero"><div class="wrap">
+  <div>
+    <div class="ftab"><mark>FILE</mark><span>四層分析 / 案件檢視</span></div>
+    <h1>安全掃描 Gmail，快速找出<span class="hl">可疑</span>郵件</h1>
+    <p class="sub">授權 Google 後掃描最新 15 封郵件，結合規則引擎、機器學習、URL / HTML 解析與 AI 語意判讀，快速找出可疑信件。</p>
+    <div class="cta">
+      <a class="btn" href="/login" data-key="s"><span>使用 Google 帳號開始掃描</span><span class="key">S</span></a>
+      <a class="btn o" href="/paste" data-key="p"><span>不想連接 Gmail？直接貼上郵件內容分析</span><span class="key">P</span></a>
     </div>
   </div>
-</div>
+  <div class="docwrap">
+    <div class="stamp" aria-hidden="true">可疑<small>SUSPICIOUS</small></div>
+    <article class="doc" aria-label="示意郵件">
+      <dl>
+        <div><dt>寄件者</dt><dd><span class="bar" title="掃描時會一併檢查寄件網域">service</span>@secure-account.example</dd></div>
+        <div><dt>主　旨</dt><dd>您的帳戶已被暫停</dd></div>
+      </dl>
+      <p>親愛的客戶：<br><mark class="m" data-n="2" style="--i:1">我們偵測到您的帳戶有異常登入行為。</mark><br>
+      請<mark class="m" data-n="1" style="--i:0">立即</mark>點擊 <mark class="m" data-n="3" style="--i:2">驗證帳戶</mark>，並<mark class="m" data-n="4" style="--i:3">回覆您的帳號密碼與<span class="bar" title="敏感資訊">信用卡號</span></mark>，否則帳戶將於 <mark class="m" data-n="1" style="--i:0">24 小時內</mark>永久停用。</p>
+      <ul class="notes">
+        <li data-n="1"><b>1</b><span>規則引擎：命中急迫語氣</span></li>
+        <li data-n="2"><b>2</b><span>ML 模型：整體用詞接近釣魚樣本</span></li>
+        <li data-n="3"><b>3</b><span>URL / HTML 解析：顯示文字與實際連結需還原比對</span></li>
+        <li data-n="4"><b>4</b><span>AI 語意判讀：索取敏感資訊</span></li>
+      </ul>
+    </article>
+    <p class="cap">示意郵件，非真實案例。滑過標記可對照批註。</p>
+  </div>
+</div></section>
+
+<section class="sec" id="pipeline"><div class="wrap">
+  <div class="ftab"><mark>FILE 02</mark><span>pipeline</span></div>
+  <h2>四層分析，<span class="hl">逐層</span>交叉比對</h2>
+  <div class="rows">
+    <div class="row"><span class="n">1</span><h3>規則引擎</h3><p>已知釣魚樣式與關鍵字比對</p><span class="eg">例：<mark>立即</mark> <mark>24 小時內</mark></span></div>
+    <div class="row"><span class="n">2</span><h3>ML 模型</h3><p>TF-IDF + Logistic Regression</p><span class="eg">例：整體用詞特徵</span></div>
+    <div class="row"><span class="n">3</span><h3>URL / HTML 解析</h3><p>連結還原、追蹤像素、隱藏元素偵測</p><span class="eg">例：<mark>顯示文字</mark> ≠ 實際連結</span></div>
+    <div class="row"><span class="n">4</span><h3>AI 語意判讀</h3><p>交叉比對郵件意圖與敏感資訊索取</p><span class="eg">例：<mark>索取密碼</mark></span></div>
+  </div>
+</div></section>
+
+<section class="sec" id="metrics"><div class="wrap">
+  <div class="ftab"><mark>FILE 03</mark><span>model report</span></div>
+  <h2>ML 模型<span class="hl">測試結果</span></h2>
+  <div class="tw"><table class="m">
+    <thead><tr><th>項目</th><th>數值</th></tr></thead>
+    <tbody>
+    <tr><td>資料集</td><td>Phishing Email Dataset，清理後 82,077 筆（訓練 65,661 / 測試 16,416）</td></tr>
+    <tr><td>Accuracy</td><td>98.41%</td></tr>
+    <tr><td>Precision</td><td>98.28%</td></tr>
+    <tr><td>Recall</td><td>98.68%</td></tr>
+    <tr><td>F1</td><td>98.48%</td></tr>
+    </tbody></table></div>
+  <p class="note">以上僅為第 2 層 ML 模型在測試資料上的表現，不代表整體四層系統在真實信箱中的準確率。</p>
+</div></section>
+
+<section class="clear">
+  <div class="l"><div class="stamp2" aria-hidden="true">已放行<small>CLEARED</small></div>
+    <div class="ftab"><mark>FILE 04</mark><span>whitelist</span></div>
+    <h2>白名單機制<span class="hl">已啟用</span></h2></div>
+  <div class="r"><p class="mono" style="max-width:34ch;font-size:13px;line-height:1.8">已知安全網域自動略過重複分析。</p>
+    <div class="acts">
+      <a class="btn" href="/whitelist" data-key="w"><span>查看白名單</span><span class="key">W</span></a>
+      <a class="btn" href="/rules" data-key="r"><span>偵測規則</span><span class="key">R</span></a>
+    </div></div>
+</section>
+</main>
+<footer class="f">
+  <div class="big"><span>phishing</span>-detector</div>
+  <nav><a href="/rules">偵測規則</a><a href="/whitelist">白名單</a><a href="/paste">貼上分析</a><a href="/login">Google 登入</a></nav>
+</footer>
+<script>
+(function(){
+  var marks=document.querySelectorAll('mark.m'),notes=document.querySelectorAll('.notes li');
+  function set(n,on){notes.forEach(function(li){if(li.getAttribute('data-n')===n)li.classList.toggle('on',on);});}
+  marks.forEach(function(m){var n=m.getAttribute('data-n');
+    m.addEventListener('mouseenter',function(){set(n,true)});m.addEventListener('mouseleave',function(){set(n,false)});});
+  notes.forEach(function(li){var n=li.getAttribute('data-n');
+    li.addEventListener('mouseenter',function(){marks.forEach(function(m){if(m.getAttribute('data-n')===n)m.style.outline='2px solid #141414'});});
+    li.addEventListener('mouseleave',function(){marks.forEach(function(m){m.style.outline='';});});});
+})();
+</script>
 """
 
 # ── Loading HTML ─────────────────────────────────────────────
@@ -617,92 +721,122 @@ setInterval(() => {
 # ── 貼上郵件內容分析 HTML（免登入）───────────────────────────
 PASTE_HTML = COMMON_CSS + """
 <style>
-.paste-wrap { max-width: 640px; margin: 0 auto; padding: 40px 20px 60px; }
-.paste-title { font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 6px; }
-.paste-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 28px; line-height: 1.6; }
-.field-label { font-size: 11.5px; color: var(--text-dim); margin-bottom: 6px;
-               display: block; letter-spacing: 0; font-family: var(--mono); }
-.field-label::before { content: "# "; color: #444; }
-.field-input, .field-textarea {
-  width: 100%; background: var(--bg-card); border: 1px solid var(--border-subtle);
-  border-radius: 3px; color: var(--text-main); font-size: 13px;
-  padding: 10px 14px; margin-bottom: 18px; font-family: var(--mono);
-}
-.field-input:focus, .field-textarea:focus { outline: none; border-color: var(--border-accent); }
-.field-textarea { resize: vertical; min-height: 140px; line-height: 1.6; }
-.field-hint { font-size: 11px; color: var(--text-dim); margin: -12px 0 18px; }
-.submit-btn {
-  background: #ffffff; color: #000000; font-size: 13px; font-weight: 700;
-  padding: 11px 26px; border-radius: 2px; border: 1px solid #fff; cursor: pointer;
-  transition: all 0.15s ease; font-family: var(--mono);
-}
-.submit-btn:hover { background: #000; color: #fff; }
-.err-box { background: var(--red-bg); border: 1px solid var(--red-border);
-           color: var(--red); font-size: 12.5px; padding: 10px 14px;
-           border-radius: 3px; margin-bottom: 18px; font-family: var(--mono); }
-.sample-box { background: var(--bg-card); border: 1px solid var(--border-subtle);
-              border-radius: 4px; padding: 14px; margin-bottom: 22px; }
-.sample-title { font-size: 12px; font-weight: 600; color: var(--text-main); margin-bottom: 10px; font-family: var(--mono); }
-.sample-title::before { content: "$ load-sample  "; color: var(--green); }
-.sample-row { display: flex; gap: 8px; }
-.sample-select { flex: 1; min-width: 0; background: #0a0a0a; color: var(--text-main);
-                 border: 1px solid var(--border-subtle); border-radius: 3px; padding: 9px 10px; font-size: 12px; font-family: var(--mono); }
-.sample-btn { background: transparent; color: var(--text-main); border: 1px solid var(--border-accent);
-              border-radius: 3px; padding: 9px 14px; font-size: 12px; cursor: pointer; white-space: nowrap; font-family: var(--mono); transition: all .15s ease; }
-.sample-btn:hover { background: #fff; color: #000; border-color: #fff; }
-.sample-hint { font-size: 10.5px; color: var(--text-dim); margin-top: 8px; }
-@media (max-width: 520px) {
-  .sample-row { flex-direction: column; }
-  .sample-btn { width: 100%; }
-}
+.err-box { border: 1px solid #c8321e; background: #fff3f0; padding: .8rem 1rem; margin-bottom: 1.2rem; font-size: 13px; line-height: 1.7; }
+.err-box pre { white-space: pre-wrap; font-size: 12px; }
+.sample-form .sr { display: flex; gap: .5rem; margin-top: 1.4rem; }
+.sample-select { flex: 1; min-width: 0; border: 1px solid #141414; background: #fff; padding: .55rem .6rem; font: 12.5px var(--mono); }
+.sample-hint { margin-top: .6rem; font-family: var(--mono); font-size: 11px; color: #8a8678; line-height: 1.7; }
+.mail { background: #fff; border: 1px solid #141414; }
+.mrow { display: grid; grid-template-columns: 5.5rem minmax(0,1fr); align-items: center; border-bottom: 1px solid #dcd7ca; padding: 0 1.1rem; }
+.mrow label { margin: 0; font-family: var(--mono); font-size: 11.5px; letter-spacing: .06em; color: #8a8678; }
+.mrow input { width: 100%; border: 0; background: transparent; font: 500 14px var(--mono); padding: .85rem 0; box-shadow: none; }
+.mrow input:focus { border: 0; box-shadow: none; }
+.mrow:focus-within { background: #fffbe8; }
+.ruled { display: block; width: 100%; min-height: 15rem; border: 0; padding: .25rem 1.1rem 1rem; font: 15px/2rem var(--sans); resize: vertical;
+  background: repeating-linear-gradient(transparent 0 calc(2rem - 1px), #e8e3d6 calc(2rem - 1px) 2rem) local; background-position: 0 .25rem; box-shadow: none; }
+.ruled:focus { border: 0; box-shadow: none; }
+.att { margin-top: 1rem; border: 1px solid #141414; background: #fff; }
+.att summary { cursor: pointer; padding: .75rem 1.1rem; font-family: var(--mono); font-size: 12px; font-weight: 600; }
+.att .ab { padding: 0 1.1rem 1rem; }
+.att textarea { width: 100%; min-height: 8rem; border: 1px solid #dcd7ca; background: #faf8f3; padding: .6rem .75rem; font: 12.5px/1.7 var(--mono); }
+.att .fh { margin-top: .5rem; font-size: 12px; color: #8a8678; line-height: 1.7; }
+.act { display: flex; flex-wrap: wrap; align-items: center; gap: .8rem 1.4rem; margin-top: 1.2rem; }
+.act .submit-btn { padding: .8rem 1.6rem; font-size: 14px; }
+.act span { font-family: var(--mono); font-size: 11.5px; color: #8a8678; }
+.pv { margin-top: 2.2rem; border: 1px dashed #a8a291; background: #fff; padding: 1rem 1.2rem 1.1rem; }
+.pv .lb { font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; display: flex; justify-content: space-between; gap: 1rem; }
+.pv .lb em { font-style: normal; color: #8a8678; font-weight: 400; letter-spacing: 0; }
+#pv { margin-top: .6rem; min-height: 3.5rem; font: 15px/2 var(--sans); white-space: pre-wrap; word-break: break-word; max-height: 16rem; overflow: auto; color: #8a8678; }
+#pv.has { color: #141414; }
+mark.m { position: relative; color: #141414; background: var(--hl); padding: .05em .12em; }
+mark.m:not(.f)::after { display: none; }
+mark.m::after { content: attr(data-n); position: relative; top: -.7em; margin-left: .15em; display: inline-grid; place-items: center; width: 1.25em; height: 1.25em; border-radius: 50%; background: #141414; color: #faf8f3; font: 600 10px/1 var(--mono); }
+.pv .nt { margin-top: .6rem; font-family: var(--mono); font-size: 11px; color: #8a8678; line-height: 1.7; }
 </style>
-
+<script>
+const RULE_KW = KEYWORDS_PLACEHOLDER;
+const WORDS = (function () {
+  const w = [];
+  RULE_KW.forEach(function (g) { g[3].forEach(function (x) { w.push(String(x).toLowerCase()); }); });
+  w.sort(function (a, b) { return b.length - a.length; });
+  return w;
+})();
+function isSp(c) { const n = c.charCodeAt(0); return n <= 32 || n === 12288; }
+function preview() {
+  const t = document.getElementById('body-input').value, low = t.toLowerCase(), out = document.getElementById('pv'), st = document.getElementById('pv-stat');
+  out.textContent = '';
+  if (!t.trim()) { out.className = ''; out.textContent = '貼上內文後，這裡會即時標出命中的關鍵字與連結。'; st.textContent = ''; return; }
+  out.className = 'has';
+  let buf = '', i = 0, k, end, found, el, kw = 0, urls = 0;
+  function flush() { if (buf) { out.appendChild(document.createTextNode(buf)); buf = ''; } }
+  while (i < t.length) {
+    if (low.startsWith('http://', i) || low.startsWith('https://', i)) {
+      end = i; while (end < t.length && !isSp(t[end])) end++;
+      flush(); el = document.createElement('mark'); el.className = urls ? 'm' : 'm f'; el.setAttribute('data-n', '3'); el.textContent = t.slice(i, end); out.appendChild(el); urls++; i = end; continue;
+    }
+    found = null;
+    for (k = 0; k < WORDS.length; k++) { if (low.startsWith(WORDS[k], i)) { found = WORDS[k]; break; } }
+    if (found) { flush(); el = document.createElement('mark'); el.className = kw ? 'm' : 'm f'; el.setAttribute('data-n', '1'); el.textContent = t.slice(i, i + found.length); out.appendChild(el); kw++; i += found.length; }
+    else { buf += t[i]; i++; }
+  }
+  flush();
+  st.textContent = '關鍵字 ' + kw + '・連結 ' + urls;
+}
+document.addEventListener('DOMContentLoaded', function () {
+  const b = document.getElementById('body-input'), h = document.getElementById('html-input');
+  b.addEventListener('input', preview); preview();
+  if (h.value.trim()) document.getElementById('att').open = true;
+});
+</script>
 <div class="hdr">
-  <div class="hdr-left">
-    <span>phishing-detector / paste</span>
-  </div>
+  <div class="hdr-left"><span>phishing-detector / paste</span></div>
   <div class="hdr-nav"><a href="/rules">偵測規則</a><a href="/whitelist">白名單</a><a href="/">回首頁</a></div>
 </div>
-
-<div class="paste-wrap">
-  <div class="paste-title">貼上郵件內容進行分析</div>
-  <div class="paste-sub">不需要 Google 帳號授權，將郵件的寄件者、主旨與內文貼上即可，系統會以相同的三層式（規則引擎 + ML + HTML / URL + AI）架構進行分析。</div>
-
-  <form method="GET" action="/paste" class="sample-box">
-    <div class="sample-title">快速載入測試信件</div>
-    <div class="sample-row">
-      <select name="sample" class="sample-select">
-        <option value="">請選擇測試範例</option>
-        <option value="account" SELECT_ACCOUNT>帳戶停用釣魚信</option>
-        <option value="prize" SELECT_PRIZE>中獎詐騙信</option>
-        <option value="delivery" SELECT_DELIVERY>假物流通知</option>
-        <option value="normal" SELECT_NORMAL>正常商業信件</option>
-        <option value="wl_real" SELECT_WL_REAL>白名單演示 ①：google.com 官方寄件者（會被略過）</option>
-        <option value="wl_fake" SELECT_WL_FAKE>白名單演示 ②：偽冒網域 google.com.verify-login.xyz（不會被略過）</option>
-      </select>
-      <button type="submit" class="sample-btn">載入範例</button>
+<div class="dz">
+  <aside class="dz-side">
+    <a href="/" class="back">← 返回首頁</a>
+    <div class="ftab"><mark>FILE</mark><span>paste</span></div>
+    <h1 class="pg-title"><span class="hl">貼上郵件內容進行分析</span></h1>
+    <p class="pg-sub">不需要 Google 帳號授權，將郵件的寄件者、主旨與內文貼上即可，系統會以相同的三層式（規則引擎 + ML + HTML / URL + AI）架構進行分析。</p>
+    <form method="GET" action="/paste" class="sample-form">
+      <div class="lb" style="font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.08em;margin-top:1.8rem">快速載入測試信件</div>
+      <div class="sr">
+        <select name="sample" class="sample-select">
+          <option value="">請選擇測試範例</option>
+          <option value="account" SELECT_ACCOUNT>帳戶停用釣魚信</option>
+          <option value="prize" SELECT_PRIZE>中獎詐騙信</option>
+          <option value="delivery" SELECT_DELIVERY>假物流通知</option>
+          <option value="normal" SELECT_NORMAL>正常商業信件</option>
+          <option value="wl_real" SELECT_WL_REAL>白名單演示 ①：google.com 官方寄件者（會被略過）</option>
+          <option value="wl_fake" SELECT_WL_FAKE>白名單演示 ②：偽冒網域 google.com.verify-login.xyz（不會被略過）</option>
+        </select>
+        <button type="submit" class="sample-btn">載入範例</button>
+      </div>
+      <div class="sample-hint">選擇範例後按「載入範例」，系統會直接填入郵件欄位，不依賴 JavaScript。</div>
+    </form>
+  </aside>
+  <main class="dz-main">
+    ERROR_PLACEHOLDER
+    <form method="POST" action="/paste_analyze">
+      <div class="sh"><span class="n">01</span><h2>待檢驗郵件</h2></div>
+      <div class="mail">
+        <div class="mrow"><label for="sender-input">寄件者</label><input id="sender-input" type="text" name="sender" value="SAMPLE_SENDER" placeholder="選填，用於白名單比對，例如 service@example.com"></div>
+        <div class="mrow"><label for="subject-input">主　旨</label><input id="subject-input" type="text" name="subject" value="SAMPLE_SUBJECT" placeholder="郵件主旨"></div>
+        <textarea id="body-input" class="ruled" name="body" placeholder="貼上郵件的純文字內容（必填）..." required>SAMPLE_BODY</textarea>
+      </div>
+      <details class="att" id="att">
+        <summary>附件：HTML 原始碼（選填，用於偵測像素追蹤／偽裝連結等）</summary>
+        <div class="ab"><textarea id="html-input" name="html" placeholder="若有郵件的 HTML 原始碼，可貼於此處以啟用多模態偵測...">SAMPLE_HTML</textarea>
+        <div class="fh">在大部分信箱可透過「顯示原始郵件 / 檢視原始碼」取得 HTML 內容。</div></div>
+      </details>
+      <div class="act"><button class="submit-btn" type="submit">開始分析</button><span>送出後會進行完整的四層分析</span></div>
+    </form>
+    <div class="pv">
+      <div class="lb"><span>預檢標記（即時）</span><em id="pv-stat"></em></div>
+      <div id="pv"></div>
+      <div class="nt">這只是規則引擎關鍵字與連結的前端預覽，送出後才會進行完整的四層分析。</div>
     </div>
-    <div class="sample-hint"># 選擇範例後按「載入範例」，系統會直接填入郵件欄位，不依賴 JavaScript。</div>
-  </form>
-
-  ERROR_PLACEHOLDER
-
-  <form method="POST" action="/paste_analyze">
-    <label class="field-label">寄件者（選填，用於白名單比對）</label>
-    <input class="field-input" type="text" name="sender" value="SAMPLE_SENDER" placeholder="例如：service@example.com">
-
-    <label class="field-label">主旨</label>
-    <input class="field-input" type="text" name="subject" value="SAMPLE_SUBJECT" placeholder="郵件主旨">
-
-    <label class="field-label">郵件內文（必填）</label>
-    <textarea class="field-textarea" name="body" placeholder="貼上郵件的純文字內容..." required>SAMPLE_BODY</textarea>
-
-    <label class="field-label">HTML 原始碼（選填，用於偵測像素追蹤／偽裝連結等）</label>
-    <textarea class="field-textarea" name="html" placeholder="若有郵件的 HTML 原始碼，可貼於此處以啟用多模態偵測...">SAMPLE_HTML</textarea>
-    <div class="field-hint">在大部分信箱可透過「顯示原始郵件 / 檢視原始碼」取得 HTML 內容。</div>
-
-    <button class="submit-btn" type="submit">開始分析</button>
-  </form>
+  </main>
 </div>
 """
 
@@ -716,10 +850,16 @@ SAMPLE_EMAILS = {
     'normal': {'sender':'service@company.example.com','subject':'本月電子帳單與服務通知','body':'您好，您的本月服務帳單已產生。\n\n您可以登入官方網站查看帳單與使用明細。若您近期沒有使用相關服務，請透過官方客服管道聯繫我們。\n\n謝謝您的使用。','html':'<p>您好，您的本月服務帳單已產生。</p>'}
 }
 
+def _kw_json():
+    """規則關鍵字清單（供前端預檢／原信批註比對用，已做 script 安全跳脫）。"""
+    return json.dumps(RULE_KEYWORD_GROUPS, ensure_ascii=False).replace(
+        '<', '\\u003c').replace('>', '\\u003e').replace('&', '\\u0026')
+
 def render_paste_page(sample_key='', error=''):
     import html as html_lib
     sample = SAMPLE_EMAILS.get(sample_key, {'sender':'','subject':'','body':'','html':''})
-    out = PASTE_HTML.replace('ERROR_PLACEHOLDER', error)
+    out = PASTE_HTML.replace('KEYWORDS_PLACEHOLDER', _kw_json())
+    out = out.replace('ERROR_PLACEHOLDER', error)
     out = out.replace('SAMPLE_SENDER', html_lib.escape(sample['sender'], quote=True))
     out = out.replace('SAMPLE_SUBJECT', html_lib.escape(sample['subject'], quote=True))
     out = out.replace('SAMPLE_BODY', html_lib.escape(sample['body']))
@@ -731,171 +871,118 @@ def render_paste_page(sample_key='', error=''):
 # ── 結果頁 HTML (修正點擊與高亮同步邏輯) ─────────────────────
 RESULT_HTML = COMMON_CSS + """
 <style>
-.summary { display: flex; border-bottom: 1px solid var(--border-subtle); background: rgba(15, 23, 42, 0.3); }
-.stat { flex: 1; padding: 14px 24px; border-right: 1px solid var(--border-subtle); }
-.stat:last-child { border-right: none; }
-.stat-num { font-size: 22px; font-weight: 700; margin-bottom: 2px; }
-.stat-lbl { font-size: 11px; color: var(--text-dim); letter-spacing: 0.05em; text-transform: uppercase; }
-.s-total .stat-num { color: var(--text-main); }
-.s-high  .stat-num { color: var(--red); }
-.s-med   .stat-num { color: var(--orange); }
-.s-low   .stat-num { color: var(--green); }
-.s-wl    .stat-num { color: var(--text-muted); }
-.s-sk    .stat-num { color: var(--text-dim); }
-.scan-overview { padding: 12px 18px; border-bottom: 1px solid var(--border-subtle); background: rgba(15, 23, 42, 0.22); }
-.overview-label { font-size: 10px; color: var(--text-dim); letter-spacing: .06em; margin-bottom: 7px; }
-.risk-track { display: flex; height: 7px; border-radius: 2px; overflow: hidden; background: #1a1a1a; }
-.risk-seg-high { background: var(--red); }
-.risk-seg-med { background: var(--orange); }
-.risk-seg-low { background: var(--green); }
-.risk-seg-wl { background: var(--text-dim); }
-.overview-meta { display:flex; justify-content:space-between; gap:10px; margin-top:7px; font-size:10px; color:var(--text-muted); }
-.item-reason { font-size: 10px; color: var(--text-muted); margin-top: 2px; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.item-reason.high { color: #fca5a5; }
-.item-reason.medium { color: #fdba74; }
-.item-reason.low { color: #86efac; }
-.item-cat { display:inline-block; margin-top:5px; padding:2px 6px; border-radius:4px; font-size:9.5px; color:var(--text-dim); background:rgba(255,255,255,.04); border:1px solid var(--border-subtle); }
-
-
-.main { display: flex; height: calc(100vh - 120px); }
-.left { width: 290px; border-right: 1px solid var(--border-subtle); overflow-y: auto; flex-shrink: 0; }
-.list-sec { padding: 8px 14px 5px; font-size: 10px; color: var(--text-dim);
-            letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600;
-            border-bottom: 1px solid var(--border-subtle); }
-
-.email-item { padding: 7px 14px; border-bottom: 1px solid var(--border-subtle);
-              cursor: pointer; transition: all 0.15s ease;
-              display: flex; align-items: flex-start; gap: 8px; border-left: 3px solid transparent; }
-.email-item:hover { background: var(--bg-hover); }
-.email-item.active { background: var(--bg-hover); border-left-color: var(--green); }
-
-.risk-dot { width: 6px; height: 6px; border-radius: 1px; flex-shrink: 0; margin-top: 5px; }
-.dot-high { background: var(--red); }
-.dot-med  { background: var(--orange); }
-.dot-low  { background: var(--green); }
-.dot-wl   { background: var(--text-dim); }
-.item-body { flex: 1; min-width: 0; }
-.item-subj { font-size: 12.5px; color: var(--text-main); white-space: nowrap;
-              overflow: hidden; text-overflow: ellipsis; margin-bottom: 1px; font-weight: 500; }
-.item-from { font-size: 11px; color: var(--text-muted); white-space: nowrap;
-              overflow: hidden; text-overflow: ellipsis; }
-.item-score { font-size: 10px; color: var(--text-dim); margin-top: 1px; }
-
-.right { flex: 1; overflow-y: auto; padding: 28px 36px; }
-.ir-statusnote { font-size: 11.5px; color: var(--text-muted); line-height: 1.6; margin: 12px 0 4px;
-                 padding: 8px 10px; border-left: 2px solid var(--orange); background: rgba(255,255,255,.03); }
-.ir-statusnote b { color: var(--text-main); }
-.ir-dl { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
-.ir-dl-btn { background: transparent; color: var(--text-main); border: 1px solid var(--border-accent);
-             border-radius: 2px; padding: 7px 14px; font-size: 12px; cursor: pointer; font-family: var(--mono);
-             transition: all .15s ease; }
-.ir-dl-btn:hover { background: #fff; color: #000; border-color: #fff; }
-.detail-badge { display: inline-flex; align-items: center; gap: 6px;
-                padding: 4px 12px; border-radius: 3px; font-size: 11px; font-family: var(--mono);
-                font-weight: 600; margin-bottom: 14px; }
-.badge-high { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
-.badge-med  { background: var(--orange-bg); color: var(--orange); border: 1px solid var(--orange-border); }
-.badge-low  { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
-.badge-wl   { background: var(--bg-card); color: var(--text-muted); border: 1px solid var(--border-subtle); }
-
-.detail-subj { font-size: 20px; font-weight: 700; color: #ffffff;
-                margin-bottom: 6px; letter-spacing: -0.3px; line-height: 1.3; }
-.detail-from { font-size: 12px; color: var(--text-muted); margin-bottom: 22px; }
-.gold-line { width: 100%; height: 1px; background: var(--border-subtle); margin: 18px 0; }
-.sec-label { font-size: 10px; color: var(--text-dim); letter-spacing: 0.08em;
-              text-transform: uppercase; margin-bottom: 8px; font-weight: 600; }
-.detail-text { font-size: 13.5px; color: #e2e8f0; line-height: 1.7; }
-.tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
-.htag { font-size: 11px; color: var(--orange); background: var(--orange-bg);
-        padding: 3px 8px; border-radius: 3px; border: 1px solid var(--orange-border); font-family: var(--mono); }
-
-.layer-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 14px; }
-.layer-card { background: var(--bg-card); border: 1px solid var(--border-subtle);
-               border-radius: 3px; padding: 13px 14px; }
-.layer-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
-.layer-name { font-size: 12px; color: var(--text-main); font-weight: 600; }
-.layer-score { font-size: 12px; color: var(--text-main); font-weight: 700; }
-.layer-status { font-size: 11px; color: var(--text-muted); margin-bottom: 7px; line-height: 1.45; }
-.bar { height: 4px; background: #1a1a1a; border-radius: 2px; overflow: hidden; }
-.bar-fill { height: 100%; border-radius: 2px; background: var(--green); transition: width .25s ease; }
-.layer-meta { display: flex; justify-content: space-between; gap: 8px; margin-top: 7px; font-size: 10px; color: var(--text-dim); }
-
-.evidence-box { margin-top: 14px; background: var(--bg-card); border: 1px solid var(--border-subtle);
-                border-radius: 3px; padding: 14px 16px; }
-.evidence-title { font-size: 12px; color: var(--text-main); font-weight: 600; margin-bottom: 9px; }
-.evidence-list { display: flex; flex-direction: column; gap: 6px; }
-.evidence-item { font-size: 12px; color: var(--text-muted); line-height: 1.55; padding-left: 13px; position: relative; }
-.evidence-item::before { content: '›'; position: absolute; left: 0; top: -1px; color: var(--text-dim); }
-.fusion-note { margin-top: 12px; font-size: 10.5px; color: var(--text-dim); }
-
-.recommend { font-size: 13px; color: var(--text-main); background: var(--bg-card);
-             border: 1px solid var(--border-subtle); border-radius: 3px;
-             padding: 14px 18px; line-height: 1.6; }
-.ir-box { background: var(--green-bg); border: 1px solid var(--green-border);
-          border-left: 2px solid var(--green); border-radius: 3px;
-          padding: 16px 20px; margin-top: 20px; }
-.ir-label { font-size: 10px; color: var(--green); letter-spacing: 0.08em;
-            text-transform: uppercase; margin-bottom: 6px; font-weight: 600; }
-.ir-id { font-size: 11px; color: var(--text-dim); font-family: var(--mono); margin-bottom: 6px; }
-.ir-impact { font-size: 12px; color: #a7f3d0; line-height: 1.6; }
-.ir-actions { margin-top: 10px; display: flex; flex-direction: column; gap: 4px; }
-.ir-action { font-size: 12px; color: #93c5fd; }
-.ir-meta { display:grid; grid-template-columns: repeat(3, 1fr); gap:8px; margin-top:12px; }
-.ir-meta-item { background: #0a0a0a; border:1px solid var(--border-subtle); border-radius:3px; padding:8px; }
-.ir-meta-label { font-size:9px; color:var(--text-dim); text-transform:uppercase; }
-.ir-meta-value { font-size:11px; color:var(--text-main); margin-top:3px; }
-.ir-section { margin-top:12px; }
-.ir-section-title { font-size:10px; color:var(--text-dim); font-weight:600; margin-bottom:5px; }
-.ir-text { font-size:12px; color:var(--text-muted); line-height:1.6; }
-.empty-detail { display: flex; align-items: center; justify-content: center;
-                height: 100%; color: var(--text-dim); font-size: 13px;
-                flex-direction: column; gap: 10px; }
-.empty-icon { display: none; }
-
-.why-box { margin-top: 14px; }
-.why-title { font-size: 13px; color: var(--text-main); font-weight: 700; margin-bottom: 10px; font-family: var(--mono); }
-.why-title::before { content: "# "; color: var(--text-dim); }
-.why-list { display: flex; flex-direction: column; gap: 8px; }
-.why-item { display: flex; gap: 10px; align-items: flex-start; padding: 11px 12px;
-            border: 1px solid var(--border-subtle); border-radius: 3px;
-            background: var(--bg-card); }
-.why-badge { min-width: 42px; text-align: center; font-size: 9px; font-weight: 700;
-             border-radius: 3px; padding: 3px 5px; margin-top: 1px; font-family: var(--mono); }
-.why-high { color: var(--red); background: var(--red-bg); border: 1px solid var(--red-border); }
-.why-medium { color: var(--orange); background: var(--orange-bg); border: 1px solid var(--orange-border); }
-.why-low { color: var(--green); background: var(--green-bg); border: 1px solid var(--green-border); }
-
-.safety-box { margin-top: 14px; padding: 14px 16px; border-radius: 3px;
-              background: var(--bg-card); border: 1px solid var(--border-subtle); }
-.safety-title { font-size: 12px; font-weight: 600; color: var(--text-main); margin-bottom: 9px; font-family: var(--mono); }
-.safety-title::before { content: "# "; color: var(--text-dim); }
-.safety-list { display: flex; flex-direction: column; gap: 7px; }
-.safety-item { display: flex; gap: 8px; font-size: 11.5px; color: var(--text-muted); line-height: 1.55; }
-.safety-num { width: 18px; height: 18px; border-radius: 3px; border: 1px solid var(--border-subtle);
-              display: inline-flex; align-items: center; justify-content: center; flex: 0 0 18px;
-              font-size: 10px; color: var(--text-dim); font-family: var(--mono); }
-.why-content { min-width: 0; }
-.why-source { font-size: 10px; color: var(--text-dim); margin-bottom: 2px; }
-.why-head { font-size: 12px; color: var(--text-main); font-weight: 600; margin-bottom: 3px; }
-.why-detail { font-size: 11.5px; color: var(--text-muted); line-height: 1.5; word-break: break-word; }
-
-@media (max-width: 900px) {
-  .summary { overflow-x: auto; }
-  .stat { min-width: 95px; padding: 12px 14px; }
-  .main { height: auto; min-height: calc(100vh - 120px); }
-  .left { width: 280px; }
-  .right { padding: 22px 20px; }
-}
-@media (max-width: 680px) {
-  .main { display: block; }
-  .left { width: 100%; max-height: 310px; border-right: none; border-bottom: 1px solid var(--border-subtle); }
-  .right { min-height: 520px; }
-  .layer-grid { grid-template-columns: 1fr; }
-}
+.dz-side .nums { grid-template-columns: repeat(3, 1fr); }
+.dz-side .nums b { font-size: 1.6rem; }
+.dz-side .nums span { font-size: 10.5px; }
+.ov { margin-top: 1.1rem; }
+.lb { font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; margin-bottom: .45rem; }
+.risk-track { display: flex; height: .9rem; border: 1px solid #141414; background: #fff; }
+.risk-track div { height: 100%; }
+.risk-seg-high { background: #c8321e; } .risk-seg-med { background: #e39a2d; } .risk-seg-low { background: #2e6a4d; } .risk-seg-wl { background: #b8b3a4; }
+.overview-meta { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 11px; color: #8a8678; margin-top: .35rem; }
+.lst { margin-top: 1.4rem; }
+.list-sec { display: inline-block; margin: 1rem 0 .4rem; padding: 0 .45rem; background: var(--hl); font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: .08em; }
+.email-item { display: flex; gap: .65rem; padding: .7rem; border-top: 1px solid #dcd7ca; border-left: 4px solid transparent; cursor: pointer; }
+.email-item:hover { background: #ebe7dc; }
+.email-item.active { background: #fff; border-left-color: #141414; box-shadow: inset 0 0 0 1px #141414; }
+.risk-dot { flex: none; width: .7rem; height: .7rem; margin-top: .4rem; border: 1px solid #141414; }
+.dot-high { background: #c8321e; } .dot-med { background: #e39a2d; } .dot-low { background: #2e6a4d; } .dot-wl { background: #b8b3a4; }
+.item-body { min-width: 0; }
+.item-subj { font-weight: 700; font-size: 13.5px; line-height: 1.45; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.item-from { font-family: var(--mono); font-size: 11px; color: #8a8678; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.item-score { font-family: var(--mono); font-size: 11.5px; margin-top: .15rem; }
+.item-reason { font-size: 12px; color: #55524a; margin-top: .2rem; line-height: 1.5; }
+.solo #listwrap { display: none; }
+/* 結論 */
+.vd { display: grid; gap: 1.4rem; align-items: start; }
+@media (min-width: 900px) { .vd { grid-template-columns: minmax(0,1fr) auto; } }
+.vd-subj { font-family: var(--serif); font-weight: 900; font-size: clamp(1.6rem,2.6vw,2.4rem); line-height: 1.3; margin: .2rem 0 .5rem; word-break: break-word; }
+.vd-from { font-family: var(--mono); font-size: 12.5px; color: #55524a; word-break: break-all; }
+.tg { display: flex; flex-wrap: wrap; gap: .35rem; margin-top: .9rem; }
+.tg span { background: var(--hl); font-family: var(--mono); font-size: 11.5px; padding: 0 .4rem; }
+.vd-r { display: flex; flex-direction: column; align-items: flex-end; gap: 1rem; padding-right: .6rem; }
+.stamp-lg { border: 4px solid currentColor; padding: .15rem 1rem .25rem; font-family: var(--serif); font-weight: 900; font-size: 2.4rem; line-height: 1.15; text-align: center; transform: rotate(-6deg); mix-blend-mode: multiply; animation: stampin .45s cubic-bezier(.2,1.7,.4,1) both; }
+.stamp-lg small { display: block; font-family: var(--mono); font-size: .7rem; letter-spacing: .2em; font-weight: 600; }
+.stamp-lg.red { color: #c8321e; } .stamp-lg.org { color: #a8650f; } .stamp-lg.grn { color: #2e6a4d; } .stamp-lg.ink { color: #141414; }
+@keyframes stampin { from { opacity: 0; transform: rotate(14deg) scale(2.2); } to { opacity: .95; transform: rotate(-6deg) scale(1); } }
+.vscore { font-family: var(--serif); font-weight: 900; font-size: 3.4rem; line-height: 1; }
+.vscore small { font-family: var(--mono); font-size: 13px; font-weight: 400; color: #55524a; margin-left: .3rem; }
+.gauge { position: relative; margin: 1.8rem 0 .3rem; padding-top: 1.7rem; }
+.gscale { display: flex; height: .9rem; border: 1px solid #141414; }
+.gscale i { display: block; } .gscale .lo { flex: 40; background: #2e6a4d; } .gscale .md { flex: 30; background: #e39a2d; } .gscale .hi { flex: 30; background: #c8321e; }
+.pin { position: absolute; top: 0; transform: translateX(-50%); font-family: var(--mono); font-weight: 600; font-size: 12px; background: #141414; color: #faf8f3; padding: 0 .4rem; }
+.pin::after { content: ""; position: absolute; left: 50%; bottom: -7px; transform: translateX(-50%); border: 4px solid transparent; border-top-color: #141414; }
+.gt { position: relative; height: 1rem; font-family: var(--mono); font-size: 11px; color: #8a8678; margin-top: .25rem; }
+.gt span { position: absolute; transform: translateX(-50%); }
+/* 原信批註 */
+.mdoc { background: #fff; border: 1px solid #141414; padding: 1.2rem 1.4rem; }
+.mdoc dl { margin: 0 0 .9rem; padding-bottom: .8rem; border-bottom: 1px solid #dcd7ca; font-family: var(--mono); font-size: 12.5px; line-height: 1.9; }
+.mdoc dl div { display: grid; grid-template-columns: 4.2em 1fr; gap: .5rem; }
+.mdoc dt { color: #8a8678; font-size: 11.5px; letter-spacing: .06em; }
+.mdoc dd { margin: 0; word-break: break-all; }
+.mbody { font-size: 15px; line-height: 2.05; white-space: pre-wrap; word-break: break-word; max-height: 24rem; overflow: auto; }
+mark.m { position: relative; color: #141414; background: linear-gradient(var(--hl), var(--hl)) no-repeat; background-size: 100% 100%; padding: .05em .12em; animation: draw .5s cubic-bezier(.3,.7,.3,1) both; animation-delay: calc(var(--i, 0) * .07s + .2s); }
+mark.m:not(.f)::after { display: none; }
+mark.m::after { content: attr(data-n); position: relative; top: -.7em; margin-left: .15em; display: inline-grid; place-items: center; width: 1.25em; height: 1.25em; border-radius: 50%; background: #141414; color: #faf8f3; font: 600 10px/1 var(--mono); }
+@keyframes draw { from { background-size: 0% 100%; } to { background-size: 100% 100%; } }
+.notes { margin: 1rem 0 0; padding: .9rem 0 0; border-top: 1px dashed #a8a291; list-style: none; font-size: 13px; line-height: 1.7; color: #55524a; }
+.notes li { display: flex; gap: .65rem; padding: .15rem 0; }
+.notes li b { flex: none; display: grid; place-items: center; width: 1.25rem; height: 1.25rem; margin-top: .22rem; border-radius: 50%; background: #141414; color: #faf8f3; font: 600 10px/1 var(--mono); }
+.notes li.on { color: #141414; } .notes li.on span { background: var(--hl); }
+.cap2 { margin-top: .7rem; font-family: var(--mono); font-size: 11.5px; color: #8a8678; line-height: 1.7; }
+/* 四層 */
+.lgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 1rem; }
+.lc { background: #fff; border: 1px solid #141414; padding: .9rem 1rem 1rem; display: flex; flex-direction: column; gap: .5rem; }
+.ln { display: flex; align-items: center; gap: .55rem; font-family: var(--mono); font-size: 12px; font-weight: 600; }
+.ln b { display: grid; place-items: center; width: 1.3rem; height: 1.3rem; border-radius: 50%; background: #141414; color: #faf8f3; font-size: 10px; }
+.lsc { font-family: var(--serif); font-weight: 900; font-size: 2.2rem; line-height: 1; }
+.lsc small { font-family: var(--mono); font-size: 12px; font-weight: 400; color: #55524a; margin-left: .25rem; }
+.ls { font-size: 13px; line-height: 1.7; color: #55524a; }
+.bar { height: .6rem; border: 1px solid #141414; background: #faf8f3; }
+.bar-fill { height: 100%; background: #141414; }
+.lm { display: flex; justify-content: space-between; gap: .6rem; font-family: var(--mono); font-size: 11px; color: #8a8678; }
+.fnote { margin-top: .9rem; font-family: var(--mono); font-size: 12px; line-height: 1.8; color: #55524a; }
+.bk { display: flex; border: 1px solid #141414; height: 2.3rem; font-family: var(--mono); font-size: 11.5px; margin-top: 1.1rem; background: #fff; }
+.bk i { font-style: normal; display: flex; align-items: center; padding: 0 .55rem; overflow: hidden; white-space: nowrap; border-right: 1px solid #141414; }
+.bk i:last-child { border-right: 0; }
+.bk .c0 { background: #141414; color: #faf8f3; } .bk .c1 { background: #55524a; color: #faf8f3; } .bk .c2 { background: var(--hl); } .bk .c3 { background: #ffe0ee; }
+.brow { display: flex; justify-content: space-between; gap: 1rem; padding: .45rem 0; border-bottom: 1px dashed #a8a291; font-family: var(--mono); font-size: 12.5px; }
+.btot { margin-top: .8rem; font-family: var(--mono); font-size: 13px; font-weight: 600; }
+/* 為什麼／證據／處置 */
+.why { list-style: none; margin: 0; padding: 0; }
+.why li { display: grid; grid-template-columns: 5.2rem minmax(0,1fr); gap: 1rem; padding: 1rem 0; border-top: 1px solid #dcd7ca; }
+.why li:last-child { border-bottom: 1px solid #dcd7ca; }
+.why .src { font-family: var(--mono); font-size: 11px; color: #8a8678; }
+.why .hd { font-weight: 700; margin: .1rem 0 .2rem; }
+.why .dt { font-size: 13.5px; line-height: 1.8; color: #55524a; }
+.ev { border: 1px solid #141414; background: #fff; margin-top: .7rem; }
+.ev summary { cursor: pointer; padding: .7rem 1rem; font-family: var(--mono); font-size: 12px; font-weight: 600; }
+.ev div.it { padding: .5rem 1rem; border-top: 1px dashed #a8a291; font-size: 13px; line-height: 1.7; color: #55524a; word-break: break-word; }
+.rec { border-left: 6px solid #141414; background: #fff; padding: 1rem 1.2rem; font-family: var(--serif); font-weight: 700; font-size: 1.15rem; line-height: 1.75; }
+.chk { margin-top: 1.2rem; }
+.chk label { display: flex; gap: .75rem; padding: .6rem 0; border-top: 1px dashed #a8a291; cursor: pointer; font-size: 14px; line-height: 1.7; }
+.chk input { flex: none; width: 1.1rem; height: 1.1rem; margin-top: .25rem; accent-color: #141414; }
+.chk input:checked + span { text-decoration: line-through; color: #8a8678; }
+/* IR 報告單 */
+.ir { background: #fff; border: 1px solid #141414; }
+.irh { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .6rem 1rem; padding: .8rem 1.1rem; background: #141414; color: #faf8f3; font-family: var(--mono); font-size: 12px; }
+.irh .st { color: #faf8f3; border-color: #faf8f3; mix-blend-mode: normal; transform: rotate(-3deg); }
+.irc { padding: 1.1rem 1.1rem 1.2rem; }
+.irc p { font-size: 14px; line-height: 1.8; color: #333; }
+.irc ul { margin: .6rem 0 0 1.2rem; font-size: 13.5px; line-height: 1.8; }
+.irmeta { display: flex; flex-wrap: wrap; gap: .4rem 2rem; margin-top: 1rem; font-family: var(--mono); font-size: 11.5px; color: #55524a; }
+.ir3 { display: grid; gap: 1px; background: #141414; border-top: 1px solid #141414; }
+@media (min-width: 900px) { .ir3 { grid-template-columns: repeat(3, 1fr); } }
+.ir3 div { background: #fff; padding: .9rem 1.1rem 1.1rem; }
+.ir3 b { display: block; font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; margin-bottom: .4rem; }
+.ir3 p { font-size: 13px; line-height: 1.75; color: #333; }
+.irn { padding: .9rem 1.1rem; border-top: 1px solid #141414; font-size: 12.5px; line-height: 1.8; color: #55524a; background: #faf8f3; }
+.irdl { display: flex; flex-wrap: wrap; gap: .6rem; padding: .9rem 1.1rem 1.1rem; border-top: 1px solid #141414; }
+@media (prefers-reduced-motion: reduce) { mark.m, .stamp-lg { animation: none; } }
 </style>
-
 <script>
 const emailData = PLACEHOLDER_DATA;
+const RULE_KW = KEYWORDS_PLACEHOLDER;
 
 function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>"']/g, c => ({
@@ -958,412 +1045,467 @@ function downloadIR(idx, fmt) {
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
 
+
+const WORDS = (function () {
+  const w = [];
+  RULE_KW.forEach(function (g) { g[3].forEach(function (x) { w.push(String(x).toLowerCase()); }); });
+  w.sort(function (a, b) { return b.length - a.length; });
+  return w;
+})();
+function isSp(c) { const n = c.charCodeAt(0); return n <= 32 || n === 12288; }
+let seenN = {};
+function markup(text) {
+  const low = text.toLowerCase();
+  let out = '', buf = '', i = 0, k, end, found, cnt = { kw: 0, url: 0 }, seq = 0;
+  function flush() { if (buf) { out += escapeHtml(buf); buf = ''; } }
+  while (i < text.length) {
+    if (low.startsWith('http://', i) || low.startsWith('https://', i)) {
+      end = i; while (end < text.length && !isSp(text[end])) end++;
+      flush(); out += '<mark class="m' + (seenN[3] ? '' : ' f') + '" data-n="3" style="--i:' + Math.min(seq++, 14) + '">' + escapeHtml(text.slice(i, end)) + '</mark>';
+      seenN[3] = 1; cnt.url++; i = end; continue;
+    }
+    found = null;
+    for (k = 0; k < WORDS.length; k++) { if (low.startsWith(WORDS[k], i)) { found = WORDS[k]; break; } }
+    if (found) {
+      flush(); out += '<mark class="m' + (seenN[1] ? '' : ' f') + '" data-n="1" style="--i:' + Math.min(seq++, 14) + '">' + escapeHtml(text.slice(i, i + found.length)) + '</mark>';
+      seenN[1] = 1; cnt.kw++; i += found.length;
+    } else { buf += text[i]; i++; }
+  }
+  flush();
+  return { html: out, cnt: cnt };
+}
+
 function showDetail(idx, element) {
   const d = emailData[idx];
   if (!d) return;
-
-  document.querySelectorAll('.email-item').forEach(el => el.classList.remove('active'));
-  if (element) {
-    element.classList.add('active');
-  } else {
-    const target = document.querySelector(`.email-item[data-idx="${idx}"]`);
-    if (target) target.classList.add('active');
-  }
+  document.querySelectorAll('.email-item').forEach(function (el) { el.classList.remove('active'); });
+  if (element) element.classList.add('active');
+  else { const t = document.querySelector('.email-item[data-idx="' + idx + '"]'); if (t) t.classList.add('active'); }
 
   const panel = document.getElementById('right-panel');
-  let badgeClass = d.level === 'high' ? 'badge-high' : d.level === 'medium' ? 'badge-med' : d.level === 'low' ? 'badge-low' : 'badge-wl';
-  let badgeText = d.level === 'high' ? '[HIGH] 高風險' : d.level === 'medium' ? '[MED] 中風險' : d.level === 'low' ? '[OK] 安全' : '[WL] 白名單';
-  let scoreStr = d.risk_score >= 0 ? ` &nbsp;·&nbsp; ${d.risk_score} / 100` : '';
-
+  seenN = {};
+  const lv = d.level;
+  const V = { high: ['可疑', 'SUSPICIOUS', 'red'], medium: ['注意', 'CAUTION', 'org'], low: ['安全', 'SAFE', 'grn'], wl: ['白名單', 'CLEARED', 'grn'] }[lv] || ['—', '', 'ink'];
+  const score = d.risk_score >= 0 ? Number(d.risk_score) : null;
   const layers = d.layers || {};
-  const layerOrder = ['rule', 'ml', 'html', 'llm'];
-  const layerIcons = {rule:'[RULE]', ml:'[ML]', html:'[HTML]', llm:'[LLM]'};
+  const order = ['rule', 'ml', 'html', 'llm'];
+  let sec = 0;
+  const H = function (t, p) { sec++; return '<div class="sh"><span class="n">' + String(sec).padStart(2, '0') + '</span><h2>' + t + '</h2>' + (p ? '<p>' + p + '</p>' : '') + '</div>'; };
 
+  let html = '';
+  /* 1 結論 */
+  html += '<div class="vd"><div><div class="ftab"><mark>CASE</mark><span>' + (idx + 1) + ' / ' + emailData.length + '</span></div>' +
+    '<h1 class="vd-subj">' + escapeHtml(d.subject) + '</h1><div class="vd-from">來自：' + escapeHtml(d.sender) + '</div>' +
+    (d.tags && d.tags.length ? '<div class="tg">' + d.tags.map(function (t) { return '<span>' + escapeHtml(t) + '</span>'; }).join('') + '</div>' : '') +
+    '</div><div class="vd-r"><div class="stamp-lg ' + V[2] + '">' + V[0] + '<small>' + V[1] + '</small></div>' +
+    (score !== null ? '<div class="vscore">' + score + '<small>/ 100</small></div>' : '') + '</div></div>';
+  if (score !== null) {
+    const pos = Math.max(3, Math.min(97, score));
+    html += '<div class="gauge"><div class="gscale"><i class="lo"></i><i class="md"></i><i class="hi"></i></div>' +
+      '<div class="pin" style="left:' + pos + '%">' + score + '</div></div>' +
+      '<div class="gt"><span style="left:0">0</span><span style="left:40%">40</span><span style="left:70%">70</span><span style="left:100%">100</span></div>';
+  }
+  html += '<div class="sh" style="margin-top:2.2rem;display:none"></div>';
+
+  /* 2 原信批註 */
+  let hasDoc = false;
+  if (d.body) {
+    hasDoc = true;
+    const sub = markup(d.subject || ''), bd = markup(d.body);
+    const kwN = sub.cnt.kw + bd.cnt.kw, urlN = sub.cnt.url + bd.cnt.url;
+    let notes = '';
+    order.forEach(function (key, n) {
+      const x = layers[key]; if (!x) return;
+      const where = (key === 'rule' && kwN) ? '（信中標出 ' + kwN + ' 處）' : (key === 'html' && urlN) ? '（信中標出 ' + urlN + ' 個連結）' : '';
+      const line = x.status || ((x.findings && x.findings[0]) || '—');
+      notes += '<li data-n="' + (n + 1) + '"><b>' + (n + 1) + '</b><span>' + escapeHtml(x.name) + '：' + escapeHtml(String(line)) + where + '</span></li>';
+    });
+    html += H('原信批註', '標記為規則引擎關鍵字與連結的比對結果；ML 與 AI 針對整封信判斷，無法標示在單一詞上。') +
+      '<article class="mdoc"><dl><div><dt>寄件者</dt><dd>' + escapeHtml(d.sender) + '</dd></div><div><dt>主　旨</dt><dd>' + sub.html + '</dd></div></dl>' +
+      '<div class="mbody">' + bd.html + '</div>' + (notes ? '<ul class="notes">' + notes + '</ul>' : '') + '</article>';
+  }
+
+  /* 3 四層分析 */
   let layerHtml = '';
-  let evidenceHtml = '';
-
-  layerOrder.forEach(key => {
-    const x = layers[key];
-    if (!x) return;
-
-    const score = x.score == null ? 0 : Math.max(0, Math.min(100, Number(x.score)));
-    const scoreText = x.score == null ? '—' : `${Number(x.score).toFixed(0)} / 100`;
-    const meta = key === 'ml' && x.probability != null
-      ? `釣魚機率 ${Number(x.probability).toFixed(1)}%`
-      : `融合權重 ${Number(x.weight || 0).toFixed(1)}%`;
-
-    layerHtml += `
-      <div class="layer-card">
-        <div class="layer-head">
-          <div class="layer-name">${layerIcons[key]} ${escapeHtml(x.name)}</div>
-          <div class="layer-score">${scoreText}</div>
-        </div>
-        <div class="layer-status">${escapeHtml(x.status || '—')}</div>
-        <div class="bar"><div class="bar-fill" style="width:${score}%"></div></div>
-        <div class="layer-meta"><span>${escapeHtml(meta)}</span><span>${key === 'llm' && x.score == null ? '未提供分數' : '分析完成'}</span></div>
-      </div>`;
+  order.forEach(function (key, n) {
+    const x = layers[key]; if (!x) return;
+    const sc = x.score == null ? 0 : Math.max(0, Math.min(100, Number(x.score)));
+    const scT = x.score == null ? '—' : Number(x.score).toFixed(0);
+    const meta = key === 'ml' && x.probability != null ? '釣魚機率 ' + Number(x.probability).toFixed(1) + '%' : '融合權重 ' + Number(x.weight || 0).toFixed(1) + '%';
+    layerHtml += '<div class="lc"><div class="ln"><b>' + (n + 1) + '</b>' + escapeHtml(x.name) + '</div>' +
+      '<div class="lsc">' + scT + '<small>/ 100</small></div><div class="bar"><div class="bar-fill" style="width:' + sc + '%"></div></div>' +
+      '<div class="ls">' + escapeHtml(x.status || '—') + '</div>' +
+      '<div class="lm"><span>' + escapeHtml(meta) + '</span><span>' + (key === 'llm' && x.score == null ? '未提供分數' : '分析完成') + '</span></div></div>';
   });
+  if (layerHtml) {
+    html += H('四層檢驗', '四層各自獨立打分，再依固定權重融合成最終分數。') + '<div class="lgrid">' + layerHtml + '</div>';
+    if (d.fusion_formula) html += '<div class="fnote">風險融合公式：' + escapeHtml(d.fusion_formula) + '。最終分數由系統固定公式計算，不直接採用單一模型結果。</div>';
+    if (d.risk_breakdown && d.risk_breakdown.components) {
+      const comps = d.risk_breakdown.components, tot = comps.reduce(function (a, c) { return a + Math.max(0, c.contribution); }, 0) || 1;
+      html += '<div class="bk">' + comps.map(function (c, i) {
+        return '<i class="c' + (i % 4) + '" style="flex:' + Math.max(0.0001, c.contribution) + '" title="' + escapeHtml(c.name) + '">' + (c.contribution / tot > 0.12 ? escapeHtml(c.name) : '') + '</i>';
+      }).join('') + '</div>' +
+        comps.map(function (c) { return '<div class="brow"><span>' + escapeHtml(c.name) + '</span><span>' + c.score.toFixed(1) + ' × ' + c.weight + '% = ' + c.contribution.toFixed(1) + '</span></div>'; }).join('') +
+        '<div class="btot">公式計算值：' + d.risk_breakdown.raw_total.toFixed(1) + ' → 最終 ' + d.risk_breakdown.rounded_final + ' / 100</div>';
+    }
+  }
 
-  layerOrder.forEach(key => {
-    const x = layers[key];
-    if (!x || !x.findings || !x.findings.length) return;
-
-    const items = x.findings.slice(0, 6).map(v =>
-      `<div class="evidence-item">${escapeHtml(v)}</div>`
-    ).join('');
-
-    evidenceHtml += `
-      <div class="evidence-box">
-        <div class="evidence-title">${layerIcons[key]} ${escapeHtml(x.name)} — 偵測證據</div>
-        <div class="evidence-list">${items}</div>
-      </div>`;
+  /* 4 AI 說明與依據 */
+  const ex = d.explainable_findings || [];
+  html += H('AI 分析說明') + '<p style="font-size:14.5px;line-height:1.9;color:#333;max-width:70ch">' + escapeHtml(d.explanation || '—') + '</p>';
+  if (ex.length) {
+    html += H('為什麼會被判定為可疑？') + '<ul class="why">' + ex.map(function (x) {
+      const cls = x.severity === 'high' ? 'red' : x.severity === 'low' ? 'grn' : 'org';
+      const lab = x.severity === 'high' ? '高風險' : x.severity === 'low' ? '低風險' : '注意';
+      return '<li><div><span class="st ' + cls + '">' + lab + '</span></div><div><div class="src">' + escapeHtml(x.source || '') + '</div><div class="hd">' + escapeHtml(x.title || '') + '</div><div class="dt">' + escapeHtml(x.detail || '') + '</div></div></li>';
+    }).join('') + '</ul>';
+  }
+  let evHtml = '';
+  order.forEach(function (key) {
+    const x = layers[key]; if (!x || !x.findings || !x.findings.length) return;
+    evHtml += '<details class="ev"><summary>' + escapeHtml(x.name) + ' — 偵測證據（' + x.findings.length + '）</summary>' +
+      x.findings.slice(0, 6).map(function (v) { return '<div class="it">' + escapeHtml(v) + '</div>'; }).join('') + '</details>';
   });
+  if (evHtml) html += H('各層偵測證據') + evHtml;
 
-  const explainable = d.explainable_findings || [];
-  const whyHtml = explainable.length ? `
-    <div class="why-box">
-      <div class="why-title">為什麼會被判定為可疑？</div>
-      <div class="why-list">
-        ${explainable.map(x => {
-          const cls = x.severity === 'high' ? 'why-high' : x.severity === 'low' ? 'why-low' : 'why-medium';
-          const label = x.severity === 'high' ? '高風險' : x.severity === 'low' ? '低風險' : '注意';
-          return `<div class="why-item">
-            <div class="why-badge ${cls}">${label}</div>
-            <div class="why-content">
-              <div class="why-source">${escapeHtml(x.source || '')}</div>
-              <div class="why-head">${escapeHtml(x.title || '')}</div>
-              <div class="why-detail">${escapeHtml(x.detail || '')}</div>
-            </div>
-          </div>`;
-        }).join('')}
-      </div>
-    </div>` : '';
+  /* 5 處置 */
+  html += H('建議行動') + '<div class="rec">' + escapeHtml(d.action || '—') + '</div>';
+  const sa = d.safety_actions || [];
+  if (sa.length) html += '<div class="chk">' + sa.map(function (x) { return '<label><input type="checkbox"><span>' + escapeHtml(x) + '</span></label>'; }).join('') + '</div>';
 
-  let tagsHtml = d.tags && d.tags.length
-    ? `<div class="tag-row">${d.tags.map(t=>`<span class="htag">${escapeHtml(t)}</span>`).join('')}</div>`
-    : '';
+  /* 6 IR 報告單 */
+  if (d.ir) {
+    const ir = d.ir;
+    html += H('IR 事件報告單', '系統已自動產生事件報告。') + '<div class="ir"><div class="irh"><span>' + escapeHtml(ir.id) + '　|　嚴重等級：' + escapeHtml(ir.severity) +
+      '</span><span class="st ink">' + escapeHtml(ir.status || 'Open') + '</span></div><div class="irc"><p>' + escapeHtml(ir.impact) + '</p>' +
+      (ir.actions && ir.actions.length ? '<ul>' + ir.actions.map(function (a) { return '<li>' + escapeHtml(a) + '</li>'; }).join('') + '</ul>' : '') +
+      '<div class="irmeta"><span>Risk ' + escapeHtml(String(ir.risk_score == null ? '—' : ir.risk_score)) + '/100</span><span>Created ' + escapeHtml(ir.created_at || '—') + '</span></div></div>' +
+      '<div class="ir3"><div><b>隔離 Containment</b><p>' + escapeHtml(ir.containment || '—') + '</p></div><div><b>驗證 Verification</b><p>' + escapeHtml(ir.verification || '—') + '</p></div><div><b>復原 Recovery</b><p>' + escapeHtml(ir.recovery || '—') + '</p></div></div>' +
+      '<div class="irn">Status = Open 代表此事件<b>已建立、尚待人員處理</b>；本系統只負責產生處置建議，不會自動通知他人或關閉事件，處理完成後由資安人員自行結案（Closed）。</div>' +
+      '<div class="irdl"><button class="ir-dl-btn" onclick="downloadIR(' + idx + ',&quot;txt&quot;)">下載 IR 報告 (.txt)</button><button class="ir-dl-btn" onclick="downloadIR(' + idx + ',&quot;json&quot;)">下載 (.json)</button></div></div>';
+  }
 
-  const safetyActions = d.safety_actions || [];
-  const safetyHtml = safetyActions.length ? `
-    <div class="safety-box">
-      <div class="safety-title">安全處置建議</div>
-      <div class="safety-list">
-        ${safetyActions.map((x, i) => `<div class="safety-item"><span class="safety-num">${i + 1}</span><span>${escapeHtml(x)}</span></div>`).join('')}
-      </div>
-    </div>` : '';
-
-  let irHtml = d.ir ? `
-    <div class="ir-box">
-      <div class="ir-label">IR 事件通報報告已自動產生</div>
-            <div class="ir-id">${escapeHtml(d.ir.id)} &nbsp;|&nbsp; 嚴重等級：${escapeHtml(d.ir.severity)}</div>
-      <div class="ir-impact">${escapeHtml(d.ir.impact)}</div>
-      ${d.ir.actions && d.ir.actions.length ? `<div class="ir-actions">${d.ir.actions.map(a=>`<div class="ir-action">• ${escapeHtml(a)}</div>`).join('')}</div>` : ''}
-       <div class="ir-meta">
-         <div class="ir-meta-item"><div class="ir-meta-label">Status 事件狀態</div><div class="ir-meta-value">${escapeHtml(d.ir.status || 'Open')}（待處理）</div></div>
-         <div class="ir-meta-item"><div class="ir-meta-label">Risk</div><div class="ir-meta-value">${escapeHtml(String(d.ir.risk_score ?? '—'))}/100</div></div>
-         <div class="ir-meta-item"><div class="ir-meta-label">Created</div><div class="ir-meta-value">${escapeHtml(d.ir.created_at || '—')}</div></div>
-       </div>
-       <div class="ir-statusnote">Status = Open 代表此事件<b>已建立、尚待人員處理</b>；本系統只負責產生處置建議，不會自動通知他人或關閉事件，處理完成後由資安人員自行結案（Closed）。</div>
-       <div class="ir-section"><div class="ir-section-title">隔離 / Containment</div><div class="ir-text">${escapeHtml(d.ir.containment || '—')}</div></div>
-       <div class="ir-section"><div class="ir-section-title">驗證 / Verification</div><div class="ir-text">${escapeHtml(d.ir.verification || '—')}</div></div>
-       <div class="ir-section"><div class="ir-section-title">復原 / Recovery</div><div class="ir-text">${escapeHtml(d.ir.recovery || '—')}</div></div>
-       <div class="ir-dl"><button class="ir-dl-btn" onclick="downloadIR(${idx}, 'txt')">⬇ 下載 IR 報告 (.txt)</button><button class="ir-dl-btn" onclick="downloadIR(${idx}, 'json')">⬇ 下載 (.json)</button></div>
-    </div>` : '';
-
-  panel.innerHTML = `
-    <span class="detail-badge ${badgeClass}">${badgeText}${scoreStr}</span>
-    <div class="detail-subj">${escapeHtml(d.subject)}</div>
-    <div class="detail-from">來自：${escapeHtml(d.sender)}</div>
-
-    <div class="gold-line"></div>
-
-    <div class="sec-label">多層式智慧分析</div>
-    <div class="layer-grid">${layerHtml}</div>
-    ${d.fusion_formula ? `<div class="fusion-note">風險融合公式：${escapeHtml(d.fusion_formula)}。最終分數由系統固定公式計算，不直接採用單一模型結果。</div>` : ''}
-      ${d.risk_breakdown ? `<div class="score-breakdown"><h4>分數組成</h4>${d.risk_breakdown.components.map(x => `<div class="score-row"><span>${escapeHtml(x.name)}</span><span>${x.score.toFixed(1)} × ${x.weight}% = ${x.contribution.toFixed(1)}</span></div>`).join('')}<div class="score-total">公式計算值：${d.risk_breakdown.raw_total.toFixed(1)} → 最終 ${d.risk_breakdown.rounded_final}/100</div></div>` : ''}
-
-    <div class="gold-line"></div>
-
-    <div class="sec-label">AI 分析說明</div>
-    <div class="detail-text">${escapeHtml(d.explanation || '—')}</div>
-    ${tagsHtml}
-    ${whyHtml}
-
-    ${evidenceHtml}
-
-    <div class="divider"></div>
-    <div class="sec-label">建議行動</div>
-    <div class="recommend">${escapeHtml(d.action || '—')}</div>
-    ${safetyHtml}
-    ${irHtml}
-  `;
+  panel.innerHTML = html.replace('<div class="sh" style="margin-top:2.2rem;display:none"></div>', '');
+  /* 標記與批註互相連動 */
+  const marks = panel.querySelectorAll('mark.m'), notes = panel.querySelectorAll('.notes li');
+  function tog(n, on) { notes.forEach(function (li) { if (li.getAttribute('data-n') === n) li.classList.toggle('on', on); }); }
+  marks.forEach(function (m) { const n = m.getAttribute('data-n'); m.addEventListener('mouseenter', function () { tog(n, true); }); m.addEventListener('mouseleave', function () { tog(n, false); }); });
+  notes.forEach(function (li) { const n = li.getAttribute('data-n');
+    li.addEventListener('mouseenter', function () { marks.forEach(function (m) { if (m.getAttribute('data-n') === n) m.style.outline = '2px solid #141414'; }); });
+    li.addEventListener('mouseleave', function () { marks.forEach(function (m) { m.style.outline = ''; }); }); });
+  window.scrollTo(0, 0);
 }
 
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', function () {
   if (Array.isArray(emailData) && emailData.length > 0) {
+    if (emailData.length === 1) document.querySelector('.dz').classList.add('solo');
     showDetail(0);
   }
 });
 </script>
-
 <div class="hdr">
-  <div class="hdr-left">
-    <span>phishing-detector / result</span>
-  </div>
-  <div class="hdr-nav">
-    <a href="/rules">偵測規則</a>
-    <a href="/history">掃描記錄</a>
-    <a href="/whitelist">白名單設定</a>
-    <a href="/">重新掃描</a>
-  </div>
+  <div class="hdr-left"><span>phishing-detector / result</span></div>
+  <div class="hdr-nav"><a href="/rules">偵測規則</a><a href="/history">掃描記錄</a><a href="/whitelist">白名單設定</a><a href="/">重新掃描</a></div>
 </div>
-
-<div class="summary">
-  <div class="stat s-total"><div class="stat-num">TOTAL_COUNT</div><div class="stat-lbl">掃描封數</div></div>
-  <div class="stat s-high"><div class="stat-num">HIGH_COUNT</div><div class="stat-lbl">高風險</div></div>
-  <div class="stat s-med"><div class="stat-num">MED_COUNT</div><div class="stat-lbl">中風險</div></div>
-  <div class="stat s-low"><div class="stat-num">LOW_COUNT</div><div class="stat-lbl">安全</div></div>
-  <div class="stat s-wl"><div class="stat-num">WL_COUNT</div><div class="stat-lbl">白名單</div></div>
-  <div class="stat s-sk"><div class="stat-num">SK_COUNT</div><div class="stat-lbl">略過</div></div>
-</div>
-
-<div class="scan-overview">
-  <div class="overview-label">風險分布</div>
-  <div class="risk-track" title="高風險 / 中風險 / 安全 / 白名單">
-    <div class="risk-seg-high" style="width:HIGH_PCT%"></div>
-    <div class="risk-seg-med" style="width:MED_PCT%"></div>
-    <div class="risk-seg-low" style="width:LOW_PCT%"></div>
-    <div class="risk-seg-wl" style="width:WL_PCT%"></div>
-  </div>
-  <div class="overview-meta"><span>已分析：ANALYZED_COUNT 封</span><span>高風險優先顯示</span></div>
-</div>
-
-<div class="main">
-  <div class="left" id="left-panel">LIST_PLACEHOLDER</div>
-  <div class="right" id="right-panel">
-    <div class="empty-detail">
-      <div>點擊左側信件查看詳細分析</div>
+<div class="dz">
+  <aside class="dz-side">
+    <div class="ftab"><mark>FILE</mark><span>result</span></div>
+    <h1 class="pg-title"><span class="hl">分析結果</span></h1>
+    <div class="nums">
+      <div><b>TOTAL_COUNT</b><span>掃描封數</span></div>
+      <div><b style="color:#c8321e">HIGH_COUNT</b><span>高風險</span></div>
+      <div><b style="color:#a8650f">MED_COUNT</b><span>中風險</span></div>
+      <div><b style="color:#2e6a4d">LOW_COUNT</b><span>安全</span></div>
+      <div><b>WL_COUNT</b><span>白名單</span></div>
+      <div><b>SK_COUNT</b><span>略過</span></div>
     </div>
-  </div>
+    <div class="ov">
+      <div class="lb">風險分布</div>
+      <div class="risk-track" title="高風險 / 中風險 / 安全 / 白名單">
+        <div class="risk-seg-high" style="width:HIGH_PCT%"></div>
+        <div class="risk-seg-med" style="width:MED_PCT%"></div>
+        <div class="risk-seg-low" style="width:LOW_PCT%"></div>
+        <div class="risk-seg-wl" style="width:WL_PCT%"></div>
+      </div>
+      <div class="overview-meta"><span>已分析：ANALYZED_COUNT 封</span><span>高風險優先顯示</span></div>
+    </div>
+    <div class="lst" id="listwrap">
+      <div class="lb">案件清單</div>
+      <div id="left-panel">LIST_PLACEHOLDER</div>
+    </div>
+  </aside>
+  <main class="dz-main"><div id="right-panel"></div></main>
 </div>
 """
 
 # ── 歷史記錄 HTML ────────────────────────────────────────────
 HISTORY_HTML = COMMON_CSS + """
 <style>
-.container { max-width: 860px; margin: 0 auto; padding: 40px 20px; }
-.page-title { font-size: 16px; font-weight: 600; color: var(--text-main); margin-bottom: 24px; font-family: var(--mono); }
-.page-title::before { content: "$ "; color: var(--green); }
-table { width: 100%; border-collapse: collapse; background: var(--bg-card); border-radius: 4px; border: 1px solid var(--border-subtle); overflow: hidden; font-family: var(--mono); }
-thead tr { border-bottom: 1px solid var(--border-subtle); background: #050505; }
-th { padding: 14px 18px; font-size: 11px; color: var(--text-dim); letter-spacing: 0.05em;
-     text-transform: uppercase; text-align: left; font-weight: 600; }
-td { padding: 14px 18px; font-size: 12.5px; color: var(--text-main);
-     border-bottom: 1px solid var(--border-subtle); }
-tr:last-child td { border-bottom: none; }
-tr:hover td { background: var(--bg-hover); }
-.cell-high { color: var(--red); font-weight: 600; }
-.cell-med { color: var(--orange); }
-.cell-low { color: var(--green); }
-.empty { padding: 60px; text-align: center; color: var(--text-dim); font-size: 13px; background: var(--bg-card); border-radius: 4px; border: 1px solid var(--border-subtle); }
+.leg { display: flex; flex-wrap: wrap; gap: .5rem 1.4rem; font-family: var(--mono); font-size: 12px; margin-bottom: 1rem; }
+.dot { display: inline-block; width: .8rem; height: .8rem; margin-right: .4rem; border: 1px solid #141414; vertical-align: -1px; }
+.dot.h, .bar3 .h { background: #c8321e; } .dot.m, .bar3 .m { background: #e39a2d; } .dot.l, .bar3 .l { background: #2e6a4d; } .dot.w, .bar3 .w { background: #b8b3a4; }
+.led { border-top: 1px solid #141414; }
+.lr { display: grid; grid-template-columns: 1fr; gap: .7rem; padding: 1.1rem 0; border-bottom: 1px solid #dcd7ca; align-items: center; }
+@media (min-width: 900px) { .lr { grid-template-columns: 9.5rem minmax(0,1fr) 14rem; gap: 1.5rem; padding-right: .6rem; } }
+.lr .tm b { display: block; font-family: var(--serif); font-weight: 900; font-size: 1.35rem; line-height: 1.2; }
+.lr .tm span { font-family: var(--mono); font-size: 11.5px; color: #8a8678; }
+.bar3 { display: flex; height: 1.7rem; border: 1px solid #141414; background: repeating-linear-gradient(135deg, #faf8f3 0 6px, #ebe7dc 6px 12px); }
+.bar3 i { display: block; min-width: 3px; border-right: 1px solid #141414; } .bar3 i:last-child { border-right: 0; }
+.lr .nm { display: flex; align-items: center; justify-content: space-between; gap: .8rem; font-family: var(--mono); font-size: 12px; }
+.lr .nm span { white-space: nowrap; }
+.lr .nm .st { font-size: .8rem; }
+.empty2 { border: 1px dashed #a8a291; padding: 4rem 1.5rem; text-align: center; background: #fff; }
+.empty2 .st { font-size: 1.6rem; padding: .2rem 1.1rem; }
+.empty2 p { margin-top: 1.4rem; font-size: 14px; color: #55524a; }
+.empty2 a { color: #141414; text-underline-offset: 4px; }
 </style>
-
 <div class="hdr">
-  <div class="hdr-left">
-    <span>phishing-detector / history</span>
-  </div>
-  <div class="hdr-nav">
-    <a href="/">首頁</a>
-    <a href="/rules">偵測規則</a>
-    <a href="/whitelist">白名單設定</a>
-  </div>
+  <div class="hdr-left"><span>phishing-detector / history</span></div>
+  <div class="hdr-nav"><a href="/">首頁</a><a href="/rules">偵測規則</a><a href="/whitelist">白名單設定</a></div>
 </div>
-
-<div class="container">
-  <a href="/" class="back">← 返回首頁</a>
-  <div class="page-title">掃描記錄</div>
-  {% if history %}
-  <table>
-    <thead><tr><th>掃描時間</th><th>總計</th><th>高風險</th><th>中風險</th><th>安全</th><th>白名單</th></tr></thead>
-    <tbody>
+<div class="dz">
+  <aside class="dz-side">
+    <a href="/" class="back">← 返回首頁</a>
+    <div class="ftab"><mark>FILE</mark><span>history</span></div>
+    <h1 class="pg-title"><span class="hl">掃描記錄</span></h1>
+    <p class="pg-sub">最近 20 次掃描的風險分布。每一列是一次掃描，色條依比例顯示各風險等級的郵件數量。</p>
+    {% if history %}
+    <div class="nums">
+      <div><b>{{ history|length }}</b><span>掃描次數</span></div>
+      <div><b>{{ history|sum(attribute=2) }}</b><span>郵件總數</span></div>
+      <div><b style="color:#c8321e">{{ history|sum(attribute=3) }}</b><span>高風險</span></div>
+      <div><b style="color:#a8650f">{{ history|sum(attribute=4) }}</b><span>中風險</span></div>
+    </div>
+    {% endif %}
+  </aside>
+  <main class="dz-main">
+    {% if history %}
+    <div class="sh"><span class="n">01</span><h2>案件簿</h2></div>
+    <div class="leg"><span><i class="dot h"></i>高風險</span><span><i class="dot m"></i>中風險</span><span><i class="dot l"></i>安全</span><span><i class="dot w"></i>白名單</span></div>
+    <div class="led">
     {% for h in history %}
-    <tr>
-      <td>{{h[1]}}</td>
-      <td>{{h[2]}}</td>
-      <td class="cell-high">{{h[3]}}</td>
-      <td class="cell-med">{{h[4]}}</td>
-      <td class="cell-low">{{h[5]}}</td>
-      <td style="color:var(--text-dim)">{{h[6]}}</td>
-    </tr>
+      <div class="lr">
+        <div class="tm"><b>{{ h[1][:10] }}</b><span>{{ h[1][11:16] }}　共 {{ h[2] }} 封</span></div>
+        <div class="bar3" title="高 {{ h[3] }}／中 {{ h[4] }}／安全 {{ h[5] }}／白名單 {{ h[6] }}">
+          {% if h[3] %}<i class="h" style="flex:{{ h[3] }}"></i>{% endif %}
+          {% if h[4] %}<i class="m" style="flex:{{ h[4] }}"></i>{% endif %}
+          {% if h[5] %}<i class="l" style="flex:{{ h[5] }}"></i>{% endif %}
+          {% if h[6] %}<i class="w" style="flex:{{ h[6] }}"></i>{% endif %}
+        </div>
+        <div class="nm">
+          <span>高 {{ h[3] }}　中 {{ h[4] }}　安 {{ h[5] }}　白 {{ h[6] }}</span>
+          {% if h[3] %}<span class="st red">高風險</span>{% elif h[4] %}<span class="st org">中風險</span>{% else %}<span class="st grn">安全</span>{% endif %}
+        </div>
+      </div>
     {% endfor %}
-    </tbody>
-  </table>
-  {% else %}
-  <div class="empty">還沒有掃描記錄，<a href="/" style="color:var(--text-main); text-decoration:underline;">開始掃描</a>！</div>
-  {% endif %}
+    </div>
+    {% else %}
+    <div class="sh"><span class="n">01</span><h2>案件簿</h2></div>
+    <div class="empty2"><span class="st ink">尚無案件</span><p>還沒有掃描記錄，<a href="/">開始掃描</a>！</p></div>
+    {% endif %}
+  </main>
 </div>
 """
 
 # ── 偵測規則展示頁 ────────────────────────────────────────────
 RULES_HTML = COMMON_CSS + """
 <style>
-.container { max-width: 980px; margin: 0 auto; padding: 36px 20px 60px; }
-.page-title { font-size: 16px; font-weight: 600; color: var(--text-main); margin-bottom: 6px; font-family: var(--mono); }
-.page-title::before { content: "$ "; color: var(--green); }
-.page-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 26px; line-height: 1.6; }
-.sec { margin-top: 30px; }
-.sec-h { font-size: 12px; color: var(--text-main); font-weight: 600; font-family: var(--mono); margin-bottom: 4px; }
-.sec-h::before { content: "# "; color: #555; }
-.sec-d { font-size: 12px; color: var(--text-muted); margin-bottom: 10px; line-height: 1.6; }
-table.rt { width: 100%; border-collapse: collapse; background: var(--bg-card); border: 1px solid var(--border-subtle); font-family: var(--mono); }
-table.rt th { padding: 9px 12px; font-size: 10.5px; color: var(--text-dim); text-align: left; background: #050505; border-bottom: 1px solid var(--border-subtle); }
-table.rt td { padding: 9px 12px; font-size: 12px; color: var(--text-main); border-bottom: 1px solid var(--border-subtle); vertical-align: top; line-height: 1.6; }
-table.rt tr:last-child td { border-bottom: none; }
-.rid { color: var(--green); font-weight: 700; white-space: nowrap; }
-.pts { color: var(--orange); white-space: nowrap; }
-.kw { display: inline-block; margin: 2px 4px 2px 0; padding: 1px 7px; border: 1px solid var(--border-subtle); border-radius: 3px; font-size: 11px; color: var(--text-muted); background: rgba(255,255,255,.03); }
-.note { margin-top: 12px; font-size: 12px; color: var(--text-muted); line-height: 1.7; border-left: 2px solid var(--border-accent); padding: 4px 12px; }
-.note b { color: var(--text-main); }
-.stats { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
-.stat-chip { border: 1px solid var(--border-subtle); background: var(--bg-card); padding: 8px 14px; font-size: 12px; font-family: var(--mono); color: var(--text-muted); }
-.stat-chip b { color: var(--text-main); font-size: 16px; margin-right: 4px; }
+.play { display: grid; border: 1px solid #141414; background: #fff; }
+@media (min-width: 900px) { .play { grid-template-columns: 1.35fr 1fr; } }
+.play .in { padding: 1rem 1.15rem 1.2rem; }
+@media (min-width: 900px) { .play .in { border-right: 1px solid #141414; } }
+.play .pn { padding: 1rem 1.15rem 1.2rem; border-top: 1px solid #141414; background: #faf8f3; }
+@media (min-width: 900px) { .play .pn { border-top: 0; } }
+.lb { font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: #141414; margin-bottom: .45rem; }
+#pt { width: 100%; min-height: 6.5rem; border: 1px solid #dcd7ca; background: #faf8f3; padding: .6rem .75rem; font: 15px/1.9 var(--sans); resize: vertical; }
+#mirror { min-height: 4.5rem; padding: .5rem 0; font: 15px/2 var(--sans); white-space: pre-wrap; word-break: break-word; }
+#mirror mark { background: var(--hl); color: #141414; padding: .05em .12em; }
+#mirror u { text-decoration: underline wavy #c8321e; text-underline-offset: 4px; }
+.hits { list-style: none; margin: .6rem 0 0; padding: 0; font-size: 13px; }
+.hits li { display: flex; justify-content: space-between; gap: 1rem; padding: .35rem 0; border-top: 1px dashed #a8a291; }
+.hits li small { font-family: var(--mono); color: #55524a; }
+.score { font-family: var(--serif); font-weight: 900; font-size: 3rem; line-height: 1; }
+.score small { font-family: var(--mono); font-size: 12px; font-weight: 400; color: #55524a; margin-left: .4rem; }
+.meter { height: .8rem; border: 1px solid #141414; background: #fff; margin: .7rem 0 .3rem; }
+.meter i { display: block; height: 100%; width: 0; background: #141414; transition: width .3s; }
+.seg { display: flex; border: 1px solid #141414; font-family: var(--mono); font-size: 11.5px; margin: .6rem 0 .2rem; }
+.seg i { font-style: normal; padding: .45rem .55rem; white-space: nowrap; overflow: hidden; border-right: 1px solid #141414; }
+.seg i:last-child { border-right: 0; }
+.seg .a { background: #141414; color: #faf8f3; } .seg .b { background: #55524a; color: #faf8f3; } .seg .c { background: var(--hl); } .seg .d { background: #ffe0ee; }
+.scale { display: flex; border: 1px solid #141414; font-family: var(--mono); font-size: 11.5px; }
+.scale i { font-style: normal; padding: .5rem .6rem; color: #fff; }
+.scale .lo { flex: 40; background: #2e6a4d; } .scale .md { flex: 30; background: #a8650f; } .scale .hi { flex: 30; background: #c8321e; }
+.ticks { display: flex; font-family: var(--mono); font-size: 11px; color: #8a8678; margin-top: .25rem; }
+.ticks span:nth-child(1) { flex: 40; } .ticks span:nth-child(2) { flex: 30; } .ticks span:nth-child(3) { flex: 30; }
+.fz { display: grid; gap: 1.4rem; }
+@media (min-width: 900px) { .fz { grid-template-columns: 1fr 1fr; } }
+.fz .box { border: 1px solid #141414; background: #fff; padding: 1rem 1.1rem 1.15rem; }
+.fz .box h3 { font-size: 1rem; font-weight: 700; }
+.fz .box p { font-size: 12.5px; color: #55524a; line-height: 1.75; margin-top: .5rem; }
 </style>
-
 <div class="hdr">
   <div class="hdr-left"><span>phishing-detector / rules</span></div>
-  <div class="hdr-nav">
-    <a href="/">首頁</a>
-    <a href="/whitelist">白名單設定</a>
-    <a href="/history">掃描記錄</a>
-  </div>
+  <div class="hdr-nav"><a href="/">首頁</a><a href="/whitelist">白名單設定</a><a href="/history">掃描記錄</a></div>
 </div>
+<div class="dz">
+  <aside class="dz-side">
+    <a href="/" class="back">← 返回首頁</a>
+    <div class="ftab"><mark>FILE</mark><span>rules</span></div>
+    <h1 class="pg-title"><span class="hl">偵測規則一覽</span></h1>
+    <p class="pg-sub">以下為系統實際使用中的規則（關鍵字清單直接讀取自偵測程式，與實際判斷同源）。規則引擎僅是四層分析中的第一層，其分數會再與 ML、HTML/URL、AI 判讀依固定權重融合。</p>
+    <div class="nums">
+      <div><b>{{ kw_total }}</b><span>關鍵字（4 類）</span></div>
+      <div><b>{{ url_items|length }}</b><span>URL 結構規則</span></div>
+      <div><b>{{ html_items|length }}</b><span>HTML 結構規則</span></div>
+      <div><b>{{ whitelist_count }}</b><span>白名單網域</span></div>
+    </div>
+    <ul class="idx" id="idx">
+      <li><a href="#try"><em>00</em><span>試試看</span></a></li>
+      <li><a href="#kw"><em>01</em><span>關鍵字規則 R1–R6</span></a></li>
+      <li><a href="#url"><em>02</em><span>URL 結構 U1–U8</span></a></li>
+      <li><a href="#html"><em>03</em><span>HTML 結構 H1–H7</span></a></li>
+      <li><a href="#fuse"><em>04</em><span>融合與分級</span></a></li>
+    </ul>
+  </aside>
+  <main class="dz-main">
+    <div class="sh" id="try"><span class="n">00</span><h2>試試看</h2>
+      <p>貼上一段文字，命中的關鍵字會被螢光筆標出，並依下方 R1–R5 的計分方式估算。僅為前端示意，不含 URL / HTML 結構規則、ML 與 AI 判讀，實際結果以後端為準。</p></div>
+    <div class="play">
+      <div class="in">
+        <div class="lb">輸入文字</div>
+        <textarea id="pt">親愛的客戶，您的帳戶將於 24 小時內停用，請立即點擊 https://example.com/verify 驗證密碼。</textarea>
+        <div class="lb" style="margin-top:.9rem">命中標記</div>
+        <div id="mirror"></div>
+      </div>
+      <div class="pn">
+        <div class="lb">規則引擎原始分數</div>
+        <div class="score"><span id="raw">0</span><small>→ 正規化 <b id="norm">0</b> / 100</small></div>
+        <div class="meter"><i id="mt"></i></div>
+        <ul class="hits" id="hits"></ul>
+      </div>
+    </div>
 
-<div class="container">
-  <a href="/" class="back">← 返回首頁</a>
-  <div class="page-title">偵測規則一覽</div>
-  <p class="page-sub">以下為系統實際使用中的規則（關鍵字清單直接讀取自偵測程式，與實際判斷同源）。規則引擎僅是四層分析中的第一層，其分數會再與 ML、HTML/URL、AI 判讀依固定權重融合。</p>
+    <div class="sh" id="kw"><span class="n">01</span><h2>第一層：規則引擎（郵件文字）</h2>
+      <p>命中即累加原始規則分數，並將觸發的規則與命中詞記錄於結果頁。關鍵字比對皆不分大小寫，同時涵蓋英文與繁體中文。</p></div>
+    <div class="cards">
+    {% for rid, name, meaning, words, pts in groups %}
+      <article class="card"><span class="st red">{{ pts }}</span><div class="rid">{{ rid }}</div><h3>{{ name }}</h3><p>{{ meaning }}</p>
+        <div class="kws">{% for w in words %}<span>{{ w }}</span>{% endfor %}</div></article>
+    {% endfor %}
+      <article class="card"><span class="st red">+min(3 + 連結數, 8)</span><div class="rid">R5</div><h3>含有連結</h3><p>郵件內文出現 http(s) 網址</p><div class="kws"><span>https?://…</span></div></article>
+      <article class="card"><span class="st red">每個網址 +min(2×命中數, 8)</span><div class="rid">R6</div><h3>URL 風險</h3><p>對內文每個網址（最多 10 個）套用 U1–U8</p><div class="kws"><span>U1 – U8</span></div></article>
+    </div>
+    <p class="note2">規則分數會正規化為 <b>min(原始分數 × 5, 100)</b> 後再進入融合。</p>
 
-  <div class="stats">
-    <div class="stat-chip"><b>{{ kw_total }}</b>關鍵字（4 類）</div>
-    <div class="stat-chip"><b>{{ url_items|length }}</b>URL 結構規則</div>
-    <div class="stat-chip"><b>{{ html_items|length }}</b>HTML 結構規則</div>
-    <div class="stat-chip"><b>{{ whitelist_count }}</b>白名單網域</div>
-  </div>
+    <div class="sh" id="url"><span class="n">02</span><h2>URL 結構規則 U1–U8</h2><p>只解析網址字串，不連線、不開啟目標網站。</p></div>
+    <div class="cards">
+    {% for rid, name, cond in url_items %}
+      <article class="card"><div class="rid">{{ rid }}</div><h3>{{ name }}</h3><p>{{ cond }}</p></article>
+    {% endfor %}
+    </div>
 
-  <div class="sec">
-    <div class="sec-h">第一層：規則引擎（郵件文字）</div>
-    <div class="sec-d">命中即累加原始規則分數，並將觸發的規則與命中詞記錄於結果頁。關鍵字比對皆不分大小寫，同時涵蓋英文與繁體中文。</div>
-    <table class="rt">
-      <thead><tr><th>編號</th><th>規則</th><th>判斷意義</th><th>關鍵字</th><th>計分</th></tr></thead>
-      <tbody>
-      {% for rid, name, meaning, words, pts in groups %}
-        <tr>
-          <td class="rid">{{ rid }}</td><td>{{ name }}</td><td>{{ meaning }}</td>
-          <td>{% for w in words %}<span class="kw">{{ w }}</span>{% endfor %}</td>
-          <td class="pts">{{ pts }}</td>
-        </tr>
-      {% endfor %}
-        <tr>
-          <td class="rid">R5</td><td>含有連結</td><td>郵件內文出現 http(s) 網址</td>
-          <td><span class="kw">https?://…</span></td><td class="pts">+min(3 + 連結數, 8)</td>
-        </tr>
-        <tr>
-          <td class="rid">R6</td><td>URL 風險</td><td>對內文每個網址（最多 10 個）套用下方 U1–U8</td>
-          <td><span class="kw">U1 – U8</span></td><td class="pts">每個網址 +min(2×命中數, 8)</td>
-        </tr>
-      </tbody>
-    </table>
-    <div class="note">規則分數會正規化為 <b>min(原始分數 × 5, 100)</b> 後再進入融合。</div>
-  </div>
+    <div class="sh" id="html"><span class="n">03</span><h2>第三層：HTML 結構規則 H1–H7</h2><p>僅在郵件含 HTML 時執行。</p></div>
+    <div class="cards">
+    {% for rid, name, cond, pts in html_items %}
+      <article class="card"><span class="st red">{{ pts }}</span><div class="rid">{{ rid }}</div><h3>{{ name }}</h3><p>{{ cond }}</p></article>
+    {% endfor %}
+    </div>
+    <p class="note2">HTML 分數會正規化為 <b>min(HTML 分數 × 8, 100)</b> 後再進入融合。</p>
 
-  <div class="sec">
-    <div class="sec-h">URL 結構規則 U1–U8（只解析網址字串，不連線、不開啟目標網站）</div>
-    <table class="rt">
-      <thead><tr><th>編號</th><th>規則</th><th>觸發條件</th></tr></thead>
-      <tbody>
-      {% for rid, name, cond in url_items %}
-        <tr><td class="rid">{{ rid }}</td><td>{{ name }}</td><td>{{ cond }}</td></tr>
-      {% endfor %}
-      </tbody>
-    </table>
-  </div>
-
-  <div class="sec">
-    <div class="sec-h">第三層：HTML 結構規則 H1–H7（僅在郵件含 HTML 時執行）</div>
-    <table class="rt">
-      <thead><tr><th>編號</th><th>規則</th><th>觸發條件</th><th>計分</th></tr></thead>
-      <tbody>
-      {% for rid, name, cond, pts in html_items %}
-        <tr><td class="rid">{{ rid }}</td><td>{{ name }}</td><td>{{ cond }}</td><td class="pts">{{ pts }}</td></tr>
-      {% endfor %}
-      </tbody>
-    </table>
-    <div class="note">HTML 分數會正規化為 <b>min(HTML 分數 × 8, 100)</b> 後再進入融合。</div>
-  </div>
-
-  <div class="sec">
-    <div class="sec-h">融合與分級</div>
-    <table class="rt">
-      <thead><tr><th>情況</th><th>權重</th><th>觸發條件</th></tr></thead>
-      <tbody>
-        <tr><td>有 AI 判讀</td><td>規則 35% + ML 35% + HTML/URL 15% + AI 15%</td>
-            <td>rule_score ≥ 4、ML 機率 ≥ 0.30、html_score ≥ 4 任一成立才呼叫 AI</td></tr>
-        <tr><td>無 AI 判讀</td><td>規則 42.5% + ML 42.5% + HTML/URL 15%</td><td>AI 未觸發或失敗時自動改用</td></tr>
-      </tbody>
-    </table>
-    <div class="note">風險等級：<b>High ≥ 70</b>、<b>Medium 40–69</b>、<b>Low &lt; 40</b>。寄件網域命中<a href="/whitelist" style="color:var(--text-main);text-decoration:underline;">白名單</a>者直接略過全部分析。</div>
-  </div>
+    <div class="sh" id="fuse"><span class="n">04</span><h2>融合與分級</h2><p>各層分數依固定權重融合；寄件網域命中<a href="/whitelist" style="color:#141414;text-decoration:underline">白名單</a>者直接略過全部分析。</p></div>
+    <div class="fz">
+      <div class="box"><h3>有 AI 判讀</h3>
+        <div class="seg"><i class="a" style="flex:35">規則 35%</i><i class="b" style="flex:35">ML 35%</i><i class="c" style="flex:15">HTML/URL 15%</i><i class="d" style="flex:15">AI 15%</i></div>
+        <p>rule_score ≥ 4、ML 機率 ≥ 0.30、html_score ≥ 4 任一成立才呼叫 AI。</p></div>
+      <div class="box"><h3>無 AI 判讀</h3>
+        <div class="seg"><i class="a" style="flex:42.5">規則 42.5%</i><i class="b" style="flex:42.5">ML 42.5%</i><i class="c" style="flex:15">HTML/URL 15%</i></div>
+        <p>AI 未觸發或失敗時自動改用。</p></div>
+    </div>
+    <div class="box" style="margin-top:1.4rem;border:1px solid #141414;background:#fff;padding:1rem 1.1rem 1.15rem">
+      <h3 style="font-size:1rem;font-weight:700">風險等級</h3>
+      <div class="scale" style="margin-top:.7rem"><i class="lo">Low &lt; 40</i><i class="md">Medium 40–69</i><i class="hi">High ≥ 70</i></div>
+      <div class="ticks"><span>0</span><span>40</span><span>70 → 100</span></div>
+    </div>
+  </main>
 </div>
+<script>
+var G = {{ groups|tojson }};
+function per(p){p=String(p);var k=p.lastIndexOf('+');return k<0?0:(parseInt(p.slice(k+1),10)||0);}
+var WORDS=[];G.forEach(function(g,gi){g[3].forEach(function(w){WORDS.push([String(w).toLowerCase(),gi]);});});
+WORDS.sort(function(a,b){return b[0].length-a[0].length;});
+function isSpace(c){var n=c.charCodeAt(0);return n<=32||n===12288;}
+function run(){
+  var t=document.getElementById('pt').value,low=t.toLowerCase(),out=document.getElementById('mirror');out.textContent='';
+  var hit={},links=0,buf='',i=0,k,el,end;
+  function flush(){if(buf){out.appendChild(document.createTextNode(buf));buf='';}}
+  while(i<t.length){
+    if(low.startsWith('http://',i)||low.startsWith('https://',i)){
+      end=i;while(end<t.length&&!isSpace(t[end]))end++;
+      flush();el=document.createElement('u');el.textContent=t.slice(i,end);out.appendChild(el);links++;i=end;continue;
+    }
+    var found=null;
+    for(k=0;k<WORDS.length;k++){if(low.startsWith(WORDS[k][0],i)){found=WORDS[k];break;}}
+    if(found){flush();el=document.createElement('mark');el.textContent=t.slice(i,i+found[0].length);out.appendChild(el);
+      (hit[found[1]]=hit[found[1]]||{})[found[0]]=1;i+=found[0].length;}
+    else{buf+=t[i];i++;}
+  }
+  flush();
+  var raw=0,ul=document.getElementById('hits');ul.textContent='';
+  Object.keys(hit).forEach(function(g){var grp=G[g],n=Object.keys(hit[g]).length,pts=n*per(grp[4]);raw+=pts;
+    var li=document.createElement('li'),a=document.createElement('span'),b=document.createElement('small');
+    a.textContent=grp[0]+' '+grp[1];b.textContent=Object.keys(hit[g]).join('、')+'　+'+pts;li.appendChild(a);li.appendChild(b);ul.appendChild(li);});
+  if(links){var p=Math.min(3+links,8);raw+=p;var li2=document.createElement('li'),a2=document.createElement('span'),b2=document.createElement('small');
+    a2.textContent='R5 含有連結';b2.textContent=links+' 個連結　+'+p;li2.appendChild(a2);li2.appendChild(b2);ul.appendChild(li2);}
+  if(!ul.children.length){var e=document.createElement('li');e.textContent='沒有命中任何規則';ul.appendChild(e);}
+  var norm=Math.min(raw*5,100);
+  document.getElementById('raw').textContent=raw;document.getElementById('norm').textContent=norm;document.getElementById('mt').style.width=norm+'%';
+}
+document.addEventListener('DOMContentLoaded',function(){
+  document.getElementById('pt').addEventListener('input',run);run();
+  var links=document.querySelectorAll('#idx a'),secs=[];
+  links.forEach(function(a){var s=document.querySelector(a.getAttribute('href'));if(s)secs.push([a,s]);});
+  function spy(){var y=window.scrollY+120,cur=secs[0];secs.forEach(function(p){if(p[1].getBoundingClientRect().top+window.scrollY<=y)cur=p;});
+    links.forEach(function(a){a.classList.toggle('on',cur&&a===cur[0]);});}
+  window.addEventListener('scroll',spy,{passive:true});spy();
+});
+</script>
 """
 
 
 # ── 白名單 HTML ──────────────────────────────────────────────
 WHITELIST_HTML = COMMON_CSS + """
 <style>
-.container { max-width: 680px; margin: 0 auto; padding: 40px 20px; }
-.page-title { font-size: 16px; font-weight: 600; color: var(--text-main); margin-bottom: 6px; font-family: var(--mono); }
-.page-title::before { content: "$ "; color: var(--green); }
-.page-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; line-height: 1.5; }
-.add-row { display: flex; gap: 10px; margin-bottom: 32px; }
-.add-row input { flex: 1; background: var(--bg-card); border: 1px solid var(--border-subtle);
-                 border-radius: 3px; padding: 11px 16px; color: var(--text-main);
-                 font-size: 13px; outline: none; transition: border-color 0.15s; font-family: var(--mono); }
-.add-row input::placeholder { color: var(--text-dim); }
-.add-row input:focus { border-color: var(--border-accent); }
-.add-btn { background: #ffffff; color: #000000; border: 1px solid #fff;
-           border-radius: 2px; padding: 11px 22px; font-size: 13px; font-weight: 700; cursor: pointer;
-           transition: all 0.15s ease; white-space: nowrap; font-family: var(--mono); }
-.add-btn:hover { background: #000; color: #fff; }
-.sec-label { font-size: 11px; color: var(--text-dim); letter-spacing: 0;
-             text-transform: none; margin-bottom: 12px; font-weight: 600; font-family: var(--mono); }
-.sec-label::before { content: "# "; color: #444; }
-.domain-item { display: flex; justify-content: space-between; align-items: center;
-               background: var(--bg-card); border: 1px solid var(--border-subtle);
-               border-radius: 3px; padding: 14px 18px; margin-bottom: 10px;
-               transition: border-color 0.15s; }
-.domain-item:hover { border-color: var(--border-accent); }
-.domain-name { font-size: 13px; color: var(--text-main); font-family: var(--mono); font-weight: 500; }
-.domain-time { font-size: 11px; color: var(--text-dim); margin-top: 3px; font-family: var(--mono); }
-.del-btn { background: transparent; color: var(--red); border: 1px solid var(--red-border);
-           border-radius: 2px; padding: 5px 12px; font-size: 12px; cursor: pointer;
-           transition: all 0.15s ease; font-family: var(--mono); }
-.del-btn:hover { background: var(--red); color: #000; border-color: var(--red); }
-.demo-box { background: var(--bg-card); border: 1px solid var(--border-accent); border-radius: 3px; padding: 16px 18px; margin-bottom: 30px; }
-.demo-title { font-size: 12px; font-weight: 600; color: var(--text-main); margin-bottom: 4px; font-family: var(--mono); }
-.demo-title::before { content: "$ whitelist-check  "; color: var(--green); }
-.demo-desc { font-size: 12px; color: var(--text-muted); line-height: 1.6; margin-bottom: 12px; }
-.demo-row { display: flex; gap: 10px; }
-.demo-row input { flex: 1; min-width: 0; background: #0a0a0a; border: 1px solid var(--border-subtle); border-radius: 3px; padding: 10px 14px;
-                  color: var(--text-main); font-size: 13px; outline: none; font-family: var(--mono); }
-.demo-row input:focus { border-color: var(--border-accent); }
-.demo-result { margin-top: 12px; font-size: 12.5px; line-height: 1.7; font-family: var(--mono); min-height: 18px; }
-.demo-result.ok { color: var(--green); }
-.demo-result.no { color: var(--orange); }
-.demo-links { margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; }
-.demo-links a, .demo-chip { font-size: 11.5px; color: var(--text-muted); text-decoration: none; border: 1px solid var(--border-subtle); padding: 5px 10px; border-radius: 2px; cursor: pointer; background: transparent; font-family: var(--mono); }
-.demo-links a:hover, .demo-chip:hover { color: #000; background: #fff; border-color: #fff; }
+.ck { border: 1px solid #141414; background: #fff; }
+.ck .row { display: flex; gap: .6rem; padding: 1rem 1.15rem; border-bottom: 1px solid #141414; }
+.ck input { flex: 1; min-width: 0; border: 0; border-bottom: 2px solid #141414; background: transparent; font: 500 1.05rem var(--mono); padding: .45rem 0; }
+.ck input:focus { box-shadow: none; }
+.out { padding: 1.4rem 1.15rem 1.5rem; min-height: 11rem; display: grid; gap: 1rem; align-content: start; }
+.dom { font-family: var(--mono); font-weight: 600; font-size: clamp(1.1rem,2.6vw,1.9rem); line-height: 1.5; word-break: break-all; }
+.dom .hl { background: linear-gradient(transparent 55%, #9fe0c2 55%); }
+.dom u { text-decoration: underline wavy #c8321e; text-underline-offset: 6px; }
+.dom s { color: #8a8678; }
+.verdict { display: flex; flex-wrap: wrap; align-items: center; gap: .9rem 1.2rem; }
+.verdict .st { font-size: 1.15rem; padding: .1rem .8rem; }
+.verdict p { font-size: 13.5px; line-height: 1.8; color: #55524a; flex: 1; min-width: 14rem; }
+.chips { display: flex; flex-wrap: wrap; gap: .5rem; padding: 0 1.15rem 1.1rem; }
+.chips button { font-family: var(--mono); font-size: 11.5px; padding: .3rem .6rem; border: 1px solid #141414; background: transparent; cursor: pointer; }
+.chips button:hover { background: var(--hl); }
+.chips a { font-family: var(--mono); font-size: 11.5px; color: #141414; align-self: center; text-underline-offset: 3px; }
+.pass { position: relative; background: #fff; border: 1px solid #141414; padding: .95rem 1rem 1rem; display: flex; flex-direction: column; gap: .35rem; }
+.pass .dn { font-family: var(--mono); font-weight: 600; font-size: 13.5px; word-break: break-all; padding-right: 1.6rem; }
+.pass .dt { font-family: var(--mono); font-size: 11px; color: #8a8678; }
+.pass .st { align-self: flex-start; margin-top: .5rem; font-size: .7rem; }
+.pass .x { position: absolute; right: .55rem; top: .5rem; width: 1.5rem; height: 1.5rem; border: 0; background: transparent; font: 400 1.2rem/1 var(--mono); color: #8a8678; cursor: pointer; }
+.pass .x:hover { background: #c8321e; color: #fff; }
+.side-form { margin-top: 1.5rem; }
+.side-form .lb, .lb { font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; margin-bottom: .45rem; }
+.side-form .r { display: flex; gap: .5rem; }
+.side-form input { flex: 1; min-width: 0; border: 1px solid #141414; padding: .55rem .7rem; font: 13px var(--mono); }
+.rst { margin-top: 1rem; font-family: var(--mono); font-size: 11.5px; padding: .3rem .6rem; border: 1px solid #141414; background: transparent; cursor: pointer; }
+.rst:hover { background: var(--hl); }
 </style>
 <script>
+var WL = {{ domains|map(attribute=0)|list|tojson }};
 function addDomain() {
   const domain = document.getElementById('domain-input').value.trim();
   if (!domain) return alert('請輸入網域');
@@ -1373,22 +1515,32 @@ function addDomain() {
     else alert(d.error || '新增失敗');
   });
 }
+function escH(x) { return String(x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function checkSender(value) {
-  const sender = (value !== undefined ? value : document.getElementById('check-input').value).trim();
-  const out = document.getElementById('check-result');
-  if (value !== undefined) document.getElementById('check-input').value = value;
-  if (!sender) { out.className = 'demo-result'; out.textContent = '請輸入寄件者信箱'; return; }
+  const input = document.getElementById('check-input');
+  if (value !== undefined) input.value = value;
+  const sender = input.value.trim();
+  const out = document.getElementById('check-out');
+  if (!sender) { out.innerHTML = '<p class="pg-sub">請輸入寄件者信箱，例如 name@example.com</p>'; return; }
   fetch('/whitelist/check', {method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({sender})}).then(r => r.json()).then(d => {
-    if (!d.success) { out.className = 'demo-result no'; out.textContent = d.error || '檢查失敗'; return; }
+    if (!d.success) { out.innerHTML = '<p class="pg-sub">' + escH(d.error || '檢查失敗') + '</p>'; return; }
+    const dom = d.domain;
     if (d.matched) {
-      out.className = 'demo-result ok';
-      out.textContent = '✔ 寄件網域 ' + d.domain + ' 命中白名單「' + d.whitelist_domain + '」（' + d.mode + '）→ 系統將略過分析，直接判定為安全。';
+      const wl = d.whitelist_domain, pre = dom.slice(0, dom.length - wl.length);
+      out.innerHTML = '<div class="dom">' + escH(pre) + '<span class="hl">' + escH(wl) + '</span></div>' +
+        '<div class="verdict"><span class="st grn">放行</span><p>' + escH(d.mode) + '：寄件網域命中白名單「' + escH(wl) + '」，系統將略過分析，直接判定為安全。</p></div>';
     } else {
-      out.className = 'demo-result no';
-      out.textContent = '✘ 寄件網域 ' + d.domain + ' 未命中任何白名單網域 → 將進入完整四層分析。';
+      const fake = WL.find(w => dom.indexOf(w) >= 0);
+      let shown = escH(dom), why = '未命中任何白名單網域，將進入完整四層分析。';
+      if (fake) {
+        const k = dom.indexOf(fake);
+        shown = escH(dom.slice(0, k)) + '<u>' + escH(fake) + '</u>' + escH(dom.slice(k + fake.length));
+        why = '網域中雖然出現「' + escH(fake) + '」，但它不是網域結尾，所以不命中，將進入完整四層分析。';
+      }
+      out.innerHTML = '<div class="dom">' + shown + '</div><div class="verdict"><span class="st red">不命中</span><p>' + why + '</p></div>';
     }
-  });
+  }).catch(() => { out.innerHTML = '<p class="pg-sub">檢查失敗，請稍後再試</p>'; });
 }
 function deleteDomain(domain) {
   if (!confirm('確定要刪除 ' + domain + '？')) return;
@@ -1405,60 +1557,55 @@ function resetWhitelist() {
   });
 }
 document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('domain-input').addEventListener('keydown', e => {
-    if (e.key === 'Enter') addDomain();
-  });
+  document.getElementById('domain-input').addEventListener('keydown', e => { if (e.key === 'Enter') addDomain(); });
+  document.getElementById('check-input').addEventListener('keydown', e => { if (e.key === 'Enter') checkSender(); });
+  checkSender('no-reply@accounts.google.com');
 });
 </script>
-
 <div class="hdr">
-  <div class="hdr-left">
-    <span>phishing-detector / whitelist</span>
-  </div>
-  <div class="hdr-nav">
-    <a href="/">首頁</a>
-    <a href="/rules">偵測規則</a>
-    <a href="/history">掃描記錄</a>
-  </div>
+  <div class="hdr-left"><span>phishing-detector / whitelist</span></div>
+  <div class="hdr-nav"><a href="/">首頁</a><a href="/rules">偵測規則</a><a href="/history">掃描記錄</a></div>
 </div>
-
-<div class="container">
-  <a href="/" class="back">← 返回首頁</a>
-  <div class="page-title">白名單設定</div>
-  <p class="page-sub">加入白名單後，來自該網域及其子網域的信件將直接標記為安全，不進行 AI 分析。請只加入確定可信任的網域。</p>
-
-  <div class="add-row">
-    <input type="text" id="domain-input" placeholder="輸入網域，例如：example.com">
-    <button class="add-btn" onclick="addDomain()">新增</button>
-  </div>
-
-  <div class="demo-box">
-    <div class="demo-title">白名單比對演示</div>
-    <div class="demo-desc">輸入任一寄件者信箱，即時顯示是否命中白名單。比對規則：寄件網域「完全相同」或為白名單網域的「子網域」才算命中；開頭相似、後面接其他網域的偽冒網域不會命中。</div>
-    <div class="demo-row">
-      <input type="text" id="check-input" placeholder="例如：no-reply@accounts.google.com" onkeydown="if(event.key==='Enter')checkSender()">
-      <button class="add-btn" onclick="checkSender()">檢測</button>
+<div class="dz">
+  <aside class="dz-side">
+    <a href="/" class="back">← 返回首頁</a>
+    <div class="ftab"><mark>FILE</mark><span>whitelist</span></div>
+    <h1 class="pg-title"><span class="hl">白名單設定</span></h1>
+    <p class="pg-sub">加入白名單後，來自該網域及其子網域的信件將直接標記為安全，不進行 AI 分析。請只加入確定可信任的網域。</p>
+    <div class="nums"><div><b>{{ count }}</b><span>目前白名單網域</span></div><div><b>2</b><span>比對方式：完全相同／子網域</span></div></div>
+    <div class="side-form">
+      <div class="lb">新增網域</div>
+      <div class="r"><input type="text" id="domain-input" placeholder="例如：example.com"><button class="add-btn" onclick="addDomain()">新增</button></div>
+      <button class="rst" onclick="resetWhitelist()">還原預設白名單</button>
     </div>
-    <div class="demo-result" id="check-result"></div>
-    <div class="demo-links">
-      <button class="demo-chip" onclick="checkSender('no-reply@accounts.google.com')">範例①：官方網域（命中）</button>
-      <button class="demo-chip" onclick="checkSender('alert@mail.google.com')">範例②：子網域（命中）</button>
-      <button class="demo-chip" onclick="checkSender('no-reply@accounts.google.com.verify-login.xyz')">範例③：偽冒網域（不命中）</button>
-      <a href="/paste?sample=wl_real">完整演示①：白名單信件</a>
-      <a href="/paste?sample=wl_fake">完整演示②：偽冒信件</a>
+  </aside>
+  <main class="dz-main">
+    <div class="sh"><span class="n">01</span><h2>比對檢測</h2>
+      <p>輸入任一寄件者信箱，即時顯示是否命中白名單。寄件網域「完全相同」或為白名單網域的「子網域」才算命中；開頭相似、後面接其他網域的偽冒網域不會命中。</p></div>
+    <div class="ck">
+      <div class="row"><input type="text" id="check-input" placeholder="例如：no-reply@accounts.google.com"><button class="add-btn" onclick="checkSender()">檢測</button></div>
+      <div class="out" id="check-out"></div>
+      <div class="chips">
+        <button onclick="checkSender('no-reply@accounts.google.com')">範例①：官方網域（命中）</button>
+        <button onclick="checkSender('alert@mail.google.com')">範例②：子網域（命中）</button>
+        <button onclick="checkSender('no-reply@accounts.google.com.verify-login.xyz')">範例③：偽冒網域（不命中）</button>
+        <a href="/paste?sample=wl_real">完整演示①：白名單信件</a>
+        <a href="/paste?sample=wl_fake">完整演示②：偽冒信件</a>
+      </div>
     </div>
-  </div>
 
-  <div class="sec-label">目前白名單（{{count}} 個）　<button class="demo-chip" onclick="resetWhitelist()">還原預設白名單</button></div>
-  {% for d in domains %}
-  <div class="domain-item">
-    <div>
-      <div class="domain-name">{{d[0]}}</div>
-      <div class="domain-time">新增時間：{{d[1][:10] if d[1] else '—'}}</div>
+    <div class="sh"><span class="n">02</span><h2>目前白名單（{{ count }} 個）</h2><p>每個網域及其子網域都會被放行。</p></div>
+    <div class="cards">
+    {% for d in domains %}
+      <div class="pass">
+        <button class="x" title="刪除" onclick="deleteDomain('{{ d[0] }}')">×</button>
+        <div class="dn">{{ d[0] }}</div>
+        <div class="dt">新增時間：{{ d[1][:10] if d[1] else '—' }}</div>
+        <span class="st grn">已放行 CLEARED</span>
+      </div>
+    {% endfor %}
     </div>
-    <button class="del-btn" onclick="deleteDomain('{{d[0]}}')">刪除</button>
-  </div>
-  {% endfor %}
+  </main>
 </div>
 """
 # ── 資料庫 ───────────────────────────────────────────────────
@@ -2438,7 +2585,7 @@ def callback():
             '<div style="font-family:system-ui;background:#0b0d12;color:#f8fafc;min-height:100vh;padding:40px">'
             '<h2>Google Gmail 授權失敗</h2>'
             '<p style="color:#94a3b8">請確認 Google OAuth 的重新導向 URI、Client ID / Secret 與 Gmail API 設定。</p>'
-            f'<pre style="white-space:pre-wrap;background:#111827;padding:16px;border-radius:8px;color:#fca5a5">{detail}</pre>'
+            f'<pre style="white-space:pre-wrap;background:#111827;padding:16px;border-radius:0;color:#b4321c">{detail}</pre>'
             '<p><a href="/" style="color:#60a5fa">← 返回首頁</a></p></div>'
         ), 500
 
@@ -2486,6 +2633,7 @@ def do_scan(token_data, scan_id):
                 'risk_score': report['risk_score'],
                 'subject': subject[:55],
                 'sender': sender[:60],
+                'body': body[:4000],
                 'explanation': report.get('explanation','')[:200],
                 'action': report.get('recommended_action','')[:120],
                 'tags': tags,
@@ -2595,6 +2743,7 @@ def paste_analyze():
                 'risk_score': report['risk_score'],
                 'subject': subject[:55],
                 'sender': sender[:60],
+                'body': body[:4000],
                 'explanation': report.get('explanation', '')[:200],
                 'action': report.get('recommended_action', '')[:120],
                 'tags': tags,
@@ -2699,8 +2848,7 @@ def result(scan_id):
     emails_json = json.dumps(all_emails, ensure_ascii=False).replace(
         '<', '\\u003c').replace('>', '\\u003e').replace('&', '\\u0026')
 
-    page = RESULT_HTML.replace('LIST_PLACEHOLDER', list_html)
-    page = page.replace('PLACEHOLDER_DATA', emails_json)
+    page = RESULT_HTML.replace('KEYWORDS_PLACEHOLDER', _kw_json())
     page = page.replace('TOTAL_COUNT', str(data['total']))
     page = page.replace('HIGH_COUNT',  str(data['high']))
     page = page.replace('MED_COUNT',   str(data['med']))
@@ -2714,6 +2862,9 @@ def result(scan_id):
     page = page.replace('LOW_PCT', f"{data['low'] / total_for_pct * 100:.2f}")
     page = page.replace('WL_PCT', f"{data['wl'] / total_for_pct * 100:.2f}")
     page = page.replace('ANALYZED_COUNT', str(analyzed_count))
+    # 使用者內容（信件列表、信件資料）最後才注入，避免內容中的字串被誤替換
+    page = page.replace('LIST_PLACEHOLDER', list_html)
+    page = page.replace('PLACEHOLDER_DATA', emails_json)
     return page
 
 
