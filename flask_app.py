@@ -475,13 +475,24 @@ footer.f .cp { margin-top: 2.25rem; color: #8a8678; }
 .card .st { position: absolute; right: .85rem; top: .95rem; font-size: .75rem; max-width: 11rem; text-align: center; }
 .note2 { margin-top: .9rem; font-family: var(--mono); font-size: 12px; color: var(--text-muted); line-height: 1.8; }
 .note2 b { background: var(--hl); font-weight: 500; padding: 0 .25rem; }
+
+body .hdr-left a { color: inherit; text-decoration: none; font-weight: 600; }
+body .hdr-nav a.cur { background: var(--hl); padding: 2px .45rem; }
+@media (max-width: 700px) {
+  body .hdr { height: auto; min-height: 3rem; flex-wrap: wrap; gap: .3rem 1rem; padding: .6rem 1rem; }
+  body .hdr-nav { gap: .9rem; flex-wrap: wrap; }
+  body .hdr-nav a kbd.k { display: none; }
+  .dz-side { padding: 1.25rem 1rem 1.5rem; }
+}
 </style>
 <script>
 document.addEventListener('DOMContentLoaded',function(){
   var path=location.pathname,map={'/rules':'R','/whitelist':'W','/':'H','/history':'L','/paste':'P','/login':'S'};
-  var keys={};
+  var keys={'h':'/'};
   document.querySelectorAll('.hdr-nav a').forEach(function(a){
-    var k=map[new URL(a.href,location.href).pathname];
+    var pn=new URL(a.href,location.href).pathname;
+    if(pn===path)a.classList.add('cur');
+    var k=map[pn];
     if(!k||keys[k.toLowerCase()])return;
     var e=document.createElement('kbd');e.className='k';e.textContent=k;a.appendChild(e);keys[k.toLowerCase()]=a.href;
   });
@@ -582,8 +593,7 @@ table.m td{padding:.65rem .9rem;border-bottom:1px solid #dcd7ca;vertical-align:t
 .clear .btn:hover{background:var(--hl);color:#141414;border-color:var(--hl)}
 footer.f{margin-top:0;padding:3rem 2rem 2.25rem}
 </style>
-<header class="hdr"><div class="hdr-left"><a href="/" style="color:inherit;text-decoration:none">phishing-detector</a></div>
-<div class="hdr-nav"><a href="/rules">偵測規則</a><a href="/whitelist">白名單</a></div></header>
+<div class="hdr"><div class="hdr-left"><a href="/">phishing-detector</a></div><div class="hdr-nav"><a href="/rules">偵測規則</a><a href="/whitelist">白名單</a><a href="/history">掃描記錄</a><a href="/paste">貼上分析</a></div></div>
 <main>
 <section class="hero"><div class="wrap">
   <div>
@@ -672,51 +682,169 @@ footer.f{margin-top:0;padding:3rem 2rem 2.25rem}
 # ── Loading HTML ─────────────────────────────────────────────
 LOADING_HTML = COMMON_CSS + """
 <style>
-.loading-wrap { display: flex; flex-direction: column; align-items: flex-start;
-                justify-content: center; min-height: calc(100vh - 57px); gap: 18px;
-                max-width: 480px; margin: 0 auto; padding: 0 24px; }
-.loading-title { font-size: 13px; color: var(--text-muted); font-family: var(--mono); }
-.loading-title::before { content: "$ "; color: var(--green); }
-.steps { display: flex; flex-direction: column; gap: 9px; width: 100%; }
-.step { font-size: 12.5px; color: var(--text-dim); display: flex; align-items: center; gap: 10px; font-family: var(--mono); }
-.step::before { content: "[ ]"; color: var(--border-accent); flex-shrink: 0; }
-.step.active { color: var(--text-main); }
-.step.active::before { content: "[x]"; color: var(--green); }
-.step-dot { display: none; }
+.big3 { font-family: var(--serif); font-weight: 900; font-size: 4.2rem; line-height: 1; margin-top: 1.5rem; }
+.big3 small { font-family: var(--mono); font-size: 14px; font-weight: 400; color: #55524a; margin-left: .4rem; }
+.el { margin-top: .5rem; font-family: var(--mono); font-size: 12px; color: #8a8678; }
+.phase { list-style: none; margin: 1.6rem 0 0; padding: 0; font-family: var(--mono); font-size: 12.5px; }
+.phase li { display: flex; gap: .7rem; padding: .5rem 0; border-top: 1px solid #dcd7ca; color: #8a8678; }
+.phase li b { flex: none; display: grid; place-items: center; width: 1.3rem; height: 1.3rem; border-radius: 50%; border: 1px solid currentColor; font-size: 10px; }
+.phase li.on { color: #141414; } .phase li.on span { background: var(--hl); }
+.phase li.on b { background: #141414; color: #faf8f3; border-color: #141414; }
+.phase li.dn { color: #141414; } .phase li.dn b { background: #2e6a4d; color: #fff; border-color: #2e6a4d; }
+.tally { grid-template-columns: repeat(2, 1fr); }
+.wall { display: grid; grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr)); gap: 1rem; }
+.slip { position: relative; min-height: 8.5rem; padding: .8rem .9rem; background: #fff; border: 1px dashed #a8a291; overflow: hidden; transition: border-color .2s; }
+.slip .no { font-family: var(--mono); font-size: 11px; color: #8a8678; }
+.slip .ln { display: block; height: .5rem; margin-top: .6rem; background: #ebe7dc; }
+.slip .ln:nth-of-type(2) { width: 82%; } .slip .ln:nth-of-type(3) { width: 64%; }
+.slip.now { border: 1px solid #141414; }
+.slip.now::after { content: ""; position: absolute; left: -40%; top: 0; bottom: 0; width: 40%; background: linear-gradient(90deg, transparent, rgba(255,182,213,.85), transparent); animation: sweep 1.1s linear infinite; }
+@keyframes sweep { to { left: 100%; } }
+.slip.dn { border: 1px solid #141414; }
+.slip .stp { position: absolute; right: .6rem; bottom: .7rem; padding: .02rem .55rem; border: 2px solid currentColor; font-family: var(--serif); font-weight: 900; font-size: 1rem; line-height: 1.4; transform: rotate(-6deg); mix-blend-mode: multiply; animation: stampin .4s cubic-bezier(.2,1.7,.4,1) both; }
+.slip .stp.red { color: #c8321e; } .slip .stp.org { color: #a8650f; } .slip .stp.grn { color: #2e6a4d; } .slip .stp.ink { color: #55524a; }
+@keyframes stampin { from { opacity: 0; transform: rotate(14deg) scale(2.2); } to { opacity: .95; transform: rotate(-6deg) scale(1); } }
+.slip.empty { border-style: dotted; color: #8a8678; }
+.note3 { margin-top: 1.4rem; font-family: var(--mono); font-size: 11.5px; line-height: 1.8; color: #8a8678; }
+@media (prefers-reduced-motion: reduce) { .slip.now::after, .slip .stp { animation: none; } }
 </style>
+<div class="hdr"><div class="hdr-left"><a href="/">phishing-detector</a></div><div class="hdr-nav"><a href="/rules">偵測規則</a><a href="/whitelist">白名單</a><a href="/history">掃描記錄</a><a href="/paste">貼上分析</a></div></div>
+<div class="dz">
+  <aside class="dz-side">
+    <div class="ftab"><mark>FILE</mark><span>scanning</span></div>
+    <h1 class="pg-title"><span class="hl">正在掃描你的 Gmail</span></h1>
+    <p class="pg-sub">唯讀授權，只讀取收件匣最新 15 封信。每檢驗完一封，右邊就蓋上一枚印章。</p>
+    <div class="big3"><span id="cnt">0</span><small>/ <span id="tot">—</span> 封</small></div>
+    <div class="el" id="el">已等待 0 秒</div>
+    <ul class="phase" id="phase">
+      <li data-p="1"><b>1</b><span>連線 Gmail，讀取最新信件</span></li>
+      <li data-p="2"><b>2</b><span>逐封檢驗</span></li>
+      <li data-p="3"><b>3</b><span>整理分析結果</span></li>
+    </ul>
+    <div class="nums tally">
+      <div><b id="t-high" style="color:#c8321e">0</b><span>可疑</span></div>
+      <div><b id="t-med" style="color:#a8650f">0</b><span>注意</span></div>
+      <div><b id="t-low" style="color:#2e6a4d">0</b><span>安全</span></div>
+      <div><b id="t-wl">0</b><span>白名單／略過</span></div>
+    </div>
+  </aside>
+  <main class="dz-main">
+    <div class="sh"><span class="n">01</span><h2>案件牆</h2><p>每一格是一封信。印章顏色是該封信的風險等級，進度來自後端實際完成的封數。</p></div>
+    <div class="wall" id="wall"></div>
+    <p class="note3" id="note3"></p>
+  </main>
+</div>
 <script>
-const stepLabels = ['連線 Gmail...','讀取最新信件...','規則引擎分析中...','AI 深度分析中...','整理分析結果...'];
-let i = 0;
-setInterval(() => {
-  if (i < stepLabels.length) {
-    document.querySelectorAll('.step')[i].classList.add('active');
-    i++;
-  }
-}, 2500);
-setInterval(() => {
-  fetch('/scan_status').then(r => r.json()).then(d => {
-    if (d.done) window.location.href = '/result/' + d.scan_id;
-  });
-}, 1000);
-</script>
+const LV = { high: ['可疑', 'red'], medium: ['注意', 'org'], low: ['安全', 'grn'], wl: ['放行', 'ink'], sk: ['略過', 'ink'] };
+const started = Date.now();
+let total = null, drawn = 0, fails = 0, finished = false;
 
-<div class="hdr">
-  <div class="hdr-left">
-    <span>phishing-detector</span>
-  </div>
-  <span class="proj-tag">[scanning]</span>
-</div>
-<div class="loading-wrap">
-  <div class="loading-title">正在掃描你的 Gmail...</div>
-  <div class="steps">
-    <div class="step active">連線 Gmail...</div>
-    <div class="step">讀取最新信件...</div>
-    <div class="step">規則引擎分析中...</div>
-    <div class="step">AI 深度分析中...</div>
-    <div class="step">整理分析結果...</div>
-  </div>
-</div>
+function slipHtml(i) {
+  return '<div class="slip empty" id="slip-' + i + '"><div class="no">' + String(i + 1).padStart(2, '0') + '</div><i class="ln"></i><i class="ln"></i><i class="ln"></i></div>';
+}
+function buildWall(n) {
+  const wall = document.getElementById('wall');
+  let h = ''; for (let i = 0; i < n; i++) h += slipHtml(i);
+  wall.innerHTML = h; drawn = n;
+}
+function setPhase(p) {
+  document.querySelectorAll('#phase li').forEach(function (li) {
+    const n = Number(li.getAttribute('data-p'));
+    li.className = n < p ? 'dn' : (n === p ? 'on' : '');
+    li.querySelector('b').textContent = n < p ? '✓' : String(n);
+  });
+}
+function paint(progress) {
+  const t = { high: 0, medium: 0, low: 0, other: 0 };
+  progress.forEach(function (lv, i) {
+    const el = document.getElementById('slip-' + i); if (!el) return;
+    if (!el.classList.contains('dn')) {
+      const v = LV[lv] || ['—', 'ink'];
+      el.className = 'slip dn';
+      el.insertAdjacentHTML('beforeend', '<span class="stp ' + v[1] + '">' + v[0] + '</span>');
+    }
+    if (lv === 'high') t.high++; else if (lv === 'medium') t.medium++; else if (lv === 'low') t.low++; else t.other++;
+  });
+  const cur = document.getElementById('slip-' + progress.length);
+  if (cur && !finished) cur.className = 'slip now';
+  document.getElementById('cnt').textContent = progress.length;
+  document.getElementById('t-high').textContent = t.high;
+  document.getElementById('t-med').textContent = t.medium;
+  document.getElementById('t-low').textContent = t.low;
+  document.getElementById('t-wl').textContent = t.other;
+}
+function tick() {
+  document.getElementById('el').textContent = '已等待 ' + Math.floor((Date.now() - started) / 1000) + ' 秒';
+}
+function poll() {
+  fetch('/scan_status').then(function (r) { return r.json(); }).then(function (d) {
+    fails = 0;
+    if (d.total !== null && d.total !== undefined && total === null) {
+      total = d.total; document.getElementById('tot').textContent = total;
+      document.getElementById('note3').textContent = '全部檢驗完成後，會自動跳到分析結果。';
+      if (total === 0) { document.getElementById('wall').innerHTML = '<p class="note3">收件匣沒有信件。</p>'; } else buildWall(total);
+    }
+    const prog = d.progress || [];
+    if (total === null) setPhase(1);
+    else if (prog.length < total) setPhase(2);
+    else setPhase(3);
+    if (total) paint(prog);
+    if (d.done) {
+      finished = true; setPhase(4);
+      if (total) { document.querySelectorAll('.slip.now').forEach(function (e) { e.className = 'slip dn'; }); }
+      setTimeout(function () { window.location.href = '/result/' + d.scan_id; }, 900);
+      return;
+    }
+    setTimeout(poll, 700);
+  }).catch(function () {
+    fails++;
+    if (fails > 15) { document.getElementById('note3').textContent = '與伺服器的連線中斷，請重新整理頁面。'; return; }
+    setTimeout(poll, 1500);
+  });
+}
+buildWall(15);
+document.getElementById('note3').textContent = '正在連線 Gmail 並讀取信件，信件數量確定後，這裡會依實際封數更新。';
+setInterval(tick, 1000);
+poll();
+</script>
 """
+
+# ── 錯誤頁（授權失敗／分析失敗）──────────────────────────────
+ERROR_HTML = COMMON_CSS + """
+<style>
+.ew { max-width: 56rem; padding: 3rem 2rem 2rem; }
+.ew .stamp-lg { display: inline-block; border: 4px solid #c8321e; color: #c8321e; padding: .15rem 1rem .25rem; font-family: var(--serif); font-weight: 900; font-size: 2rem; line-height: 1.15; text-align: center; transform: rotate(-5deg); mix-blend-mode: multiply; }
+.ew .stamp-lg small { display: block; font-family: var(--mono); font-size: .65rem; letter-spacing: .2em; }
+.ew h1 { font-family: var(--serif); font-weight: 900; font-size: clamp(1.8rem, 3.4vw, 2.8rem); line-height: 1.3; margin: 1.6rem 0 .8rem; }
+.ew p { font-size: 14.5px; line-height: 1.9; color: #55524a; max-width: 60ch; }
+.ew details { margin-top: 1.6rem; border: 1px solid #141414; background: #fff; }
+.ew summary { cursor: pointer; padding: .75rem 1rem; font-family: var(--mono); font-size: 12px; font-weight: 600; }
+.ew pre { margin: 0; padding: .9rem 1rem 1.1rem; border-top: 1px dashed #a8a291; font-family: var(--mono); font-size: 12px; line-height: 1.7; white-space: pre-wrap; word-break: break-word; max-height: 22rem; overflow: auto; }
+.ew .acts { margin-top: 1.8rem; display: flex; flex-wrap: wrap; gap: .6rem; }
+.ew .acts a { display: inline-flex; padding: .65rem 1.1rem; border: 1px solid #141414; background: #141414; color: #faf8f3; font-family: var(--mono); font-size: 12.5px; text-decoration: none; }
+.ew .acts a.o { background: transparent; color: #141414; }
+.ew .acts a:hover { background: var(--hl); color: #141414; }
+</style>
+<div class="hdr"><div class="hdr-left"><a href="/">phishing-detector</a></div><div class="hdr-nav"><a href="/rules">偵測規則</a><a href="/whitelist">白名單</a><a href="/history">掃描記錄</a><a href="/paste">貼上分析</a></div></div>
+<main class="ew">
+  <div class="stamp-lg">失敗<small>FAILED</small></div>
+  <h1>ERR_TITLE</h1>
+  <p>ERR_MSG</p>
+  ERR_DETAIL
+  <div class="acts"><a href="/">返回首頁</a><a class="o" href="/paste">改用貼上分析</a></div>
+</main>
+"""
+
+def render_error(title, message, detail=''):
+    """統一風格的錯誤頁；title / message / detail 皆會做 HTML 跳脫。"""
+    import html as html_lib
+    box = ''
+    if detail:
+        box = ('<details><summary>技術細節</summary><pre>' + html_lib.escape(str(detail)) + '</pre></details>')
+    out = ERROR_HTML.replace('ERR_TITLE', html_lib.escape(title)).replace('ERR_MSG', html_lib.escape(message))
+    out = out.replace('ERR_DETAIL', box)
+    return out
+
 
 # ── 貼上郵件內容分析 HTML（免登入）───────────────────────────
 PASTE_HTML = COMMON_CSS + """
@@ -788,13 +916,9 @@ document.addEventListener('DOMContentLoaded', function () {
   if (h.value.trim()) document.getElementById('att').open = true;
 });
 </script>
-<div class="hdr">
-  <div class="hdr-left"><span>phishing-detector / paste</span></div>
-  <div class="hdr-nav"><a href="/rules">偵測規則</a><a href="/whitelist">白名單</a><a href="/">回首頁</a></div>
-</div>
+<div class="hdr"><div class="hdr-left"><a href="/">phishing-detector</a></div><div class="hdr-nav"><a href="/rules">偵測規則</a><a href="/whitelist">白名單</a><a href="/history">掃描記錄</a><a href="/paste">貼上分析</a></div></div>
 <div class="dz">
   <aside class="dz-side">
-    <a href="/" class="back">← 返回首頁</a>
     <div class="ftab"><mark>FILE</mark><span>paste</span></div>
     <h1 class="pg-title"><span class="hl">貼上郵件內容進行分析</span></h1>
     <p class="pg-sub">不需要 Google 帳號授權，將郵件的寄件者、主旨與內文貼上即可，系統會以相同的三層式（規則引擎 + ML + HTML / URL + AI）架構進行分析。</p>
@@ -1203,10 +1327,7 @@ window.addEventListener('DOMContentLoaded', function () {
   }
 });
 </script>
-<div class="hdr">
-  <div class="hdr-left"><span>phishing-detector / result</span></div>
-  <div class="hdr-nav"><a href="/rules">偵測規則</a><a href="/history">掃描記錄</a><a href="/whitelist">白名單設定</a><a href="/">重新掃描</a></div>
-</div>
+<div class="hdr"><div class="hdr-left"><a href="/">phishing-detector</a></div><div class="hdr-nav"><a href="/rules">偵測規則</a><a href="/whitelist">白名單</a><a href="/history">掃描記錄</a><a href="/paste">貼上分析</a></div></div>
 <div class="dz">
   <aside class="dz-side">
     <div class="ftab"><mark>FILE</mark><span>result</span></div>
@@ -1259,13 +1380,9 @@ HISTORY_HTML = COMMON_CSS + """
 .empty2 p { margin-top: 1.4rem; font-size: 14px; color: #55524a; }
 .empty2 a { color: #141414; text-underline-offset: 4px; }
 </style>
-<div class="hdr">
-  <div class="hdr-left"><span>phishing-detector / history</span></div>
-  <div class="hdr-nav"><a href="/">首頁</a><a href="/rules">偵測規則</a><a href="/whitelist">白名單設定</a></div>
-</div>
+<div class="hdr"><div class="hdr-left"><a href="/">phishing-detector</a></div><div class="hdr-nav"><a href="/rules">偵測規則</a><a href="/whitelist">白名單</a><a href="/history">掃描記錄</a><a href="/paste">貼上分析</a></div></div>
 <div class="dz">
   <aside class="dz-side">
-    <a href="/" class="back">← 返回首頁</a>
     <div class="ftab"><mark>FILE</mark><span>history</span></div>
     <h1 class="pg-title"><span class="hl">掃描記錄</span></h1>
     <p class="pg-sub">最近 20 次掃描的風險分布。每一列是一次掃描，色條依比例顯示各風險等級的郵件數量。</p>
@@ -1343,13 +1460,9 @@ RULES_HTML = COMMON_CSS + """
 .fz .box h3 { font-size: 1rem; font-weight: 700; }
 .fz .box p { font-size: 12.5px; color: #55524a; line-height: 1.75; margin-top: .5rem; }
 </style>
-<div class="hdr">
-  <div class="hdr-left"><span>phishing-detector / rules</span></div>
-  <div class="hdr-nav"><a href="/">首頁</a><a href="/whitelist">白名單設定</a><a href="/history">掃描記錄</a></div>
-</div>
+<div class="hdr"><div class="hdr-left"><a href="/">phishing-detector</a></div><div class="hdr-nav"><a href="/rules">偵測規則</a><a href="/whitelist">白名單</a><a href="/history">掃描記錄</a><a href="/paste">貼上分析</a></div></div>
 <div class="dz">
   <aside class="dz-side">
-    <a href="/" class="back">← 返回首頁</a>
     <div class="ftab"><mark>FILE</mark><span>rules</span></div>
     <h1 class="pg-title"><span class="hl">偵測規則一覽</span></h1>
     <p class="pg-sub">以下為系統實際使用中的規則（關鍵字清單直接讀取自偵測程式，與實際判斷同源）。規則引擎僅是四層分析中的第一層，其分數會再與 ML、HTML/URL、AI 判讀依固定權重融合。</p>
@@ -1562,13 +1675,9 @@ document.addEventListener('DOMContentLoaded', () => {
   checkSender('no-reply@accounts.google.com');
 });
 </script>
-<div class="hdr">
-  <div class="hdr-left"><span>phishing-detector / whitelist</span></div>
-  <div class="hdr-nav"><a href="/">首頁</a><a href="/rules">偵測規則</a><a href="/history">掃描記錄</a></div>
-</div>
+<div class="hdr"><div class="hdr-left"><a href="/">phishing-detector</a></div><div class="hdr-nav"><a href="/rules">偵測規則</a><a href="/whitelist">白名單</a><a href="/history">掃描記錄</a><a href="/paste">貼上分析</a></div></div>
 <div class="dz">
   <aside class="dz-side">
-    <a href="/" class="back">← 返回首頁</a>
     <div class="ftab"><mark>FILE</mark><span>whitelist</span></div>
     <h1 class="pg-title"><span class="hl">白名單設定</span></h1>
     <p class="pg-sub">加入白名單後，來自該網域及其子網域的信件將直接標記為安全，不進行 AI 分析。請只加入確定可信任的網域。</p>
@@ -2581,13 +2690,13 @@ def callback():
     except Exception as e:
         import traceback
         detail = traceback.format_exc()
-        return (
-            '<div style="font-family:system-ui;background:#0b0d12;color:#f8fafc;min-height:100vh;padding:40px">'
-            '<h2>Google Gmail 授權失敗</h2>'
-            '<p style="color:#94a3b8">請確認 Google OAuth 的重新導向 URI、Client ID / Secret 與 Gmail API 設定。</p>'
-            f'<pre style="white-space:pre-wrap;background:#111827;padding:16px;border-radius:0;color:#b4321c">{detail}</pre>'
-            '<p><a href="/" style="color:#60a5fa">← 返回首頁</a></p></div>'
-        ), 500
+        return render_error('Google Gmail 授權失敗', '請確認 Google OAuth 的重新導向 URI、Client ID / Secret 與 Gmail API 設定。', detail), 500
+
+def _scan_progress(scan_id, level):
+    """記錄每封信完成後的風險等級，供掃描中頁面顯示真實進度（不含信件內容）。"""
+    st = _scans.get(scan_id)
+    if st is not None and not st.get('done'):
+        st.setdefault('progress', []).append(level)
 
 def do_scan(token_data, scan_id):
     try:
@@ -2597,6 +2706,8 @@ def do_scan(token_data, scan_id):
             userId='me', maxResults=15, labelIds=['INBOX']).execute()
         messages = results_api.get('messages', [])
         inbox_count = len(messages)
+        _scans[scan_id]['inbox_total'] = inbox_count
+        _scans[scan_id]['progress'] = []
         all_emails = []
         high_list, med_list, low_list = [], [], []
         wl_list = []
@@ -2613,6 +2724,7 @@ def do_scan(token_data, scan_id):
 
             if is_system_report(sender, subject):
                 skipped += 1
+                _scan_progress(scan_id, 'sk')
                 continue
 
             if is_whitelisted(sender):
@@ -2622,6 +2734,7 @@ def do_scan(token_data, scan_id):
                          'category':'白名單安全信件','ir':None}
                 wl_list.append(entry)
                 all_emails.append(entry)
+                _scan_progress(scan_id, 'wl')
                 continue
 
             report, html_score, html_findings, rule_score, spam_prob = full_pipeline(text, html)
@@ -2672,6 +2785,7 @@ def do_scan(token_data, scan_id):
             else:
                 low_list.append(entry)
             all_emails.append(entry)
+            _scan_progress(scan_id, report['risk_level'])
 
         scan_time = datetime.now().strftime('%Y-%m-%d %H:%M')
         save_scan(scan_id, scan_time,
@@ -2704,7 +2818,9 @@ def scan():
 def scan_status():
     scan_id = _state.get('last_scan_id','')
     if scan_id and scan_id in _scans:
-        return jsonify({'done': _scans[scan_id].get('done',False), 'scan_id': scan_id})
+        st = _scans[scan_id]
+        return jsonify({'done': st.get('done',False), 'scan_id': scan_id,
+                        'total': st.get('inbox_total'), 'progress': st.get('progress', [])})
     return jsonify({'done': False, 'scan_id': ''})
 
 @app.route('/paste')
@@ -2802,7 +2918,7 @@ def result(scan_id):
     data = _scans.get(scan_id)
     if not data or not data.get('done'): return redirect('/')
     if 'error' in data:
-        return f'<pre style="background:#1c1c1c;color:#f0ede8;padding:20px">{data["error"]}</pre>', 500
+        return render_error('掃描失敗', '分析過程發生錯誤，詳細資訊如下。', data['error']), 500
 
     all_emails = data['all_emails']
 
