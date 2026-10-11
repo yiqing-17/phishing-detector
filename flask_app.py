@@ -4,7 +4,7 @@
 
 import json, os, uuid, threading, base64, re, sqlite3, smtplib, secrets
 import joblib
-from datetime import datetime
+from datetime import datetime, timedelta
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import pandas as pd
@@ -17,7 +17,7 @@ try:
 except ImportError:
     Groq = None
 from bs4 import BeautifulSoup
-from flask import Flask, redirect, request, render_template_string, jsonify
+from flask import Flask, redirect, request, render_template_string, jsonify, session
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
 from google.oauth2.credentials import Credentials
@@ -484,6 +484,9 @@ body .hdr-nav a.cur { background: var(--hl); padding: 2px .45rem; }
   body .hdr-nav a kbd.k { display: none; }
   .dz-side { padding: 1.25rem 1rem 1.5rem; }
 }
+footer.f .fi { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 1.5rem 3rem; }
+footer.f .fi .big { margin-bottom: 0; }
+footer.f .fi nav { padding-bottom: .6rem; }
 </style>
 <script>
 document.addEventListener('DOMContentLoaded',function(){
@@ -506,7 +509,7 @@ document.addEventListener('DOMContentLoaded',function(){
   }
   if(path!=='/'&&!document.querySelector('footer.f')&&!document.querySelector('.main')){
     var f=document.createElement('footer');f.className='f';
-    f.innerHTML='<div class="big"><span>phishing</span>-detector</div><nav><a href="/rules">偵測規則</a><a href="/whitelist">白名單</a><a href="/paste">貼上分析</a><a href="/login">Google 登入</a></nav>';
+    f.innerHTML='<div class="fi"><div class="big"><span>phishing</span>-detector</div><nav><a href="/rules">偵測規則</a><a href="/whitelist">白名單</a><a href="/paste">貼上分析</a><a href="/login">Google 登入</a></nav></div>';
     document.body.appendChild(f);
   }
   document.addEventListener('keydown',function(ev){
@@ -581,16 +584,15 @@ table.m th{background:#141414;color:var(--paper);text-align:left;font-weight:500
 table.m td{padding:.65rem .9rem;border-bottom:1px solid #dcd7ca;vertical-align:top}
 .tw{overflow-x:auto}
 .note{margin-top:.8rem;font-family:var(--mono);font-size:11.5px;color:#8a8678;max-width:64ch;line-height:1.7}
-.clear{display:grid}
-@media(min-width:900px){.clear{grid-template-columns:1fr 1fr}}
-.clear>div{padding:clamp(2rem,6vw,4rem) 2rem;position:relative}
-.clear .l{background:#ebe7dc}
-.clear .r{background:#141414;color:var(--paper);display:flex;flex-direction:column;justify-content:space-between;gap:2.5rem}
-.clear .stamp2{position:absolute;right:2rem;top:2rem;border:3px solid #2e6a4d;color:#2e6a4d;padding:.15rem .7rem;font-family:var(--serif);font-weight:900;font-size:1.3rem;transform:rotate(-6deg);mix-blend-mode:multiply}
-.clear .stamp2 small{display:block;font-family:var(--mono);font-size:.55rem;letter-spacing:.2em;font-weight:600;text-align:center}
-.clear .acts{display:flex;flex-direction:column;gap:.6rem;max-width:20rem}
-.clear .btn{background:transparent;color:var(--paper);border-color:var(--paper)}.clear .btn .key{background:var(--paper);color:#141414}
-.clear .btn:hover{background:var(--hl);color:#141414;border-color:var(--hl)}
+.clear{background:#ebe7dc;border-top:1px solid #141414;border-bottom:1px solid #141414}
+.clear .wrap{display:grid;gap:2rem 4rem;align-items:center;padding-top:clamp(3rem,8vh,5rem);padding-bottom:clamp(3rem,8vh,5rem)}
+@media(min-width:900px){.clear .wrap{grid-template-columns:1.25fr 1fr}}
+.clear h2{margin-top:.4rem;max-width:none}
+.clear .stamp2{display:inline-block;margin-left:1rem;vertical-align:middle;border:3px solid #2e6a4d;color:#2e6a4d;padding:.1rem .6rem;font-family:var(--serif);font-weight:900;font-size:1.05rem;line-height:1.3;transform:rotate(-6deg);mix-blend-mode:multiply;white-space:nowrap}
+.clear .stamp2 small{display:block;font-family:var(--mono);font-size:.5rem;letter-spacing:.2em;font-weight:600;text-align:center}
+.clear p.t{font-size:15px;line-height:1.9;color:#55524a;max-width:34ch}
+.clear .acts{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:1.4rem}
+.clear .btn{min-width:11.5rem}
 footer.f{margin-top:0;padding:3rem 2rem 2.25rem}
 </style>
 <div class="hdr"><div class="hdr-left"><a href="/">phishing-detector</a></div><div class="hdr-nav"><a href="/rules">偵測規則</a><a href="/whitelist">白名單</a><a href="/history">掃描記錄</a><a href="/paste">貼上分析</a></div></div>
@@ -651,21 +653,24 @@ footer.f{margin-top:0;padding:3rem 2rem 2.25rem}
   <p class="note">以上僅為第 2 層 ML 模型在測試資料上的表現，不代表整體四層系統在真實信箱中的準確率。</p>
 </div></section>
 
-<section class="clear">
-  <div class="l"><div class="stamp2" aria-hidden="true">已放行<small>CLEARED</small></div>
+<section class="clear"><div class="wrap">
+  <div>
     <div class="ftab"><mark>FILE 04</mark><span>whitelist</span></div>
-    <h2>白名單機制<span class="hl">已啟用</span></h2></div>
-  <div class="r"><p class="mono" style="max-width:34ch;font-size:13px;line-height:1.8">已知安全網域自動略過重複分析。</p>
+    <h2>白名單機制<span class="hl">已啟用</span><span class="stamp2" aria-hidden="true">已放行<small>CLEARED</small></span></h2>
+  </div>
+  <div>
+    <p class="t">已知安全網域自動略過重複分析。</p>
     <div class="acts">
       <a class="btn" href="/whitelist" data-key="w"><span>查看白名單</span><span class="key">W</span></a>
-      <a class="btn" href="/rules" data-key="r"><span>偵測規則</span><span class="key">R</span></a>
-    </div></div>
-</section>
+      <a class="btn o" href="/rules" data-key="r"><span>偵測規則</span><span class="key">R</span></a>
+    </div>
+  </div>
+</div></section>
 </main>
-<footer class="f">
+<footer class="f"><div class="fi">
   <div class="big"><span>phishing</span>-detector</div>
   <nav><a href="/rules">偵測規則</a><a href="/whitelist">白名單</a><a href="/paste">貼上分析</a><a href="/login">Google 登入</a></nav>
-</footer>
+</div></footer>
 <script>
 (function(){
   var marks=document.querySelectorAll('mark.m'),notes=document.querySelectorAll('.notes li');
@@ -1709,7 +1714,7 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="pass">
         <button class="x" title="刪除" onclick="deleteDomain('{{ d[0] }}')">×</button>
         <div class="dn">{{ d[0] }}</div>
-        <div class="dt">新增時間：{{ d[1][:10] if d[1] else '—' }}</div>
+        <div class="dt">{{ ('新增時間：' ~ d[1][:10]) if d[1] else '預設網域' }}</div>
         <span class="st grn">已放行 CLEARED</span>
       </div>
     {% endfor %}
@@ -1724,28 +1729,51 @@ def init_db():
     c.execute('''CREATE TABLE IF NOT EXISTS scan_history
         (id TEXT PRIMARY KEY, scan_time TEXT, total INTEGER,
          high INTEGER, medium INTEGER, low INTEGER, whitelist INTEGER, skipped INTEGER)''')
+    # 舊版沒有 uid 欄位：補上；舊紀錄 uid 為空字串，不屬於任何訪客（不會被顯示）
+    cols = [r[1] for r in c.execute('PRAGMA table_info(scan_history)')]
+    if 'uid' not in cols:
+        c.execute("ALTER TABLE scan_history ADD COLUMN uid TEXT DEFAULT ''")
+    c.execute('CREATE INDEX IF NOT EXISTS idx_hist_uid ON scan_history (uid, scan_time)')
+    # 舊版全站共用白名單：保留資料表不動（僅供日後手動匯入），程式不再讀取
     c.execute('''CREATE TABLE IF NOT EXISTS whitelist
         (id INTEGER PRIMARY KEY AUTOINCREMENT, domain TEXT UNIQUE, added_time TEXT)''')
+    # 個人白名單只記錄「每個人的修改」：預設網域存在程式裡，這裡只存新增（add）與刪除預設（del）
+    c.execute('''CREATE TABLE IF NOT EXISTS user_whitelist
+        (uid TEXT NOT NULL, domain TEXT NOT NULL, action TEXT NOT NULL, added_time TEXT,
+         PRIMARY KEY (uid, domain))''')
     c.execute('CREATE TABLE IF NOT EXISTS app_meta (key TEXT PRIMARY KEY, value TEXT)')
-    c.execute("SELECT value FROM app_meta WHERE key='whitelist_seeded'")
-    if not c.fetchone():
-        # 預設白名單只在首次建立時寫入，之後使用者刪除的網域不會在重啟後復原
-        for domain in DEFAULT_WHITELIST:
-            c.execute('INSERT OR IGNORE INTO whitelist (domain, added_time) VALUES (?, ?)',
-                     (domain, datetime.now().isoformat()))
-        c.execute("INSERT OR REPLACE INTO app_meta (key, value) VALUES ('whitelist_seeded', '1')")
     conn.commit()
     conn.close()
 
 init_db()
 
-def get_whitelist():
+def get_uid():
+    """每個瀏覽器一個匿名識別碼（存在簽章過的 cookie）。
+    白名單、掃描記錄、Google 授權憑證與掃描結果都以它區分，不同訪客互相看不到。"""
+    uid = session.get('uid', '')
+    if not re.fullmatch(r'[0-9a-f]{32}', uid or ''):
+        uid = secrets.token_hex(16)
+        session['uid'] = uid
+    session.permanent = True
+    return uid
+
+def get_whitelist_rows(uid=None):
+    """回傳這位訪客的白名單 [(domain, added_time)]：自行新增的在前（新到舊），預設網域在後（added_time 為空字串）。"""
+    uid = uid or get_uid()
     conn = sqlite3.connect('phishing.db')
     c = conn.cursor()
-    c.execute('SELECT domain FROM whitelist')
-    domains = [row[0] for row in c.fetchall()]
+    c.execute('SELECT domain, action, added_time FROM user_whitelist WHERE uid=?', (uid,))
+    rows = c.fetchall()
     conn.close()
-    return domains
+    removed = {d for d, a, _ in rows if a == 'del'}
+    added = sorted([(d, t or '') for d, a, t in rows if a == 'add'], key=lambda x: x[1], reverse=True)
+    added_set = {d for d, _ in added}
+    out = list(added)
+    out += [(d, '') for d in DEFAULT_WHITELIST if d not in removed and d not in added_set]
+    return out
+
+def get_whitelist(uid=None):
+    return [d for d, _ in get_whitelist_rows(uid)]
 
 def extract_sender_domain(sender):
     """從 From 標頭取出真正的 email domain。"""
@@ -1772,38 +1800,41 @@ def normalize_whitelist_domain(value):
         return ''
     return value
 
-def whitelist_match(sender):
+def whitelist_match(sender, uid=None):
     """回傳 (寄件網域, 命中的白名單網域, 比對方式)；未命中時命中網域為空字串。"""
     domain = extract_sender_domain(sender)
     if not domain:
         return '', '', ''
-    for d in get_whitelist():
+    for d in get_whitelist(uid):
         if domain == d:
             return domain, d, '精確網域比對'
         if domain.endswith('.' + d):
             return domain, d, '子網域比對'
     return domain, '', ''
 
-def is_whitelisted(sender):
-    return bool(whitelist_match(sender)[1])
+def is_whitelisted(sender, uid=None):
+    return bool(whitelist_match(sender, uid)[1])
 
 def is_system_report(sender, subject):
     if any(kw in subject for kw in SKIP_SUBJECTS): return True
     if MY_EMAIL in sender and any(kw in subject for kw in ['釣魚','警告','偵測']): return True
     return False
 
-def save_scan(scan_id, scan_time, total, high, med, low, wl, skipped):
+def save_scan(scan_id, scan_time, total, high, med, low, wl, skipped, uid=''):
     conn = sqlite3.connect('phishing.db')
     c = conn.cursor()
-    c.execute('INSERT OR REPLACE INTO scan_history VALUES (?,?,?,?,?,?,?,?)',
-             (scan_id, scan_time, total, len(high), len(med), len(low), wl, skipped))
+    c.execute('INSERT OR REPLACE INTO scan_history '
+              '(id, scan_time, total, high, medium, low, whitelist, skipped, uid) VALUES (?,?,?,?,?,?,?,?,?)',
+              (scan_id, scan_time, total, len(high), len(med), len(low), wl, skipped, uid))
     conn.commit()
     conn.close()
 
-def get_history():
+def get_history(uid=None):
+    uid = uid or get_uid()
     conn = sqlite3.connect('phishing.db')
     c = conn.cursor()
-    c.execute('SELECT * FROM scan_history ORDER BY scan_time DESC LIMIT 20')
+    c.execute('SELECT id, scan_time, total, high, medium, low, whitelist, skipped, uid FROM scan_history '
+              'WHERE uid=? ORDER BY scan_time DESC LIMIT 20', (uid,))
     rows = c.fetchall()
     conn.close()
     return rows
@@ -2613,9 +2644,14 @@ def handle_internal_error(e):
 app.secret_key = os.environ.get('FLASK_SECRET_KEY') or secrets.token_hex(32)
 if not os.environ.get('FLASK_SECRET_KEY') and BASE_URL.startswith('https://'):
     print('WARNING: FLASK_SECRET_KEY 未設定，已使用隨機暫時金鑰；正式部署請設定環境變數。')
-_state = {}
-_creds = {}
-_scans = {}
+app.config.update(
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE='Lax',
+    SESSION_COOKIE_SECURE=bool(os.environ.get('RENDER')),   # Render 為 https；本機 http 不啟用，避免 cookie 存不進去
+    PERMANENT_SESSION_LIFETIME=timedelta(days=365),
+)
+_creds = {}     # uid -> Google 授權憑證（只存在伺服器記憶體，掃描結束即清除）
+_scans = {}     # scan_id -> 掃描結果（含 owner，只有擁有者能讀）
 
 
 @app.after_request
@@ -2666,22 +2702,25 @@ def login():
     import secrets, hashlib, base64 as _b64
     cv = secrets.token_urlsafe(64)
     cc = _b64.urlsafe_b64encode(hashlib.sha256(cv.encode()).digest()).rstrip(b'=').decode()
-    _state['code_verifier'] = cv
+    get_uid()
+    session['code_verifier'] = cv
     flow = create_google_flow()
     auth_url, state = flow.authorization_url(prompt='consent', access_type='offline',
                                               code_challenge=cc, code_challenge_method='S256')
-    _state['current'] = state
+    session['oauth_state'] = state
     return redirect(auth_url)
 
 @app.route('/callback')
 def callback():
     try:
-        flow = create_google_flow(state=_state.get('current',''))
+        uid = get_uid()
+        flow = create_google_flow(state=session.get('oauth_state',''))
         auth_resp = request.url
         flow.fetch_token(authorization_response=auth_resp,
-                         code_verifier=_state.get('code_verifier',''))
+                         code_verifier=session.get('code_verifier',''))
         creds = flow.credentials
-        _creds['current'] = {
+        session.pop('code_verifier', None); session.pop('oauth_state', None)
+        _creds[uid] = {
             'token': creds.token, 'refresh_token': creds.refresh_token,
             'token_uri': creds.token_uri, 'client_id': creds.client_id,
             'client_secret': creds.client_secret, 'scopes': list(creds.scopes)
@@ -2698,7 +2737,7 @@ def _scan_progress(scan_id, level):
     if st is not None and not st.get('done'):
         st.setdefault('progress', []).append(level)
 
-def do_scan(token_data, scan_id):
+def do_scan(token_data, scan_id, uid):
     try:
         creds = Credentials(**token_data)
         service = build('gmail','v1',credentials=creds)
@@ -2727,7 +2766,7 @@ def do_scan(token_data, scan_id):
                 _scan_progress(scan_id, 'sk')
                 continue
 
-            if is_whitelisted(sender):
+            if is_whitelisted(sender, uid):
                 entry = {'level':'wl','risk_score':-1,'subject':subject[:55],
                          'sender':sender[:60],'explanation':'來自白名單寄件者，系統判定為安全。',
                          'action':'可安全閱讀','tags':[],'scores':[],
@@ -2790,9 +2829,10 @@ def do_scan(token_data, scan_id):
         scan_time = datetime.now().strftime('%Y-%m-%d %H:%M')
         save_scan(scan_id, scan_time,
                   len(high_list)+len(med_list)+len(low_list)+len(wl_list),
-                  high_list, med_list, low_list, len(wl_list), skipped)
+                  high_list, med_list, low_list, len(wl_list), skipped, uid)
 
         _scans[scan_id] = {
+            'owner': uid,
             'done': True,
             'all_emails': all_emails,
             'high': len(high_list), 'med': len(med_list),
@@ -2802,23 +2842,27 @@ def do_scan(token_data, scan_id):
         }
     except Exception as e:
         import traceback
-        _scans[scan_id] = {'done': True, 'error': traceback.format_exc()}
+        _scans[scan_id] = {'owner': uid, 'done': True, 'error': traceback.format_exc()}
+    finally:
+        _creds.pop(uid, None)   # 掃描結束就清除授權憑證，不長期留在伺服器記憶體
 
 @app.route('/scan')
 def scan():
-    token_data = _creds.get('current')
+    uid = get_uid()
+    token_data = _creds.get(uid)
     if not token_data: return redirect('/')
     scan_id = str(uuid.uuid4())[:8]
-    _scans[scan_id] = {'done': False}
-    _state['last_scan_id'] = scan_id
-    threading.Thread(target=do_scan, args=(token_data, scan_id)).start()
+    _scans[scan_id] = {'done': False, 'owner': uid}
+    session['last_scan_id'] = scan_id
+    threading.Thread(target=do_scan, args=(token_data, scan_id, uid)).start()
     return LOADING_HTML
 
 @app.route('/scan_status')
 def scan_status():
-    scan_id = _state.get('last_scan_id','')
-    if scan_id and scan_id in _scans:
-        st = _scans[scan_id]
+    uid = get_uid()
+    scan_id = session.get('last_scan_id', '')
+    st = _scans.get(scan_id) if scan_id else None
+    if st and st.get('owner') == uid:
         return jsonify({'done': st.get('done',False), 'scan_id': scan_id,
                         'total': st.get('inbox_total'), 'progress': st.get('progress', [])})
     return jsonify({'done': False, 'scan_id': ''})
@@ -2829,6 +2873,7 @@ def paste_page():
 
 @app.route('/paste_analyze', methods=['POST'])
 def paste_analyze():
+    uid = get_uid()
     sender  = request.form.get('sender', '').strip() or '(未提供寄件者)'
     subject = request.form.get('subject', '').strip() or '(無主旨)'
     body    = request.form.get('body', '').strip()
@@ -2841,7 +2886,7 @@ def paste_analyze():
     text = f"From: {sender}\nSubject: {subject}\nBody: {body}"
 
     try:
-        wl_domain, wl_hit, wl_mode = whitelist_match(sender)
+        wl_domain, wl_hit, wl_mode = whitelist_match(sender, uid)
         if wl_hit:
             entry = {'level': 'wl', 'risk_score': -1, 'subject': subject[:55],
                      'sender': sender[:60],
@@ -2901,12 +2946,13 @@ def paste_analyze():
         scan_id = str(uuid.uuid4())[:8]
         _scans[scan_id] = {
             'done': True,
+            'owner': uid,
             'all_emails': [entry],
             'high': high, 'med': med, 'low': low, 'wl': wl, 'skipped': 0,
             'total': 1
         }
         scan_time = datetime.now().strftime('%Y-%m-%d %H:%M')
-        save_scan(scan_id, scan_time, 1, ['x'] * high, ['x'] * med, ['x'] * low, wl, 0)
+        save_scan(scan_id, scan_time, 1, ['x'] * high, ['x'] * med, ['x'] * low, wl, 0, uid)
         return redirect(f'/result/{scan_id}')
     except Exception:
         import traceback
@@ -2916,7 +2962,7 @@ def paste_analyze():
 @app.route('/result/<scan_id>')
 def result(scan_id):
     data = _scans.get(scan_id)
-    if not data or not data.get('done'): return redirect('/')
+    if not data or not data.get('done') or data.get('owner') != get_uid(): return redirect('/')
     if 'error' in data:
         return render_error('掃描失敗', '分析過程發生錯誤，詳細資訊如下。', data['error']), 500
 
@@ -3010,55 +3056,62 @@ def whitelist_check():
 
 @app.route('/whitelist')
 def whitelist_page():
-    conn = sqlite3.connect('phishing.db')
-    c = conn.cursor()
-    c.execute('SELECT domain, added_time FROM whitelist ORDER BY added_time DESC')
-    domains = c.fetchall()
-    conn.close()
+    domains = get_whitelist_rows()
     return render_template_string(WHITELIST_HTML, domains=domains, count=len(domains))
 
 @app.route('/whitelist/add', methods=['POST'])
 def whitelist_add():
+    uid = get_uid()
     data = request.get_json(silent=True) or {}
-    raw_domain = data.get('domain', '')
-    domain = normalize_whitelist_domain(raw_domain)
+    domain = normalize_whitelist_domain(data.get('domain', ''))
     if not domain:
         return jsonify({'success':False,'error':'網域格式不正確，請輸入例如 example.com'}), 400
+    current = get_whitelist(uid)
+    if domain in current:
+        return jsonify({'success':False,'error':'這個網域已經在白名單中'})
+    if len(current) >= 300:
+        return jsonify({'success':False,'error':'白名單數量已達上限（300）'}), 400
     try:
         conn = sqlite3.connect('phishing.db')
         c = conn.cursor()
-        c.execute('INSERT INTO whitelist (domain, added_time) VALUES (?,?)',
-                 (domain, datetime.now().isoformat()))
+        if domain in DEFAULT_WHITELIST:     # 之前刪掉的預設網域：取消刪除即可
+            c.execute('DELETE FROM user_whitelist WHERE uid=? AND domain=?', (uid, domain))
+        else:
+            c.execute('INSERT OR REPLACE INTO user_whitelist (uid, domain, action, added_time) VALUES (?,?,?,?)',
+                      (uid, domain, 'add', datetime.now().isoformat()))
         conn.commit(); conn.close()
         return jsonify({'success':True,'domain':domain})
-    except sqlite3.IntegrityError:
-        return jsonify({'success':False,'error':'這個網域已經在白名單中'})
-    except Exception as e:
+    except Exception:
         return jsonify({'success':False,'error':'新增白名單失敗'})
 
 @app.route('/whitelist/reset', methods=['POST'])
 def whitelist_reset():
-    """還原預設白名單（補回被刪除的預設網域，不影響使用者自行新增的網域）。"""
+    """還原預設白名單（補回被刪除的預設網域，不影響自行新增的網域）。只影響目前這位訪客。"""
+    uid = get_uid()
     conn = sqlite3.connect('phishing.db')
     c = conn.cursor()
-    for domain in DEFAULT_WHITELIST:
-        c.execute('INSERT OR IGNORE INTO whitelist (domain, added_time) VALUES (?, ?)',
-                 (domain, datetime.now().isoformat()))
+    c.execute("DELETE FROM user_whitelist WHERE uid=? AND action='del'", (uid,))
     conn.commit(); conn.close()
     return jsonify({'success': True})
 
 @app.route('/whitelist/delete', methods=['POST'])
 def whitelist_delete():
+    uid = get_uid()
     data = request.get_json(silent=True) or {}
     domain = normalize_whitelist_domain(data.get('domain', ''))
     if not domain:
         return jsonify({'success':False,'error':'網域格式不正確'}), 400
+    if domain not in get_whitelist(uid):
+        return jsonify({'success':True,'deleted':False})
     conn = sqlite3.connect('phishing.db')
     c = conn.cursor()
-    c.execute('DELETE FROM whitelist WHERE domain=?', (domain,))
-    deleted = c.rowcount
+    if domain in DEFAULT_WHITELIST:         # 預設網域：記一筆「刪除」
+        c.execute('INSERT OR REPLACE INTO user_whitelist (uid, domain, action, added_time) VALUES (?,?,?,?)',
+                  (uid, domain, 'del', datetime.now().isoformat()))
+    else:
+        c.execute('DELETE FROM user_whitelist WHERE uid=? AND domain=?', (uid, domain))
     conn.commit(); conn.close()
-    return jsonify({'success':True,'deleted':bool(deleted)})
+    return jsonify({'success':True,'deleted':True})
 
 def run_system_self_test():
     """執行不依賴 Gmail / Groq 的本機系統自我檢測。"""
