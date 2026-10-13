@@ -1,7 +1,3 @@
-# ============================================================
-# AI 釣魚信件偵測系統 - Flask 網頁版 v25（加入測試範例）
-# ============================================================
-
 import json, os, uuid, threading, base64, re, sqlite3, smtplib, secrets
 import joblib
 from datetime import datetime, timedelta
@@ -528,15 +524,15 @@ document.addEventListener('DOMContentLoaded',function(){
 HOME_HTML = COMMON_CSS + """
 <style>
 html,body{background:var(--paper);color:#141414;font-family:var(--sans);-webkit-font-smoothing:antialiased;scroll-behavior:smooth}
-.wrap{max-width:1560px;margin:0 auto;padding:0 2rem}
+.wrap{max-width:1360px;margin:0 auto;padding:0 2rem}
 .mono{font-family:var(--mono)}
 .hero{padding:clamp(2.5rem,7vh,5rem) 0 clamp(3rem,8vh,6rem)}
 .hero .wrap{display:grid;gap:3rem;align-items:center}
-@media(min-width:1000px){.hero .wrap{grid-template-columns:1fr 1.02fr;gap:4.5rem;min-height:calc(100svh - 3rem - 8rem)}}
+@media(min-width:1000px){.hero .wrap{grid-template-columns:1fr 1.02fr;gap:3rem;min-height:calc(100svh - 3rem - 8rem)}}
 h1{font-family:var(--serif);font-weight:900;font-size:clamp(2.3rem,4.7vw,4.4rem);line-height:1.2;letter-spacing:-.01em;text-wrap:balance}
 h1 .hl{background:linear-gradient(transparent 56%,var(--hl) 56%)}
-.sub{margin-top:1.5rem;max-width:44ch;color:#55524a;font-size:16px;line-height:1.85}
-.cta{margin-top:2.25rem;display:flex;flex-direction:column;gap:.6rem;max-width:25rem}
+.sub{margin-top:1.5rem;max-width:36rem;color:#55524a;font-size:16px;line-height:1.85}
+.cta{margin-top:2.25rem;display:flex;flex-direction:column;gap:.6rem;max-width:30rem}
 .btn{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.7rem .8rem;border:1px solid #141414;background:#141414;color:var(--paper);font-family:var(--mono);font-size:12.5px;text-decoration:none;transition:background .15s,color .15s}
 .btn.o{background:transparent;color:#141414}
 .btn .key{display:flex;align-items:center;justify-content:center;min-width:1.35rem;height:1.35rem;background:var(--paper);color:#141414;font-weight:600;font-size:11px;text-transform:uppercase}
