@@ -1,3 +1,7 @@
+# ============================================================
+# AI 釣魚信件偵測系統 - Flask 網頁版 v25（加入測試範例）
+# ============================================================
+
 import json, os, uuid, threading, base64, re, sqlite3, smtplib, secrets
 import joblib
 from datetime import datetime, timedelta
@@ -2640,12 +2644,8 @@ def handle_internal_error(e):
 app.secret_key = os.environ.get('FLASK_SECRET_KEY') or secrets.token_hex(32)
 if not os.environ.get('FLASK_SECRET_KEY') and BASE_URL.startswith('https://'):
     print('WARNING: FLASK_SECRET_KEY 未設定，已使用隨機暫時金鑰；正式部署請設定環境變數。')
-app.config.update(
-    SESSION_COOKIE_HTTPONLY=True,
-    SESSION_COOKIE_SAMESITE='Lax',
-    SESSION_COOKIE_SECURE=bool(os.environ.get('RENDER')),   # Render 為 https；本機 http 不啟用，避免 cookie 存不進去
-    PERMANENT_SESSION_LIFETIME=timedelta(days=365),
-)
+# HttpOnly / SameSite / Secure 已於上方依 BASE_URL 設定（https 時預設啟用 Secure），此處只補長效 session
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=365)
 _creds = {}     # uid -> Google 授權憑證（只存在伺服器記憶體，掃描結束即清除）
 _scans = {}     # scan_id -> 掃描結果（含 owner，只有擁有者能讀）
 
