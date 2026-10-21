@@ -116,12 +116,24 @@ MONEY_WORDS = [
 ]
 
 
+def _kw_hit(word, text_lower):
+    """關鍵字比對（text_lower 需已轉小寫）。
+    - 純英文字母／空白的詞：前面不可緊接字母；4 字母以內的短詞（pin、won、free、wire…）前後都不可緊接字母，
+      避免 pin 命中 shipping、wire 命中 wireless。
+    - 其他詞（中文、$、NT$）：子字串比對；詞庫一律轉小寫後比較，修正 NT$ 永遠不命中。"""
+    w = word.lower()
+    if re.fullmatch(r'[a-z ]+', w):
+        pat = r'(?<![a-z])' + re.escape(w) + (r'(?![a-z])' if len(w) <= 4 else '')
+        return re.search(pat, text_lower) is not None
+    return w in text_lower
+
+
 def rule_based_score(text):
     score = 0
     triggered = []
     t = (text or '').lower()
 
-    hits = [w for w in URGENT_WORDS if w in t]
+    hits = [w for w in URGENT_WORDS if _kw_hit(w, t)]
     if hits:
         score += len(hits) * 2
         triggered.append(f'緊急語句: {hits}')
@@ -137,17 +149,17 @@ def rule_based_score(text):
                 score += min(len(url_findings) * 2, 8)
                 triggered.append(f'URL 風險: {url_findings[:4]}')
 
-    hits2 = [w for w in BAIT_WORDS if w in t]
+    hits2 = [w for w in BAIT_WORDS if _kw_hit(w, t)]
     if hits2:
         score += len(hits2) * 2
         triggered.append(f'誘騙話術: {hits2}')
 
-    hits3 = [w for w in PERSONAL_WORDS if w in t]
+    hits3 = [w for w in PERSONAL_WORDS if _kw_hit(w, t)]
     if hits3:
         score += len(hits3) * 3
         triggered.append(f'索取個資: {hits3}')
 
-    hits4 = [w for w in MONEY_WORDS if w in t]
+    hits4 = [w for w in MONEY_WORDS if _kw_hit(w, t)]
     if hits4:
         score += len(hits4) * 2
         triggered.append(f'金錢相關: {hits4}')

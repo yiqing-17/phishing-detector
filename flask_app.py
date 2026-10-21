@@ -29,7 +29,7 @@ from email_parser import get_body, get_header, get_html
 from result_builder import build_analyzed_entry
 from templates import (
     HISTORY_HTML, HOME_HTML, LOADING_HTML, RESULT_HTML,
-    RULES_HTML, WHITELIST_HTML, _kw_json, render_error, render_paste_page,
+    RULES_HTML, WHITELIST_HTML, _kw_json, render_error, render_home_page, render_paste_page,
 )
 
 
@@ -47,20 +47,20 @@ app.config['SESSION_COOKIE_SECURE'] = COOKIE_SECURE
 def handle_payload_too_large(e):
     if request.path.startswith('/api') or request.is_json:
         return jsonify({"ok": False, "error": "內容過大，請縮短郵件內容後再試。"}), 413
-    return "內容過大，請縮短郵件內容後再試。", 413
+    return render_error('內容過大', '郵件內容太長，請縮短後再送檢。'), 413
 
 @app.errorhandler(404)
 def handle_not_found(e):
     if request.path.startswith('/api') or request.is_json:
         return jsonify({"ok": False, "error": "找不到要求的頁面。"}), 404
-    return "找不到要求的頁面。", 404
+    return render_error('查無此案', '找不到你要的頁面，可能已經移走，或網址打錯了。'), 404
 
 @app.errorhandler(500)
 def handle_internal_error(e):
     app.logger.exception("Unhandled application error")
     if request.path.startswith('/api') or request.is_json:
         return jsonify({"ok": False, "error": "系統暫時發生錯誤，請稍後再試。"}), 500
-    return "系統暫時發生錯誤，請稍後再試。", 500
+    return render_error('案件退回', '系統暫時發生錯誤，請稍後再試。'), 500
 
 app.secret_key = FLASK_SECRET_KEY or secrets.token_hex(32)
 if not FLASK_SECRET_KEY and BASE_URL.startswith('https://'):
@@ -84,7 +84,7 @@ def add_security_headers(response):
 
 @app.route('/')
 def index():
-    return HOME_HTML
+    return render_home_page(RULE_KEYWORD_GROUPS)
 
 def create_google_flow(state=None):
     """建立 Google OAuth Flow。優先使用環境變數，沒有才讀 credentials.json。"""
@@ -310,7 +310,7 @@ def result(scan_id):
     data = _scans.get(scan_id)
     if not data or not data.get('done') or data.get('owner') != get_uid(): return redirect('/')
     if 'error' in data:
-        return render_error('掃描失敗', '分析過程發生錯誤，詳細資訊如下。', data['error']), 500
+        return render_error('案件退回', '這批信件在檢驗途中出了問題，詳細資訊如下。', data['error']), 500
 
     all_emails = data['all_emails']
 
@@ -428,7 +428,7 @@ def whitelist_add():
         conn.commit(); conn.close()
         return jsonify({'success':True,'domain':domain})
     except Exception:
-        return jsonify({'success':False,'error':'新增白名單失敗'})
+        return jsonify({'success':False,'error':'發放通行失敗'})
 
 @app.route('/whitelist/reset', methods=['POST'])
 def whitelist_reset():
