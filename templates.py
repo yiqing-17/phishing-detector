@@ -705,6 +705,47 @@ main.ew{margin:3.5rem auto;padding:3rem 2.4rem 2.4rem;width:calc(100% - 2.5rem)}
 @media(max-width:700px){.tick{transform:rotate(-.8deg);margin-top:-.6rem;margin-bottom:-.6rem}}
 @media(min-width:1100px){.quiz{margin-left:auto}}
 
+/* ===== 證據剪報（規則頁）：撕邊的信紙碎片，上面是真的釣魚句子 ===== */
+:is(#kwcards,#url + .cards,#html + .cards){filter:drop-shadow(0 7px 9px rgba(0,0,0,.17));gap:1.7rem 1.5rem}
+:is(#kwcards,#url + .cards,#html + .cards) .card{
+ --rot:-1deg;grid-template-rows:auto auto auto 1fr;background:#fdfdfe!important;border:0!important;
+ transform:rotate(var(--rot));transition:transform .2s ease;
+ clip-path:polygon(0 0,100% 0,100% calc(100% - 8px),95% 100%,90% calc(100% - 6px),84% 100%,78% calc(100% - 7px),72% 100%,66% calc(100% - 5px),60% 100%,54% calc(100% - 7px),47% 100%,41% calc(100% - 5px),35% 100%,29% calc(100% - 7px),22% 100%,16% calc(100% - 5px),9% 100%,4% calc(100% - 7px),0 calc(100% - 3px))}
+:is(#kwcards,#url + .cards,#html + .cards) .card:nth-child(3n+2){--rot:.8deg;
+ clip-path:polygon(0 0,100% 0,100% calc(100% - 4px),93% calc(100% - 1px),88% 100%,81% calc(100% - 6px),75% calc(100% - 2px),69% 100%,62% calc(100% - 7px),56% calc(100% - 3px),50% 100%,43% calc(100% - 6px),37% calc(100% - 2px),31% 100%,24% calc(100% - 7px),17% calc(100% - 3px),11% 100%,5% calc(100% - 6px),0 calc(100% - 2px))}
+:is(#kwcards,#url + .cards,#html + .cards) .card:nth-child(3n){--rot:-.5deg;
+ clip-path:polygon(0 0,100% 0,100% calc(100% - 6px),96% 100%,91% calc(100% - 3px),85% calc(100% - 8px),79% 100%,73% calc(100% - 4px),67% calc(100% - 7px),60% 100%,54% calc(100% - 3px),48% calc(100% - 8px),42% 100%,36% calc(100% - 4px),30% calc(100% - 7px),23% 100%,17% calc(100% - 3px),10% calc(100% - 8px),5% 100%,0 calc(100% - 5px))}
+:is(#kwcards,#url + .cards,#html + .cards) .card:hover{transform:rotate(0) translateY(-3px)}
+:is(#kwcards,#url + .cards,#html + .cards) .card .clip{grid-row:2;grid-column:1 / -1;padding:.95rem 1rem .35rem;font:13.5px/1.95 var(--sans);color:#141414}
+:is(#kwcards,#url + .cards,#html + .cards) .card .clip.code{font:12px/1.8 var(--mono);word-break:break-all}
+.clip[role="button"]{cursor:pointer}
+.clip mark{background:#ffb6d5;color:#141414;padding:.02em .12em}
+.clip mark[data-g="0"]{background:#ffc3dc}.clip mark[data-g="1"]{background:#ffe58a}.clip mark[data-g="2"]{background:#bfe0ff}.clip mark[data-g="3"]{background:#c5ecd2}
+:is(#kwcards,#url + .cards,#html + .cards) .card p{grid-row:3;padding:.1rem 1rem 1.25rem;font-size:11.5px;color:#4a4a4a}
+:is(#kwcards,#url + .cards,#html + .cards) .card .kws{grid-row:4;align-self:end;border-top:1px dashed #b5b5b5;margin:.8rem 1rem 0;padding:.55rem 0 1.3rem}
+.card .kws span{font-size:10px;padding:0 .3em}
+:is(#kwcards,#url + .cards,#html + .cards) .card:has(.kws) p{padding-bottom:0}
+@media (prefers-reduced-motion: reduce){:is(#kwcards,#url + .cards,#html + .cards) .card{transition:none}}
+
+/* ===== 簽證章頁（白名單）：每個網域是一枚蓋在通行頁上的章 ===== */
+.dz-split .dz-main>.cards{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem 1.1rem;background:#fafafa repeating-linear-gradient(135deg,rgba(0,0,0,.028) 0 1px,transparent 1px 8px);border:1px dashed #b5b5b5;padding:1.5rem 1.3rem 1.7rem;position:relative}
+.dz-split .dz-main>.cards::before{content:"PASSPORT　通行頁";position:absolute;left:1rem;top:.55rem;font:600 9.5px var(--mono);letter-spacing:.22em;color:#9a9a9a}
+.cards .pass{display:block!important;position:relative;background:transparent!important;border:0!important;box-shadow:none!important;padding:0!important;clip-path:none!important;color:#2e6a4d;transform:rotate(var(--r,0deg));margin-top:calc(var(--j,0) * 1px);animation:none}
+.cards .pass.custom{color:#2b3a67;background:transparent!important}
+.cards .pass::after,.cards .pass .dn::before{content:none!important}
+.cards .pass .dn,.cards .pass .dt,.cards .pass .st{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.stamp-svg{display:block}
+.stamp-svg svg{display:block;width:9.6rem;height:auto;overflow:visible}
+.stamp-svg svg[data-shape="circle"]{width:7rem}
+.stamp-svg g{mix-blend-mode:multiply}
+.cards .pass .x{position:absolute!important;top:-6px;right:-4px;width:22px;height:22px;border:0;border-radius:50%;background:#141414;color:#fff;font-size:13px;line-height:22px;padding:0;margin:0;opacity:0;transition:opacity .15s;z-index:3;cursor:pointer}
+.cards .pass:hover .x,.cards .pass:focus-within .x{opacity:1}
+@media(hover:none){.cards .pass .x{opacity:.85}}
+.cards .pass.new .stamp-svg svg{animation:stampDown .55s cubic-bezier(.2,1.6,.4,1) backwards}
+@keyframes stampDown{from{opacity:0;transform:scale(2.6) rotate(18deg)}}
+.cards .pass.gone{animation:passOut .28s ease-in forwards}
+@media (prefers-reduced-motion: reduce){.cards .pass.new .stamp-svg svg{animation:none}.cards .pass .x{transition:none}}
+
 /* ===== 手寫批註：只出現在信紙上 ===== */
 .hw{font-family:"Klee One","Kaiti TC","BiauKai","DFKai-SB","KaiTi",cursive;color:#2b3a67;font-size:1.02rem;line-height:1.5;transform:rotate(-3deg);pointer-events:none;position:absolute;z-index:2;text-align:left}
 .doc .hw{right:1.7rem;top:5.2rem;max-width:9.5rem;animation:hwIn .9s ease-out 3.3s backwards}
@@ -2749,28 +2790,47 @@ document.addEventListener('DOMContentLoaded',function(){
   pt.dispatchEvent(new Event('input'));
   if(scroll)document.getElementById('try').scrollIntoView({behavior:PD.RM?'auto':'smooth'});
  }
+ var EXS={
+  R5:'請點擊 <mark>https://example.com/verify</mark> 完成驗證。',
+  R6:'http://<mark>192.168.4.7</mark>/<mark>login</mark>',
+  U1:'http://<mark>203.0.113.7</mark>/pay',
+  U2:'http://google.com<mark>@</mark>evil.example/',
+  U3:'http://<mark>xn--</mark>pple-43d.example/',
+  U4:'http://my-bank<mark>.xyz</mark>/',
+  U5:'http://example.com/<mark>0123456789…（超過 100 字元）</mark>',
+  U6:'http://<mark>mail.shop.cdn.img.store</mark>.example/',
+  U7:'<mark>bit.ly</mark>/3xYzAbC',
+  U8:'http://example.com/<mark>login</mark>/<mark>verify</mark>?<mark>account</mark>=1',
+  H1:'&lt;a href="http://<mark>203.0.113.7</mark>/x"&gt;領取&lt;/a&gt;',
+  H2:'&lt;a href="http://<mark>evil.example</mark>/"&gt;<mark>paypal.com</mark>&lt;/a&gt;',
+  H3:'&lt;img src="t.gif" <mark>width="1" height="1"</mark>&gt;',
+  H4:'&lt;div style="<mark>display:none</mark>"&gt;…&lt;/div&gt;',
+  H5:'<mark>&lt;form</mark> action="/submit"&gt;',
+  H6:'&lt;input <mark>type="password"</mark>&gt;',
+  H7:'Your <mark>Microsoft</mark> account needs attention.'
+ };
  var cards=PD.all('#kwcards .card');
- cards.forEach(function(c){
+ PD.all('.dz-main .cards .card').forEach(function(c){
   var rid=(c.querySelector('.rid')||{}).textContent,gi=-1;
   G.forEach(function(g,k){if(g[0]===rid)gi=k;});
   c.setAttribute('data-gi',gi);
-  if(gi<0)return;
   PD.all('.kws span',c).forEach(function(s){
+   if(gi<0)return;
    s.setAttribute('role','button');s.setAttribute('tabindex','0');s.title='點一下加入上方試玩區';
    function add(){put(s.textContent,false,false);PD.toast('已加入「'+s.textContent+'」到試玩區',{type:'ok',ms:1800});}
    s.addEventListener('click',function(e){e.stopPropagation();add();});
    s.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();e.stopPropagation();add();}});
   });
-  if(!EX[rid])return;
-  c.classList.add('xp');c.setAttribute('tabindex','0');c.setAttribute('role','button');c.setAttribute('aria-expanded','false');c.title='點一下看範例';
-  var ex=document.createElement('div');ex.className='ex';
-  var p=document.createElement('p');p.appendChild(hlGroup(EX[rid],gi));
-  var b=document.createElement('button');b.type='button';b.className='sample-btn';b.textContent='放進試玩區';
-  b.addEventListener('click',function(e){e.stopPropagation();put(EX[rid],true,true);});
-  ex.appendChild(p);ex.appendChild(b);c.appendChild(ex);
-  function tg(){var o=c.classList.toggle('open');c.setAttribute('aria-expanded',o?'true':'false');}
-  c.addEventListener('click',function(e){if(e.target.closest('button'))return;tg();});
-  c.addEventListener('keydown',function(e){if((e.key==='Enter'||e.key===' ')&&e.target===c){e.preventDefault();tg();}});
+  var txt=EX[rid],html=EXS[rid];
+  if(!txt&&!html)return;
+  var clip=document.createElement('div');clip.className='clip'+(html?' code':'');
+  if(txt){
+   clip.appendChild(hlGroup(txt,gi));
+   clip.title='點一下放進上方試玩區';clip.setAttribute('role','button');clip.setAttribute('tabindex','0');
+   clip.addEventListener('click',function(){put(txt,true,true);});
+   clip.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();put(txt,true,true);}});
+  }else{clip.innerHTML=html;}
+  c.insertBefore(clip,c.querySelector('p'));
  });
  var q=document.getElementById('kwq'),qc=document.getElementById('kwc');
  q.addEventListener('input',function(){
@@ -2839,6 +2899,47 @@ function escH(x) { return String(x).replace(/&/g,'&amp;').replace(/</g,'&lt;').r
 function post(url, body) {
   return fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body: body === undefined ? undefined : JSON.stringify(body)}).then(function (r) { return r.json(); });
 }
+function hashStr(s) { var h = 7; for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return Math.abs(h); }
+function clampN(v, a, b) { return Math.max(a, Math.min(b, v)); }
+function stampSvg(domain, custom, dd, hs) {
+  var n = domain.length, up = escH(domain.toUpperCase()), word = custom ? 'GRANTED' : 'CLEARED';
+  var shape = n <= 12 ? (hs % 3 === 0 ? 'rect' : 'circle') : (n <= 22 ? (hs % 2 ? 'oval' : 'rect') : 'rect');
+  var sub = custom ? ('GRANTED' + (dd ? ' · ' + dd : '')) : 'DEFAULT · CLEARED';
+  var mono = 'font-family="IBM Plex Mono,ui-monospace,monospace"';
+  if (shape === 'circle') {
+    var id = 'rp' + hs, txt = up + ' · ' + word + ' · ', chars = txt.length, fs = 9.4;
+    var sp = Math.max(0, (272 - chars * fs * 0.6) / chars);
+    return '<svg viewBox="0 0 120 120" data-shape="circle"><g style="filter:url(#ink)"><circle cx="60" cy="60" r="53" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="60" cy="60" r="35" fill="none" stroke="currentColor" stroke-width="1.2"/><path id="' + id + '" d="M60,60 m-44,0 a44,44 0 1,1 88,0 a44,44 0 1,1 -88,0" fill="none"/><text ' + mono + ' font-size="' + fs + '" font-weight="700" letter-spacing="' + sp.toFixed(2) + '" fill="currentColor"><textPath href="#' + id + '">' + txt + '</textPath></text><text x="60" y="' + (dd ? 62 : 68) + '" text-anchor="middle" font-family="Georgia,serif" font-size="26" font-weight="900" fill="currentColor">✓</text>' + (dd ? '<text x="60" y="80" text-anchor="middle" ' + mono + ' font-size="8" fill="currentColor">' + escH(dd) + '</text>' : '') + '</g></svg>';
+  }
+  var f2 = clampN(128 / (n * 0.6), 7.5, 13);
+  if (shape === 'oval') {
+    return '<svg viewBox="0 0 170 100" data-shape="oval"><g style="filter:url(#ink)"><ellipse cx="85" cy="50" rx="80" ry="42" fill="none" stroke="currentColor" stroke-width="3"/><ellipse cx="85" cy="50" rx="72" ry="34" fill="none" stroke="currentColor" stroke-width="1"/><text x="85" y="52" text-anchor="middle" ' + mono + ' font-size="' + f2.toFixed(1) + '" font-weight="700" fill="currentColor">' + escH(domain) + '</text><text x="85" y="67" text-anchor="middle" ' + mono + ' font-size="7.4" letter-spacing="1.2" fill="currentColor">' + escH(sub) + '</text></g></svg>';
+  }
+  var head = '<svg viewBox="0 0 170 82" data-shape="rect"><g style="filter:url(#ink)"><rect x="2" y="2" width="166" height="78" fill="none" stroke="currentColor" stroke-width="2.8"/><rect x="8" y="8" width="154" height="66" fill="none" stroke="currentColor" stroke-width="1"/>';
+  var subTxt = '<text x="85" y="%Y%" text-anchor="middle" ' + mono + ' font-size="7.4" letter-spacing="1.2" fill="currentColor">' + escH(sub) + '</text></g></svg>';
+  if (n > 24) {
+    var mid = n / 2, cut = -1, best = 1e9;
+    for (var i = 1; i < n - 1; i++) { if (domain.charAt(i) === '.' && Math.abs(i - mid) < best) { best = Math.abs(i - mid); cut = i + 1; } }
+    if (cut < 0) cut = Math.ceil(mid);
+    var l1 = domain.slice(0, cut), l2 = domain.slice(cut), f4 = clampN(144 / (Math.max(l1.length, l2.length) * 0.6), 7.5, 12);
+    return head + '<text x="85" y="33" text-anchor="middle" ' + mono + ' font-size="' + f4.toFixed(1) + '" font-weight="700" fill="currentColor">' + escH(l1) + '</text><text x="85" y="48" text-anchor="middle" ' + mono + ' font-size="' + f4.toFixed(1) + '" font-weight="700" fill="currentColor">' + escH(l2) + '</text>' + subTxt.replace('%Y%', '64');
+  }
+  var f3 = clampN(144 / (n * 0.6), 7.5, 13);
+  return head + '<text x="85" y="40" text-anchor="middle" ' + mono + ' font-size="' + f3.toFixed(1) + '" font-weight="700" fill="currentColor">' + escH(domain) + '</text>' + subTxt.replace('%Y%', '58');
+}
+function decoratePasses() {
+  cards().forEach(function (c) {
+    if (c.getAttribute('data-st')) return;
+    c.setAttribute('data-st', '1');
+    const dn = c.querySelector('.dn').textContent.trim(), custom = c.classList.contains('custom'), hs = hashStr(dn);
+    const m = /([0-9]{4})-([0-9]{2})-([0-9]{2})/.exec((c.querySelector('.dt') || {}).textContent || '');
+    const w = document.createElement('span'); w.className = 'stamp-svg'; w.setAttribute('aria-hidden', 'true');
+    w.innerHTML = stampSvg(dn, custom, m ? m[2] + '.' + m[3] : '', hs);
+    c.insertBefore(w, c.firstChild);
+    c.style.setProperty('--r', ((hs % 19) - 9) + 'deg'); c.style.setProperty('--j', (hs % 9) - 4);
+    c.title = dn + (custom ? '（你發放的通行）' : '（預設通行）');
+  });
+}
 function cards() { return Array.prototype.slice.call(document.querySelectorAll('.cards .pass')); }
 function findCard(domain) { return cards().filter(function (c) { return c.querySelector('.dn').textContent === domain; })[0]; }
 function setCount() {
@@ -2854,6 +2955,7 @@ function refreshList() {
     if (!nc || !cur) throw new Error('no list');
     const old = {}; cards().forEach(function (c) { old[c.querySelector('.dn').textContent] = 1; });
     cur.innerHTML = nc.innerHTML;
+    decoratePasses();
     cards().forEach(function (c) { if (!old[c.querySelector('.dn').textContent]) c.classList.add('new'); });
     hidePending();
     WL = cards().filter(function (c) { return c.style.display !== 'none'; }).map(function (c) { return c.querySelector('.dn').textContent; });
@@ -2943,11 +3045,13 @@ document.addEventListener('DOMContentLoaded', function () {
   const ci = document.getElementById('check-input');
   ci.addEventListener('keydown', function (e) { if (e.key === 'Enter') { clearTimeout(chkTimer); checkSender(); } });
   ci.addEventListener('input', function () { clearTimeout(chkTimer); chkTimer = setTimeout(function () { checkSender(); }, 350); });
+  decoratePasses();
   buildChips();
   checkSender('no-reply@accounts.google.com');
 });
 </script>
 <div class="hdr"><div class="hdr-left"><a href="/">phishing-detector</a></div><div class="hdr-nav"><a href="/rules">偵測規則</a><a href="/whitelist">白名單</a><a href="/history">案件簿</a><a href="/paste">貼信送檢</a></div></div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><filter id="ink"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="4" result="t"/><feColorMatrix in="t" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -2.4 2.0" result="m"/><feComposite in="SourceGraphic" in2="m" operator="in"/></filter></defs></svg>
 <div class="dz dz-wide dz-split">
   <aside class="dz-side">
 <div class="bl">
