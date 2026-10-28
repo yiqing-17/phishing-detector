@@ -695,6 +695,38 @@ main.ew{margin:3.5rem auto;padding:3rem 2.4rem 2.4rem;width:calc(100% - 2.5rem)}
  .dz-split .dz-main>.cards{grid-column:2;grid-row:2;grid-template-columns:repeat(auto-fill,minmax(14rem,1fr))}
 }
 @media(max-width:999px){.dz-wide>.idx{margin:1rem 1.25rem 0;display:block}}
+/* 三頁標題帶（規則／白名單／案件簿）：墨黑底 */
+.dz-wide>.dz-side{background:#141414;color:#f1f1f1}
+.dz-wide>.dz-side .ftab{color:#f1f1f1}
+.dz-wide>.dz-side .pg-title{color:#f1f1f1}
+.dz-wide>.dz-side .pg-title .hl{background:var(--hl);color:#141414;padding:.02em .18em}
+.dz-wide>.dz-side .pg-sub{color:#d0d0d0}
+.dz-wide>.dz-side .nums{display:block;background:none;border:0}
+.dz-wide>.dz-side .nums>div{position:relative;display:grid;grid-template-columns:3.6rem minmax(0,1fr) 38%;align-items:center;column-gap:.9rem;padding:.55rem 0;border-top:1px solid #5f5f5f;background:none}
+.dz-wide>.dz-side .nums b{color:var(--hl);font-size:1.75rem;line-height:1}
+.dz-wide>.dz-side .nums span{color:#d0d0d0;grid-column:2}
+.dz-wide>.dz-side .nums>div:not([data-bar]) span{grid-column:2 / -1}
+.dz-wide>.dz-side .nums>div.hb::before,.dz-wide>.dz-side .nums>div.hb::after{content:"";position:absolute;right:0;top:50%;width:38%;height:6px;margin-top:-3px}
+.dz-wide>.dz-side .nums>div.hb::before{background:#3a3a3a}
+.dz-wide>.dz-side .nums>div.hb::after{background:var(--bc,#ffb6d5);transform:scaleX(var(--p,0));transform-origin:left}
+.dz-wide>.dz-side .nums>div:has(b[style*="c8321e"]){--bc:#ff8a78}
+.dz-wide>.dz-side .nums>div:has(b[style*="a8650f"]){--bc:#ffb25c}
+/* 統計列入場（播放型）：預設可見，列先逐列登錄，條再粗線描出 */
+.dz-wide>.dz-side .nums>div.in{animation:rowIn .42s ease backwards;animation-delay:calc(var(--ni,0) * .09s)}
+.dz-wide>.dz-side .nums>div.in::after{animation:barDraw .6s cubic-bezier(.3,.7,.3,1) backwards;animation-delay:calc(var(--ni,0) * .09s + .35s)}
+@media (prefers-reduced-motion: reduce){.dz-wide>.dz-side .nums>div.in,.dz-wide>.dz-side .nums>div.in::after{animation:none}}
+.dz-wide>.dz-side .lb{color:#f1f1f1}
+.dz-wide>.dz-side .side-form input{border-color:#f1f1f1}
+body .dz-wide>.dz-side .add-btn{background:var(--hl);color:#141414;border-color:var(--hl)}
+body .dz-wide>.dz-side .add-btn:hover{background:#f1f1f1;border-color:#f1f1f1}
+.dz-wide>.dz-side .rst{color:#f1f1f1;border-color:#f1f1f1}
+.dz-wide>.dz-side .rst:hover{background:var(--hl);color:#141414;border-color:var(--hl)}
+.dz-wide>.dz-side .nums b[style*="c8321e"]{color:#ff8a78!important}
+.dz-wide>.dz-side .nums b[style*="a8650f"]{color:#ffb25c!important}
+.dz-wide>.dz-side .spark{color:#d0d0d0}
+.dz-wide>.dz-side .spark .ax{stroke:#d0d0d0}
+.dz-wide>.dz-side .spark .area{fill:rgba(255,138,120,.18)}
+.dz-wide>.dz-side .spark .ln{stroke:#ff8a78}
 /* 記錄頁：熱度格是主視覺 */
 .heat .hg{display:grid;grid-template-columns:repeat(auto-fill,minmax(3.2rem,4.6rem));gap:.45rem}
 .heat .hc{width:auto;height:3.6rem}
@@ -924,6 +956,19 @@ document.addEventListener('DOMContentLoaded',function(){
     });
   }
   PD.arm=arm;
+  /* 標題帶統計列的比例條：max＝同組最大值為滿；share＝占「郵件總數」的比例（須在數字滾動歸零之前讀值） */
+  all('.dz-wide>.dz-side .nums').forEach(function(box){
+    var val=function(d){var b=d.querySelector('b');return b?(parseInt(b.textContent,10)||0):0;};
+    var rows=all('div[data-bar]',box),tot=box.querySelector('div[data-role="total"]'),mx=1,tv=tot?val(tot):0;
+    rows.forEach(function(r){if(r.getAttribute('data-bar')==='max')mx=Math.max(mx,val(r));});
+    rows.forEach(function(r){
+      var v=val(r),den=r.getAttribute('data-bar')==='share'?tv:mx;
+      if(!den)return;
+      r.style.setProperty('--p',Math.min(1,Math.max(v?0.04:0,v/den)).toFixed(3));
+      r.classList.add('hb');
+    });
+  });
+  all('.dz-wide>.dz-side .nums>div').forEach(function(r,i){r.style.setProperty('--ni',i);r.classList.add('in');});
   arm('.dz-main .sh');arm('.dz-main .cards .card');arm('.dz-main .led .lr');
   /* 側欄數字滾動 */
   all('.nums b').forEach(function(b){
@@ -2490,9 +2535,9 @@ HISTORY_HTML = COMMON_CSS + """
     {% if history %}
     <div class="nums">
       <div><b>{{ history|length }}</b><span>掃描次數</span></div>
-      <div><b>{{ history|sum(attribute=2) }}</b><span>郵件總數</span></div>
-      <div><b style="color:#c8321e">{{ history|sum(attribute=3) }}</b><span>高風險</span></div>
-      <div><b style="color:#a8650f">{{ history|sum(attribute=4) }}</b><span>中風險</span></div>
+      <div data-role="total"><b>{{ history|sum(attribute=2) }}</b><span>郵件總數</span></div>
+      <div data-bar="share"><b style="color:#c8321e">{{ history|sum(attribute=3) }}</b><span>高風險</span></div>
+      <div data-bar="share"><b style="color:#a8650f">{{ history|sum(attribute=4) }}</b><span>中風險</span></div>
     </div>
     <div class="spark" id="spark"></div>
  {% endif %}
@@ -2648,6 +2693,13 @@ RULES_HTML = COMMON_CSS + """
 .hits li[data-g] span::before{content:"";display:inline-block;width:.65rem;height:.65rem;margin-right:.45rem;border:1px solid #141414;background:#ffc3dc}
 .hits li[data-g="1"] span::before{background:#ffe58a}.hits li[data-g="2"] span::before{background:#bfe0ff}.hits li[data-g="3"] span::before{background:#c5ecd2}
 @media (prefers-reduced-motion: reduce){.card.open .ex{animation:none}}
+/* 結構規則（R5/R6、U、H）標題帶分組色：只有顏色，沿用詞庫四色 */
+:is(#kwcards,#url + .cards,#html + .cards) .card[data-cg="0"]{--cc:#ffb6d5}
+:is(#kwcards,#url + .cards,#html + .cards) .card[data-cg="1"]{--cc:#ffe58a}
+:is(#kwcards,#url + .cards,#html + .cards) .card[data-cg="2"]{--cc:#bfe0ff}
+:is(#kwcards,#url + .cards,#html + .cards) .card[data-cg="3"]{--cc:#c5ecd2}
+.card[data-cg="0"] .clip mark{background:#ffc3dc}.card[data-cg="1"] .clip mark{background:#ffe58a}.card[data-cg="2"] .clip mark{background:#bfe0ff}.card[data-cg="3"] .clip mark{background:#c5ecd2}
+.card[data-cg="1"] .kws span{background:#ffe58a}.card[data-cg="2"] .kws span{background:#bfe0ff}.card[data-cg="3"] .kws span{background:#c5ecd2}
 
 
 </style>
@@ -2661,9 +2713,9 @@ RULES_HTML = COMMON_CSS + """
 </div>
 <div class="br">
     <div class="nums">
-      <div><b>{{ kw_total }}</b><span>關鍵字（4 類）</span></div>
-      <div><b>{{ url_items|length }}</b><span>URL 結構規則</span></div>
-      <div><b>{{ html_items|length }}</b><span>HTML 結構規則</span></div>
+      <div data-bar="max"><b>{{ kw_total }}</b><span>關鍵字（4 類）</span></div>
+      <div data-bar="max"><b>{{ url_items|length }}</b><span>URL 結構規則</span></div>
+      <div data-bar="max"><b>{{ html_items|length }}</b><span>HTML 結構規則</span></div>
       <div><b>{{ whitelist_count }}</b><span>白名單網域</span></div>
     </div>
   
@@ -2809,11 +2861,13 @@ document.addEventListener('DOMContentLoaded',function(){
   H6:'&lt;input <mark>type="password"</mark>&gt;',
   H7:'Your <mark>Microsoft</mark> account needs attention.'
  };
+ var CG={R5:2,R6:2,U1:2,U2:1,U3:2,U4:2,U5:1,U6:2,U7:1,U8:0,H1:2,H2:1,H3:1,H4:1,H5:0,H6:0,H7:3};
  var cards=PD.all('#kwcards .card');
  PD.all('.dz-main .cards .card').forEach(function(c){
   var rid=(c.querySelector('.rid')||{}).textContent,gi=-1;
   G.forEach(function(g,k){if(g[0]===rid)gi=k;});
   c.setAttribute('data-gi',gi);
+  if(CG[rid]!==undefined)c.setAttribute('data-cg',CG[rid]);
   PD.all('.kws span',c).forEach(function(s){
    if(gi<0)return;
    s.setAttribute('role','button');s.setAttribute('tabindex','0');s.title='點一下加入上方試玩區';
