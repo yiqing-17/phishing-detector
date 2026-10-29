@@ -1763,6 +1763,64 @@ mark.m[data-g="0"]{background:#ffc3dc}mark.m[data-g="1"]{background:#ffe58a}mark
 .dropmsg{position:absolute;inset:0;display:none;place-items:center;background:rgba(255,251,232,.94);font:600 14px var(--mono);z-index:2}
 .mail.drag{outline:3px dashed #ff6fae;outline-offset:4px}
 .mail.drag .dropmsg{display:grid}
+/* ── 送檢轉場（方案 A）：只在送出時建立，不影響原本表單 ── */
+.sx{position:fixed;inset:0;z-index:9000;display:grid;place-items:center;color:#f1f1f1;overflow:hidden}
+.sx-wipe{position:absolute;inset:0;background:#141414;clip-path:inset(0 100% 0 0);animation:sxaWipe .33s cubic-bezier(.7,0,.2,1) forwards}
+.sx-edge{position:absolute;top:0;bottom:0;left:0;width:6px;background:var(--hl);animation:sxaEdge .33s cubic-bezier(.7,0,.2,1) forwards}
+@keyframes sxaWipe{to{clip-path:inset(0)}}
+@keyframes sxaEdge{to{transform:translateX(100vw)}}
+.sx-live{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.sx-skip{position:absolute;top:1.2rem;right:1.4rem;z-index:3;font:600 12px var(--mono);letter-spacing:.08em;color:#f1f1f1;background:transparent;border:1px solid #f1f1f1;padding:.4rem .8rem;cursor:pointer;border-radius:0}
+.sx-skip:hover,.sx-skip:focus-visible{background:var(--hl);color:#141414;border-color:var(--hl);outline:0}
+.sx-lbl{position:absolute;top:1.3rem;left:1.5rem;z-index:3;display:flex;gap:.7rem;align-items:baseline;font:600 12px var(--mono);letter-spacing:.12em}
+.sx-lbl .no{background:var(--hl);color:#141414;padding:.05rem .45rem;font-weight:700}
+.sx-lbl .ct{font-style:normal;color:var(--hl)}
+.sx.pre .sx-lbl{visibility:hidden}
+.sx-stage{position:relative;z-index:2;width:min(620px,calc(100% - 2.4rem));display:grid;gap:1rem;justify-items:center}
+.sx .sx-letter{width:100%;margin:0;padding:1.1rem 1.4rem 1.2rem;color:#141414;animation:sxaIn .42s cubic-bezier(.2,.8,.2,1) .16s backwards}
+@keyframes sxaIn{from{transform:translateX(-18vw) rotate(-5deg)}}
+.sx-row{display:grid;grid-template-columns:4.2rem minmax(0,1fr);gap:.4rem;padding:.12rem 0;font:12px var(--mono)}
+.sx-row span{color:#6b6b6b;letter-spacing:.06em}
+.sx-row b{font-weight:600;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sx-body{position:relative;margin-top:.8rem;padding-top:.8rem;border-top:1px dashed #b5b5b5;font:14px/1.9 var(--sans);white-space:pre-wrap;word-break:break-word;display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;overflow:hidden}
+.sx-body mark{color:inherit;background-color:transparent;background-image:linear-gradient(var(--c,#ffc3dc),var(--c,#ffc3dc));background-repeat:no-repeat;background-size:100% 100%;padding:0 .08em;margin:0 -.08em}
+.sx-body mark[data-u]{background-image:linear-gradient(#ff6fae,#ff6fae);background-size:0 3px;background-position:0 100%;transition:background-size .35s ease}
+.sx.p3 .sx-body mark[data-u],.sx.p4 .sx-body mark[data-u]{background-size:100% 3px}
+.sx.pre .sx-body mark[data-g]{background-size:0 100%}
+.sx.p1 .sx-body mark[data-g]{animation:sxaInk .32s ease backwards;animation-delay:var(--d,0s)}
+@keyframes sxaInk{from{background-size:0 100%}}
+.sx-scan{position:absolute;left:-1rem;right:-1rem;top:0;height:4px;background:var(--hl);box-shadow:0 0 0 1px #141414;visibility:hidden;z-index:2}
+.sx.p1 .sx-scan{visibility:visible;animation:sxaScan .52s linear forwards}
+.sx.p2 .sx-scan{display:none}
+@keyframes sxaScan{from{transform:translateY(0)}to{transform:translateY(var(--h,200px))}}
+.sx-bar{width:100%;height:4px;background:#3a3a3a;visibility:hidden}
+.sx.p2 .sx-bar{visibility:visible}
+.sx-bar i{display:block;height:100%;background:var(--hl);transform-origin:left;transform:scaleX(0)}
+.sx.p2 .sx-bar i{animation:sxaBar .38s linear forwards}
+@keyframes sxaBar{to{transform:scaleX(1)}}
+.sx-doms{display:flex;gap:.5rem;flex-wrap:wrap;justify-content:center;min-height:1.6rem;font:600 12px var(--mono)}
+.sx-doms span{background:var(--hl);color:#141414;padding:.1rem .55rem;animation:sxaChip .25s ease backwards}
+@keyframes sxaChip{from{clip-path:inset(0 100% 0 0)}}
+.sx-sq{display:flex;gap:.4rem;visibility:hidden}
+.sx.p4 .sx-sq{visibility:visible}
+.sx-sq i{width:26px;height:12px;border:1px solid #f1f1f1;background:transparent}
+.sx.p4 .sx-sq i:nth-child(-n+3){background:var(--hl);border-color:var(--hl);animation:sxaSq .2s ease backwards}
+.sx.p4 .sx-sq i:nth-child(2){animation-delay:.08s}
+.sx.p4 .sx-sq i:nth-child(3){animation-delay:.16s}
+@keyframes sxaSq{from{background-color:transparent}}
+.sx-sq i.w{animation:sxaPulse .7s ease-in-out infinite alternate}
+@keyframes sxaPulse{to{background:var(--hl);border-color:var(--hl)}}
+.sx-sq i.ok{background:var(--hl);border-color:var(--hl);animation:none}
+.sx-stamp{position:absolute;right:-.9rem;bottom:-1.2rem;z-index:3;font:900 1.9rem var(--serif);letter-spacing:.06em;color:#141414;background:var(--hl);border:3px solid #141414;padding:.1rem .7rem;transform:rotate(-9deg);visibility:hidden;line-height:1.2}
+.sx-stamp small{display:block;font:600 10px var(--mono);letter-spacing:.2em;text-align:center}
+.sx.done .sx-stamp{visibility:visible;animation:sxaStamp .28s cubic-bezier(.2,1.4,.4,1) backwards}
+@keyframes sxaStamp{from{transform:rotate(-9deg) scale(1.9)}}
+.sx.out .sx-letter{animation:sxaOut .36s cubic-bezier(.6,0,.9,.4) forwards}
+@keyframes sxaOut{to{transform:translate(20vw,-16vh) rotate(6deg)}}
+.sx.out .sx-bar,.sx.out .sx-doms,.sx.out .sx-sq{visibility:hidden}
+.sx.fast *{animation-duration:.01s!important;animation-delay:0s!important;transition-duration:.01s!important}
+@media (max-width:640px){.sx-skip{top:.8rem;right:.8rem}.sx-lbl{top:.9rem;left:1rem}.sx-stage{width:calc(100% - 2.2rem)}.sx-stamp{font-size:1.5rem;right:-.5rem}}
+@media (prefers-reduced-motion: reduce){.sx *{animation:none!important;transition:none!important}}
 .emlbtn{display:inline-flex;align-items:center;cursor:pointer;padding:.8rem 1rem;font-size:13px}
 .submit-btn.busy{background:var(--hl);color:#141414;position:relative;overflow:hidden;pointer-events:none}
 .submit-btn.busy::after{content:"";position:absolute;left:-40%;top:0;bottom:0;width:40%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.75),transparent);animation:sweep2 .9s linear infinite}
@@ -1897,6 +1955,142 @@ document.addEventListener('DOMContentLoaded', function () {
  window.addEventListener('pageshow', function () { sb.classList.remove('busy'); sb.disabled = false; sb.textContent = orig; });
 });
 </script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const form = document.querySelector('form[action="/paste_analyze"]');
+  if (!form || !window.fetch || !window.FormData || !window.Promise || typeof WORDS === 'undefined') return;
+  const T = { wipe: 330, p1: 520, p2: 380, p3: 420, p4: 360, stamp: 280, hold: 300, out: 360 };
+  const NAMES = ['', '規則引擎', 'ML 模型', '連結還原', 'AI 語意判讀'];
+  let busy = false, st = null, ov = null;
+  function host(u) { try { return new URL(u).hostname; } catch (e) { return ''; } }
+  function scanText(t) {
+    const low = t.toLowerCase(), frag = document.createDocumentFragment();
+    let buf = '', i = 0, k, end, found, el, kw = 0;
+    const urls = [];
+    function flush() { if (buf) { frag.appendChild(document.createTextNode(buf)); buf = ''; } }
+    while (i < t.length) {
+      if (low.startsWith('http://', i) || low.startsWith('https://', i)) {
+        end = i; while (end < t.length && !isSp(t[end])) end++;
+        flush(); el = document.createElement('mark'); el.setAttribute('data-u', '1'); el.textContent = t.slice(i, end); frag.appendChild(el); urls.push(t.slice(i, end)); i = end; continue;
+      }
+      found = null;
+      for (k = 0; k < WORDS.length; k++) { if (PD.kwAt(low, i, WORDS[k][0])) { found = WORDS[k]; break; } }
+      if (found) {
+        flush(); el = document.createElement('mark'); el.setAttribute('data-g', found[1]); el.style.setProperty('--c', PCOL[found[1]] || PCOL[0]);
+        el.textContent = t.slice(i, i + found[0].length); frag.appendChild(el); kw++; i += found[0].length;
+      } else { buf += t[i]; i++; }
+    }
+    flush();
+    return { frag: frag, kw: kw, urls: urls };
+  }
+  function wait(ms) {
+    return new Promise(function (res) {
+      if (!st || st.skip) { res(); return; }
+      const id = setTimeout(fin, ms);
+      function fin() { clearTimeout(id); res(); }
+      st.res.push(fin);
+    });
+  }
+  function skipNow() { if (!st || st.skip) return; st.skip = true; if (ov) ov.classList.add('fast'); st.res.splice(0).forEach(function (f) { f(); }); }
+  function say(s) { if (ov) ov.querySelector('.sx-live').textContent = s; }
+  function setCt(s) { if (ov) ov.querySelector('.sx-lbl .ct').textContent = s; }
+  function phase(n, ct) {
+    ov.querySelector('.sx-lbl .no').textContent = '0' + n;
+    ov.querySelector('.sx-lbl .tx').textContent = NAMES[n];
+    setCt(ct || '');
+    ov.classList.add('p' + n);
+    say('第 ' + n + ' 層　' + NAMES[n] + (ct ? '，' + ct : ''));
+  }
+  function lock(on) {
+    ['.hdr', '.dz'].forEach(function (s) { const e = document.querySelector(s); if (e) { if (on) e.setAttribute('inert', ''); else e.removeAttribute('inert'); } });
+  }
+  function cleanup() { if (ov && ov.parentNode) ov.parentNode.removeChild(ov); ov = null; st = null; busy = false; lock(false); }
+  function build(sender, subject) {
+    const o = document.createElement('div');
+    o.className = 'sx pre';
+    o.setAttribute('role', 'dialog'); o.setAttribute('aria-modal', 'true'); o.setAttribute('aria-label', '送檢中');
+    o.innerHTML = '<div class="sx-wipe"></div><div class="sx-edge"></div><div class="sx-live" aria-live="polite"></div>'
+      + '<button type="button" class="sx-skip">略過　Esc</button>'
+      + '<div class="sx-lbl"><b class="no"></b><span class="tx"></span><em class="ct"></em></div>'
+      + '<div class="sx-stage"><div class="mail sx-letter"><div class="lh"></div>'
+      + '<div class="sx-row"><span>寄件者</span><b class="sx-from"></b></div>'
+      + '<div class="sx-row"><span>主　旨</span><b class="sx-subj"></b></div>'
+      + '<div class="sx-body"></div><div class="sx-scan"></div><div class="sx-stamp">已送檢<small>FILED</small></div></div>'
+      + '<div class="sx-bar"><i></i></div><div class="sx-doms"></div><div class="sx-sq"><i></i><i></i><i></i><i></i></div></div>';
+    const m = /@([^ >]+)/.exec(sender);
+    o.querySelector('.lh').textContent = m ? m[1] : '待檢驗郵件';
+    o.querySelector('.sx-from').textContent = sender || '(未提供寄件者)';
+    o.querySelector('.sx-subj').textContent = subject || '(無主旨)';
+    o.querySelector('.sx-skip').addEventListener('click', skipNow);
+    return o;
+  }
+  async function play(body, html) {
+    const letter = ov.querySelector('.sx-letter'), bd = ov.querySelector('.sx-body');
+    const res = scanText(body.slice(0, 4000));
+    bd.appendChild(res.frag);
+    const doms = [];
+    function addDom(u) { const d = host(u); if (d && doms.indexOf(d) < 0) doms.push(d); }
+    res.urls.forEach(addDom);
+    if (html.trim()) {
+      try { new DOMParser().parseFromString(html, 'text/html').querySelectorAll('a[href]').forEach(function (a) { const h = a.getAttribute('href') || ''; if (h.indexOf('http') === 0) addDom(h); }); } catch (e) {}
+    }
+    await wait(T.wipe);
+    const H = Math.max(letter.offsetHeight, 1);
+    ov.querySelector('.sx-scan').style.setProperty('--h', H + 'px');
+    bd.querySelectorAll('mark[data-g]').forEach(function (m) {
+      const y = Math.max(0, Math.min(1, (bd.offsetTop + m.offsetTop) / H));
+      m.style.setProperty('--d', (y * T.p1 * 0.0009).toFixed(2) + 's');
+    });
+    ov.classList.remove('pre');
+    phase(1, '命中 ' + res.kw);
+    PD.tween(0, res.kw, T.p1 * 0.9, function (x) { if (ov && ov.classList.contains('p1') && !ov.classList.contains('p2')) setCt('命中 ' + Math.round(x)); });
+    await wait(T.p1);
+    phase(2);
+    await wait(T.p2);
+    phase(3, doms.length ? '連結 ' + doms.length : '未發現連結');
+    const dm = ov.querySelector('.sx-doms');
+    doms.slice(0, 3).forEach(function (d, i) { const sp = document.createElement('span'); sp.textContent = d; sp.style.animationDelay = (i * 0.07) + 's'; dm.appendChild(sp); });
+    await wait(T.p3);
+    phase(4);
+    await wait(T.p4);
+    if (st && !st.settled) { setCt('等待回覆…'); ov.querySelector('.sx-sq i:nth-child(4)').classList.add('w'); }
+  }
+  async function finish(r) {
+    const ok = r.redirected && /[/]result[/]/.test(r.url);
+    if (!ok) { cleanup(); document.open(); document.write(r.text); document.close(); return; }
+    const q = ov.querySelector('.sx-sq i:nth-child(4)');
+    q.classList.remove('w'); q.classList.add('ok');
+    setCt('');
+    ov.classList.add('done'); say('已送檢，前往結果頁');
+    await wait(T.stamp + T.hold);
+    ov.classList.add('out');
+    await wait(T.out);
+    try { sessionStorage.setItem('pdSx', '1'); } catch (e) {}
+    location.href = r.url;
+  }
+  form.addEventListener('submit', function (e) {
+    if (PD.RM) return;
+    if (busy) { e.preventDefault(); return; }
+    const bodyEl = document.getElementById('body-input');
+    if (!bodyEl.value.trim()) return;
+    e.preventDefault(); busy = true;
+    const sender = document.getElementById('sender-input').value.trim(), subject = document.getElementById('subject-input').value.trim();
+    const html = document.getElementById('html-input').value;
+    st = { skip: false, res: [], settled: false };
+    ov = build(sender, subject);
+    document.body.appendChild(ov); lock(true);
+    ov.querySelector('.sx-skip').focus();
+    say('開始送檢');
+    const respP = fetch('/paste_analyze', { method: 'POST', body: new FormData(form), credentials: 'same-origin' })
+      .then(function (r) { return r.text().then(function (txt) { if (st) st.settled = true; return { redirected: r.redirected, url: r.url, text: txt }; }); });
+    let played;
+    try { played = play(bodyEl.value, html); } catch (err) { played = Promise.resolve(); }
+    Promise.all([played.catch(function () {}), respP]).then(function (a) { return finish(a[1]); }).catch(function () { cleanup(); form.submit(); });
+  });
+  document.addEventListener('keydown', function (e) { if (busy && e.key === 'Escape') skipNow(); });
+  window.addEventListener('pageshow', function (ev) { if (ev.persisted) cleanup(); });
+});
+</script>
 <div class="hdr"><div class="hdr-left"><a href="/">phishing-detector</a></div><div class="hdr-nav"><a href="/rules">偵測規則</a><a href="/whitelist">白名單</a><a href="/history">案件簿</a><a href="/paste">貼信送檢</a></div></div>
 <div class="dz dz-short">
   <aside class="dz-side">
@@ -1977,7 +2171,11 @@ def render_paste_page(sample_key='', error='', rule_keyword_groups=()):
 
 # ── 結果頁 HTML (修正點擊與高亮同步邏輯) ─────────────────────
 RESULT_HTML = COMMON_CSS + """
+<script>try{if(sessionStorage.getItem('pdSx')){sessionStorage.removeItem('pdSx');var d=document.documentElement;d.classList.add('sxin');setTimeout(function(){d.classList.remove('sxin');},1400);}}catch(e){}</script>
 <style>
+html.sxin::after{content:"";position:fixed;inset:0;z-index:9999;background:#141414;pointer-events:none;animation:sxaOutRes .5s cubic-bezier(.7,0,.2,1) .06s forwards}
+@keyframes sxaOutRes{from{clip-path:inset(0)}to{clip-path:inset(0 0 0 100%)}}
+@media (prefers-reduced-motion: reduce){html.sxin::after{display:none}}
 .dz-side .nums { grid-template-columns: repeat(3, 1fr); }
 .dz-side .nums b { font-size: 1.6rem; }
 .dz-side .nums span { font-size: 10.5px; }
@@ -2101,6 +2299,40 @@ mark.m::after { content: attr(data-n); position: relative; top: -.7em; margin-le
 .irn { padding: .9rem 1.1rem; border-top: 1px solid #141414; font-size: 12.5px; line-height: 1.8; color: #4a4a4a; background: #f1f1f1; }
 .irdl { display: flex; flex-wrap: wrap; gap: .6rem; padding: .9rem 1.1rem 1.1rem; border-top: 1px solid #141414; }
 @media (prefers-reduced-motion: reduce) { mark.m, .stamp-lg { animation: none; } }
+/* ── 調查台（方案 B）：信與四層合併，逐層聚光 ── */
+.ivg{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:1.6rem;align-items:start}
+.iv .mdoc{margin:0}
+.ivr{display:grid;gap:.8rem;position:sticky;top:1rem}
+.ivl{display:grid;gap:.5rem}
+.ivb{display:grid;grid-template-columns:1.6rem minmax(0,1fr) auto;align-items:center;gap:.5rem;text-align:left;padding:.7rem .8rem;border:0;border-left:4px solid transparent;background:#e6e6e6;color:#555;font:600 13px var(--sans);cursor:pointer;border-radius:0}
+.ivb b{display:grid;place-items:center;width:1.4rem;height:1.4rem;border-radius:50%;background:#141414;color:#f1f1f1;font:700 11px var(--mono)}
+.ivb .sc{font:700 15px var(--serif);color:#141414}
+.ivb:hover,.ivb.hot{background:#dadada}
+.ivb.on{background:var(--hl);color:#141414;border-left-color:#141414}
+.ivb:focus-visible{outline:2px solid #141414;outline-offset:2px}
+.ivd{min-height:9.2rem;padding:.9rem 1rem;background:#fff;border:1.5px solid #141414;font-size:13.5px;line-height:1.7;color:#333}
+.ivd .t{font:700 14px var(--sans);color:#141414;margin-bottom:.15rem}
+.ivd .m{font:12px var(--mono);color:#6b6b6b}
+.ivtag{display:none;position:absolute;top:.6rem;right:.8rem;z-index:2;background:var(--hl);color:#141414;font:700 11px var(--mono);padding:.1rem .5rem;letter-spacing:.08em}
+.iv[data-whole="1"] .ivtag{display:block}
+.iv[data-whole="1"] .mdoc{outline:3px solid var(--hl);outline-offset:-3px}
+.iv .mdoc dd,.iv .mdoc .mbody,.iv .mdoc mark.m{transition:color .25s ease,background-color .25s ease}
+.iv[data-spot="1"] .mdoc dd,.iv[data-spot="1"] .mdoc .mbody,.iv[data-spot="3"] .mdoc dd,.iv[data-spot="3"] .mdoc .mbody{color:#a3a3a3}
+.iv[data-spot="1"] mark.m:not([data-n="1"]),.iv[data-spot="3"] mark.m:not([data-n="3"]){background-image:none;background-color:#e9e9e9;color:#a3a3a3}
+.iv[data-spot="3"] mark.m[data-n="3"]{text-decoration:underline;text-decoration-color:#ff6fae;text-decoration-thickness:3px;text-underline-offset:.15em}
+.acc{margin-top:1.4rem}
+.acch{display:flex;align-items:baseline;gap:.8rem;flex-wrap:wrap;font:600 12px var(--mono);letter-spacing:.08em}
+.acch b{font:900 1.8rem var(--serif);letter-spacing:0;min-width:3.4rem}
+.acc.arm .acf{visibility:hidden}
+.acr{margin-left:auto;font:600 12px var(--mono);letter-spacing:.08em;border:1px solid #141414;background:transparent;color:#141414;padding:.3rem .7rem;cursor:pointer;border-radius:0}
+.acr:hover,.acr:focus-visible{background:var(--hl);outline:0}
+.atrk{position:relative;display:block;height:10px;background:#dcdcdc;margin:.5rem 0 .9rem}
+.atrk .as{position:absolute;top:0;bottom:0;background:var(--hl);border-left:2px solid #141414;transform-origin:left;transition:transform .55s cubic-bezier(.3,.7,.3,1)}
+.atrk.arm .as{transform:scaleX(0)}
+.atrk.arm .as.on{transform:scaleX(1)}
+.atrk .tk{position:absolute;top:-3px;bottom:-3px;width:1px;background:#141414;opacity:.5}
+@media (max-width:1180px){.ivg{grid-template-columns:1fr}.ivr{position:static}.ivl{grid-template-columns:repeat(4,minmax(0,1fr));gap:.35rem}.ivb{grid-template-columns:1fr;gap:.25rem;padding:.55rem .45rem;border-left:0;border-bottom:4px solid transparent;justify-items:start}.ivb.on{border-bottom-color:#141414}.ivb .nm{font-size:11px}}
+@media (prefers-reduced-motion: reduce){.atrk .as,.iv .mdoc dd,.iv .mdoc .mbody,.iv .mdoc mark.m{transition:none}}
 
 </style>
 <script>
@@ -2198,9 +2430,116 @@ function markup(text) {
   return { html: out, cnt: cnt };
 }
 
+/* ── 調查台（方案 B）：信與四層合併，逐層聚光；累計條用真實貢獻值 ── */
+let IVX = null;
+function ivBuild(d, sub, bd, H) {
+  const layers = d.layers || {}, order = ['rule', 'ml', 'html', 'llm'];
+  let btn = '';
+  order.forEach(function (key, n) {
+    const x = layers[key]; if (!x) return;
+    const scT = x.score == null ? '—' : Number(x.score).toFixed(0);
+    btn += '<button type="button" class="ivb" data-k="' + key + '" aria-pressed="false"><b>' + (n + 1) + '</b><span class="nm">' + escapeHtml(x.name) + '</span><span class="sc">' + scT + '</span></button>';
+  });
+  const rb = d.risk_breakdown || {}, comps = rb.components || [], fin = rb.rounded_final != null ? rb.rounded_final : d.risk_score;
+  let acc = '';
+  if (comps.length && rb.raw_total != null) {
+    let cum = 0, segs = '';
+    comps.forEach(function (c, i) { const w = Math.max(0, Number(c.contribution) || 0); segs += '<i class="as" data-i="' + i + '" style="left:' + cum.toFixed(2) + '%;width:' + w.toFixed(2) + '%"></i>'; cum += w; });
+    acc = '<div class="acc"><div class="acch"><span>累計風險分數</span><b class="acv">' + Number(rb.raw_total).toFixed(1) + '</b><span class="acf">→ 最終 ' + escapeHtml(String(fin)) + ' / 100</span><button type="button" class="acr">重播</button></div>' +
+      '<span class="atrk">' + segs + '<u class="tk" style="left:40%"></u><u class="tk" style="left:70%"></u></span>' +
+      comps.map(function (c) { return '<div class="brow"><span>' + escapeHtml(c.name) + '</span><span>' + Number(c.score).toFixed(1) + ' × ' + c.weight + '% = ' + Number(c.contribution).toFixed(1) + '</span></div>'; }).join('') +
+      '<div class="btot">公式計算值：' + Number(rb.raw_total).toFixed(1) + ' → 最終 ' + escapeHtml(String(fin)) + ' / 100</div></div>';
+  }
+  const fnote = d.fusion_formula ? '<div class="fnote">風險融合公式：' + escapeHtml(d.fusion_formula) + '。最終分數由系統固定公式計算，不直接採用單一模型結果。</div>' : '';
+  return H('調查台', '滑過或點選一層，信上對應處就會聚光；累計條依各層的真實貢獻累加。') +
+    '<div class="iv" data-spot="" data-whole=""><div class="ivg"><article class="mdoc"><dl><div><dt>寄件者</dt><dd>' + escapeHtml(d.sender) + '</dd></div><div><dt>主　旨</dt><dd>' + sub.html + '</dd></div></dl><div class="mbody">' + bd.html + '</div><span class="ivtag">整封信判斷</span></article>' +
+    '<div class="ivr"><div class="ivl">' + btn + '</div><div class="ivd" aria-live="polite"></div></div></div>' + acc + fnote + '</div>';
+}
+function initIV(panel, d) {
+  const iv = panel.querySelector('.iv'); if (!iv) return;
+  const layers = d.layers || {}, order = ['rule', 'ml', 'html', 'llm'];
+  const btns = Array.prototype.slice.call(iv.querySelectorAll('.ivb')), dbox = iv.querySelector('.ivd');
+  const rb = d.risk_breakdown || {}, comps = rb.components || [];
+  const acc = iv.querySelector('.acc'), trk = iv.querySelector('.atrk'), acv = iv.querySelector('.acv'), segs = iv.querySelectorAll('.as');
+  const compOf = {};
+  order.forEach(function (k) { const x = layers[k]; if (!x) return; comps.forEach(function (c, i) { if (c.name === x.name) compOf[k] = i; }); });
+  const seq = order.filter(function (k) { return layers[k]; });
+  const canHover = !!(window.matchMedia && window.matchMedia('(hover: hover)').matches);
+  let pinned = '', hover = '', timers = [], playing = false, tok = 0, touched = false;
+  function hint() { dbox.innerHTML = '<div class="t">調查台</div><div>滑過或點選一層，信上對應處就會聚光。ML 與 AI 判斷的是整封信，會把整封信框起來。</div>'; }
+  function detail(k) {
+    const x = layers[k]; if (!x) return;
+    const n = order.indexOf(k) + 1;
+    const scT = x.score == null ? '未提供分數' : Number(x.score).toFixed(0) + ' / 100';
+    const meta = (k === 'ml' && x.probability != null) ? '釣魚機率 ' + Number(x.probability).toFixed(1) + '%' : '融合權重 ' + Number(x.weight || 0).toFixed(1) + '%';
+    const ci = compOf[k], c = (ci != null) ? comps[ci] : null;
+    let where;
+    if (k === 'rule') { const m = iv.querySelectorAll('mark.m[data-n="1"]').length; where = m ? '信中標出 ' + m + ' 處關鍵字。' : '信中沒有可標示的關鍵字。'; }
+    else if (k === 'html') { const m = iv.querySelectorAll('mark.m[data-n="3"]').length; where = m ? '信中標出 ' + m + ' 個連結。' : '風險來自 HTML 原始碼，純文字內容沒有可標示處。'; }
+    else where = '針對整封信判斷，無法標示在單一詞上。';
+    dbox.innerHTML = '<div class="t">' + n + '　' + escapeHtml(x.name) + '　<span class="m">' + escapeHtml(scT) + '</span></div>' +
+      '<div>' + escapeHtml(x.status || '—') + '</div><div>' + escapeHtml(where) + '</div>' +
+      '<div class="m">' + escapeHtml(meta) + (c ? '　貢獻 ' + Number(c.contribution).toFixed(1) + '（' + Number(c.score).toFixed(1) + ' × ' + c.weight + '%）' : (x.score == null ? '　未計入總分' : '')) + '</div>';
+  }
+  function apply() {
+    const k = hover || pinned, n = k ? order.indexOf(k) + 1 : 0;
+    iv.setAttribute('data-spot', n ? String(n) : '');
+    iv.setAttribute('data-whole', (k === 'ml' || k === 'llm') ? '1' : '');
+    btns.forEach(function (b) { const bk = b.getAttribute('data-k'); b.classList.toggle('on', bk === k); b.setAttribute('aria-pressed', (bk === pinned && !playing) ? 'true' : 'false'); });
+    if (k) detail(k); else hint();
+  }
+  function stop() { tok++; timers.forEach(clearTimeout); timers = []; playing = false; }
+  function showFinal() {
+    if (!acc) return;
+    trk.classList.remove('arm'); acc.classList.remove('arm');
+    acv.textContent = Number(rb.raw_total).toFixed(1);
+  }
+  function interrupt() { touched = true; if (playing) { stop(); pinned = ''; showFinal(); } }
+  function play() {
+    stop(); playing = true; pinned = ''; hover = '';
+    const my = tok;
+    if (acc) { acc.classList.add('arm'); trk.classList.add('arm'); segs.forEach(function (s) { s.classList.remove('on'); }); acv.textContent = '0.0'; }
+    apply();
+    let i = 0, run = 0;
+    function step() {
+      if (my !== tok) return;
+      if (i >= seq.length) { playing = false; pinned = ''; apply(); showFinal(); return; }
+      const k = seq[i++]; pinned = k; apply();
+      const ci = compOf[k];
+      let gap = 700;
+      if (acc && ci != null && comps[ci]) {
+        gap = 950; segs[ci].classList.add('on');
+        const from = run; run += Math.max(0, Number(comps[ci].contribution) || 0);
+        PD.tween(from, run, 600, function (x) { if (my === tok) acv.textContent = x.toFixed(1); });
+      }
+      timers.push(setTimeout(step, gap));
+    }
+    step();
+  }
+  btns.forEach(function (b) {
+    const k = b.getAttribute('data-k');
+    if (canHover) {
+      b.addEventListener('mouseenter', function () { interrupt(); hover = k; apply(); });
+      b.addEventListener('mouseleave', function () { hover = ''; apply(); });
+      b.addEventListener('focus', function () { interrupt(); hover = k; apply(); });
+      b.addEventListener('blur', function () { hover = ''; apply(); });
+    }
+    b.addEventListener('click', function () { interrupt(); pinned = (pinned === k) ? '' : k; apply(); });
+  });
+  iv.querySelectorAll('mark.m').forEach(function (m) {
+    const k = order[Number(m.getAttribute('data-n')) - 1];
+    m.addEventListener('mouseenter', function () { btns.forEach(function (b) { b.classList.toggle('hot', b.getAttribute('data-k') === k); }); });
+    m.addEventListener('mouseleave', function () { btns.forEach(function (b) { b.classList.remove('hot'); }); });
+  });
+  const rp = iv.querySelector('.acr'); if (rp) rp.addEventListener('click', play);
+  IVX = { stop: stop };
+  hint();
+  if (acc && !PD.RM) PD.onView([iv.querySelector('.ivg')], function () { timers.push(setTimeout(function () { if (!touched) play(); }, 350)); }, 0.6);
+}
 function showDetail(idx, element) {
   const d = emailData[idx];
   if (!d) return;
+  if (IVX) IVX.stop();
   document.querySelectorAll('.email-item').forEach(function (el) { el.classList.remove('active'); });
   if (element) element.classList.add('active');
   else { const t = document.querySelector('.email-item[data-idx="' + idx + '"]'); if (t) t.classList.add('active'); }
@@ -2231,6 +2570,7 @@ function showDetail(idx, element) {
   html += '<div class="sh" style="margin-top:2.2rem;display:none"></div>';
 
   /* 2 原信批註 */
+  const useIV = !!(d.body && Object.keys(layers).length);
   let hasDoc = false;
   if (d.body) {
     hasDoc = true;
@@ -2243,7 +2583,7 @@ function showDetail(idx, element) {
       const line = x.status || ((x.findings && x.findings[0]) || '—');
       notes += '<li data-n="' + (n + 1) + '"><b>' + (n + 1) + '</b><span>' + escapeHtml(x.name) + '：' + escapeHtml(String(line)) + where + '</span></li>';
     });
-    html += H('原信批註', '標記為規則引擎關鍵字與連結的比對結果；ML 與 AI 針對整封信判斷，無法標示在單一詞上。') +
+    html += useIV ? ivBuild(d, sub, bd, H) : H('原信批註', '標記為規則引擎關鍵字與連結的比對結果；ML 與 AI 針對整封信判斷，無法標示在單一詞上。') +
       '<article class="mdoc"><dl><div><dt>寄件者</dt><dd>' + escapeHtml(d.sender) + '</dd></div><div><dt>主　旨</dt><dd>' + sub.html + '</dd></div></dl>' +
       '<div class="mbody">' + bd.html + '</div>' + (notes ? '<ul class="notes">' + notes + '</ul>' : '') + '</article>';
   }
@@ -2260,7 +2600,7 @@ function showDetail(idx, element) {
       '<div class="ls">' + escapeHtml(x.status || '—') + '</div>' +
       '<div class="lm"><span>' + escapeHtml(meta) + '</span><span>' + (key === 'llm' && x.score == null ? '未提供分數' : '分析完成') + '</span></div></div>';
   });
-  if (layerHtml) {
+  if (layerHtml && !useIV) {
     html += H('四層檢驗', '四層各自獨立打分，再依固定權重融合成最終分數。') + '<div class="lgrid">' + layerHtml + '</div>';
     if (d.fusion_formula) html += '<div class="fnote">風險融合公式：' + escapeHtml(d.fusion_formula) + '。最終分數由系統固定公式計算，不直接採用單一模型結果。</div>';
     if (d.risk_breakdown && d.risk_breakdown.components) {
@@ -2344,6 +2684,7 @@ function showDetail(idx, element) {
   function hotLc(n, on) { panel.querySelectorAll('.lc').forEach(function (lc) { const b = lc.querySelector('.ln b'); if (b && b.textContent === n) lc.classList.toggle('hot', on); }); }
   panel.querySelectorAll('mark.m').forEach(function (m) { const n = m.getAttribute('data-n'); m.addEventListener('mouseenter', function () { hotLc(n, true); }); m.addEventListener('mouseleave', function () { hotLc(n, false); }); });
   panel.querySelectorAll('.notes li').forEach(function (li) { const n = li.getAttribute('data-n'); li.addEventListener('mouseenter', function () { hotLc(n, true); }); li.addEventListener('mouseleave', function () { hotLc(n, false); }); });
+  initIV(panel, d);
   panel.querySelectorAll('.cn').forEach(function (b) { b.addEventListener('click', function () { go(Number(b.getAttribute('data-d'))); }); });
   const md = panel.querySelector('.mdoc'); if (md && !PD.RM) md.classList.add(navDir < 0 ? 'pin-l' : 'pin-r');
   PD.arm('#right-panel .sh');
