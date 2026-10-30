@@ -7,6 +7,12 @@ COMMON_CSS = """
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#141414">
 <meta name="description" content="結合規則、機器學習、URL／HTML 解析與 AI 語意判讀，找出可疑信件。">
+<script>try{var _t=+sessionStorage.getItem('pdSx');sessionStorage.removeItem('pdSx');if(_t&&Date.now()-_t<5000){var _d=document.documentElement;_d.classList.add('sxin');setTimeout(function(){_d.classList.remove('sxin');},1400);}}catch(e){}</script>
+<style>
+html.sxin::after{content:"";position:fixed;inset:0;z-index:9999;background:#141414;pointer-events:none;animation:sxaOutRes .5s cubic-bezier(.7,0,.2,1) .06s forwards}
+@keyframes sxaOutRes{from{clip-path:inset(0)}to{clip-path:inset(0 0 0 100%)}}
+@media (prefers-reduced-motion: reduce){html.sxin::after{display:none}}
+</style>
 <meta property="og:type" content="website">
 <meta property="og:title" content="phishing-detector">
 <meta property="og:description" content="授權 Gmail 或直接貼信，四層分析逐層比對，找出可疑信件。">
@@ -463,7 +469,7 @@ document.addEventListener('DOMContentLoaded',function(){
     var t2=ev.target,tn=t2&&t2.tagName;
     if(tn==='INPUT'||tn==='TEXTAREA'||tn==='SELECT'||(t2&&t2.isContentEditable))return;
     var h=keys[(ev.key||'').toLowerCase()];
-    if(h)location.href=h;
+    if(h){if(window.PDX)PDX.key(ev.key,h);else location.href=h;}
   });
 });
 </script>
@@ -993,6 +999,112 @@ document.addEventListener('DOMContentLoaded',function(){
   var ft=document.querySelector('footer.f');
   if(ft)onView([ft],function(){ft.classList.add('in');},.3);
 });
+})();
+</script>
+<style>
+/* ── 全站質感層（方案 C）：換頁黑幕、游標環、按壓蓋章、焦點外框 ── */
+.pdx{position:fixed;inset:0;z-index:9500}
+.pdx-w{position:absolute;inset:0;background:#141414;clip-path:inset(0 100% 0 0);animation:pdxWipe .25s cubic-bezier(.7,0,.2,1) forwards}
+.pdx-e{position:absolute;top:0;bottom:0;left:0;width:6px;background:var(--hl,#ffb6d5);animation:pdxEdge .25s cubic-bezier(.7,0,.2,1) forwards}
+@keyframes pdxWipe{to{clip-path:inset(0)}}
+@keyframes pdxEdge{to{transform:translateX(100vw)}}
+.pdc{position:fixed;left:0;top:0;width:18px;height:18px;margin:-9px 0 0 -9px;border:2px solid #141414;border-radius:50%;box-shadow:0 0 0 1px #fff;pointer-events:none;z-index:9600;opacity:0;transition:width .18s ease,height .18s ease,margin .18s ease,background-color .18s ease,opacity .15s ease;will-change:transform}
+.pdc.on{opacity:1}
+.pdc.hov{width:34px;height:34px;margin:-17px 0 0 -17px;background:rgba(255,182,213,.55)}
+.pdc.dn{width:12px;height:12px;margin:-6px 0 0 -6px;background:#141414}
+.pdc.txt{opacity:0}
+.btn,.submit-btn,.add-btn,.rst,.acr,.ivb{position:relative;overflow:hidden;isolation:isolate}
+.pdp{transform:translateY(2px);transition:transform .08s ease}
+.pdr{position:absolute;width:12px;height:12px;margin:-6px 0 0 -6px;background:#141414;opacity:.3;z-index:-1;pointer-events:none;animation:pdrOut .4s cubic-bezier(.2,.7,.2,1) forwards}
+.pdr.dk{background:#ffb6d5;opacity:.9}
+@keyframes pdrOut{to{transform:scale(18);opacity:0}}
+kbd.k.hit,.key.hit{background:var(--hl,#ffb6d5)!important;color:#141414!important}
+a:focus-visible,button:focus-visible,summary:focus-visible,select:focus-visible,[tabindex]:not([tabindex="-1"]):focus-visible{outline:2px solid #141414;outline-offset:3px;box-shadow:0 0 0 5px #fff}
+.btn:focus-visible,.submit-btn:focus-visible,.add-btn:focus-visible{background:var(--hl,#ffb6d5);color:#141414;outline-offset:-5px;box-shadow:none}
+@media (prefers-reduced-motion: reduce){.pdr{display:none}.pdp{transform:none;transition:none}.pdc{transition:none}}
+</style>
+<script>
+(function () {
+  if (!window.PD) return;
+  const RM = PD.RM, root = document.documentElement;
+  let cover = null;
+  function stamp() { try { sessionStorage.setItem('pdSx', String(Date.now())); } catch (e) {} }
+  function drop() { if (cover && cover.parentNode) cover.parentNode.removeChild(cover); cover = null; }
+  function leave(href, delay) {
+    if (cover) return;
+    stamp();
+    cover = document.createElement('div'); cover.className = 'pdx'; cover.setAttribute('aria-hidden', 'true');
+    cover.innerHTML = '<i class="pdx-w"></i><i class="pdx-e"></i>';
+    document.body.appendChild(cover);
+    setTimeout(function () { location.href = href; }, delay || 250);
+    setTimeout(function () { drop(); try { sessionStorage.removeItem('pdSx'); } catch (e) {} }, 3000);
+  }
+  function go(href) { if (RM) { location.href = href; return; } leave(href, 250); }
+  function flash(k) {
+    const L = String(k || '').toUpperCase();
+    let el = null;
+    document.querySelectorAll('.hdr-nav kbd.k').forEach(function (e) { if (e.textContent === L) el = e; });
+    if (!el && /^[a-z]$/i.test(String(k))) el = document.querySelector('[data-key="' + String(k).toLowerCase() + '"] .key');
+    if (el) el.classList.add('hit');
+  }
+  function key(k, href) {
+    let same = false;
+    try { same = new URL(href, location.href).pathname === location.pathname; } catch (e) {}
+    if (RM || same) { location.href = href; return; }
+    flash(k); leave(href, 300);
+  }
+  window.PDX = { stamp: stamp, go: go, key: key };
+  document.addEventListener('click', function (e) {
+    if (RM || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    const a = e.target.closest && e.target.closest('a[href]');
+    if (!a || (a.target && a.target !== '_self') || a.hasAttribute('download')) return;
+    let u; try { u = new URL(a.href, location.href); } catch (err) { return; }
+    if (u.origin !== location.origin || (u.pathname === location.pathname && u.search === location.search)) return;
+    e.preventDefault(); leave(u.href, 250);
+  });
+  window.addEventListener('pageshow', function (e) { if (e.persisted) { drop(); root.classList.remove('sxin'); } });
+  const PRESS = '.btn,.submit-btn,.add-btn,.rst,.acr,.ivb';
+  document.addEventListener('pointerdown', function (e) {
+    if (e.button !== 0) return;
+    const b = e.target.closest && e.target.closest(PRESS);
+    if (!b || b.disabled || b.classList.contains('busy')) return;
+    b.classList.add('pdp');
+    if (!RM) {
+      const r = b.getBoundingClientRect(), i = document.createElement('i');
+      const bg = (getComputedStyle(b).backgroundColor.match(/[0-9.]+/g) || []).map(Number);
+      const dark = bg.length >= 3 && (bg.length < 4 || bg[3] > 0.5) && (bg[0] * 0.299 + bg[1] * 0.587 + bg[2] * 0.114) < 110;
+      i.className = dark ? 'pdr dk' : 'pdr'; i.setAttribute('aria-hidden', 'true');
+      i.style.left = (e.clientX - r.left) + 'px'; i.style.top = (e.clientY - r.top) + 'px';
+      b.appendChild(i); setTimeout(function () { if (i.parentNode) i.parentNode.removeChild(i); }, 450);
+    }
+    const up = function () { b.classList.remove('pdp'); document.removeEventListener('pointerup', up, true); document.removeEventListener('pointercancel', up, true); };
+    document.addEventListener('pointerup', up, true); document.addEventListener('pointercancel', up, true);
+  }, true);
+  document.addEventListener('DOMContentLoaded', function () {
+    if (RM || !window.matchMedia || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+    const ring = document.createElement('div'); ring.className = 'pdc'; ring.setAttribute('aria-hidden', 'true'); document.body.appendChild(ring);
+    const CLICK = 'a[href],button,[role="button"],summary,label[for],select,input[type="submit"],input[type="button"],input[type="checkbox"],input[type="radio"]';
+    const TEXT = 'input:not([type="submit"]):not([type="button"]):not([type="checkbox"]):not([type="radio"]):not([type="range"]),textarea,[contenteditable="true"]';
+    let x = -100, y = -100, rx = -100, ry = -100, vis = false, raf = 0;
+    function loop() {
+      rx += (x - rx) * 0.28; ry += (y - ry) * 0.28;
+      ring.style.transform = 'translate3d(' + rx.toFixed(1) + 'px,' + ry.toFixed(1) + 'px,0)';
+      raf = (Math.abs(x - rx) > 0.1 || Math.abs(y - ry) > 0.1) ? requestAnimationFrame(loop) : 0;
+    }
+    document.addEventListener('pointermove', function (e) {
+      if (e.pointerType !== 'mouse') return;
+      x = e.clientX; y = e.clientY;
+      if (!vis) { rx = x; ry = y; vis = true; ring.classList.add('on'); }
+      if (!raf) raf = requestAnimationFrame(loop);
+      const t = e.target;
+      ring.classList.toggle('txt', !!(t.closest && t.closest(TEXT)));
+      ring.classList.toggle('hov', !!(t.closest && t.closest(CLICK)));
+    }, { passive: true });
+    root.addEventListener('mouseleave', function () { vis = false; ring.classList.remove('on'); });
+    document.addEventListener('pointerdown', function (e) { if (e.pointerType === 'mouse') ring.classList.add('dn'); }, true);
+    document.addEventListener('pointerup', function () { ring.classList.remove('dn'); }, true);
+    document.addEventListener('pointercancel', function () { ring.classList.remove('dn'); }, true);
+  });
 })();
 </script>
 """
@@ -1662,7 +1774,7 @@ function poll() {
       finished = true; setPhase(4);
       if (total) { document.querySelectorAll('.slip.now').forEach(function (e) { e.className = 'slip dn'; }); }
       gather();
-      setTimeout(function () { window.location.href = '/result/' + d.scan_id; }, PD.RM ? 900 : 1500);
+      setTimeout(function () { const u = '/result/' + d.scan_id; if (window.PDX) PDX.go(u); else window.location.href = u; }, PD.RM ? 900 : 1500);
       return;
     }
     setTimeout(poll, 700);
@@ -2065,7 +2177,7 @@ document.addEventListener('DOMContentLoaded', function () {
     await wait(T.stamp + T.hold);
     ov.classList.add('out');
     await wait(T.out);
-    try { sessionStorage.setItem('pdSx', '1'); } catch (e) {}
+    try { sessionStorage.setItem('pdSx', String(Date.now())); } catch (e) {}
     location.href = r.url;
   }
   form.addEventListener('submit', function (e) {
@@ -2171,11 +2283,7 @@ def render_paste_page(sample_key='', error='', rule_keyword_groups=()):
 
 # ── 結果頁 HTML (修正點擊與高亮同步邏輯) ─────────────────────
 RESULT_HTML = COMMON_CSS + """
-<script>try{if(sessionStorage.getItem('pdSx')){sessionStorage.removeItem('pdSx');var d=document.documentElement;d.classList.add('sxin');setTimeout(function(){d.classList.remove('sxin');},1400);}}catch(e){}</script>
 <style>
-html.sxin::after{content:"";position:fixed;inset:0;z-index:9999;background:#141414;pointer-events:none;animation:sxaOutRes .5s cubic-bezier(.7,0,.2,1) .06s forwards}
-@keyframes sxaOutRes{from{clip-path:inset(0)}to{clip-path:inset(0 0 0 100%)}}
-@media (prefers-reduced-motion: reduce){html.sxin::after{display:none}}
 .dz-side .nums { grid-template-columns: repeat(3, 1fr); }
 .dz-side .nums b { font-size: 1.6rem; }
 .dz-side .nums span { font-size: 10.5px; }
