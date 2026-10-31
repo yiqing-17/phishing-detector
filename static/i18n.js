@@ -131,6 +131,11 @@
     '貼上郵件內文': 'Paste the email body',
     '寄件者信箱': 'Sender email',
     '郵件主旨': 'Email subject',
+    '例如：example.com': 'e.g. example.com',
+    '例如：no-reply@accounts.google.com': 'e.g. no-reply@accounts.google.com',
+    '選填，用於白名單比對，例如 service@example.com': 'Optional; used for allowlist matching, e.g. service@example.com',
+    '貼上郵件的純文字內容（必填）...': 'Paste the email text (required)…',
+    '若有郵件的 HTML 原始碼，可貼於此處以啟用多模態偵測...': 'Optional: paste the email HTML source to enable HTML checks…',
     '選擇範例': 'Choose an example',
     '重播': 'Replay',
     '查看': 'View',
@@ -343,6 +348,7 @@
       'Sender domain $1 matched allowlisted domain "$2" ($3). This is only a domain match, does not verify the sender’s identity, and does not skip the four analysis layers.');
     result = result.replace(/資料集　(.+)，清理後 ([\d,]+) 筆（訓練 ([\d,]+) \/ 測試 ([\d,]+)）/g,
       'Dataset: $1; $2 cleaned rows ($3 train / $4 test).');
+    result = result.replace(/目前白名單（\s*(\d+)\s*個）/g, 'Current allowlist ($1 domains)');
     result = result.replace(/者直接略過全部分析。/g,
       ' is only a domain hint; every message still goes through all four analysis layers.');
     return result;
@@ -394,18 +400,22 @@
       let node;
       while ((node = walker.nextNode())) translateNode(node);
       if (target.nodeType === 1) {
-        restoreMetric(target);
-        target.querySelectorAll && target.querySelectorAll('.cu[data-to]').forEach(restoreMetric);
-        ['placeholder', 'aria-label', 'title', 'alt'].forEach(function (name) {
-          const value = target.getAttribute(name);
-          if (value) {
-            let originals = originalAttributes.get(target);
-            if (!originals) { originals = new Map(); originalAttributes.set(target, originals); }
-            if (!originals.has(name)) originals.set(name, value);
-            const original = originals.get(name);
-            const translated = localizeText(original, locale);
-            if (translated !== value) target.setAttribute(name, translated);
-          }
+        const elements = [target].concat(Array.from(target.querySelectorAll('*')));
+        elements.forEach(function (element) {
+          restoreMetric(element);
+          const names = ['placeholder', 'aria-label', 'title', 'alt'];
+          if (element.tagName === 'INPUT' && /^(submit|button|reset)$/i.test(element.type)) names.push('value');
+          names.forEach(function (name) {
+            const value = element.getAttribute(name);
+            if (value) {
+              let originals = originalAttributes.get(element);
+              if (!originals) { originals = new Map(); originalAttributes.set(element, originals); }
+              if (!originals.has(name)) originals.set(name, value);
+              const original = originals.get(name);
+              const translated = localizeText(original, locale);
+              if (translated !== value) element.setAttribute(name, translated);
+            }
+          });
         });
         if (locale === 'en' && target.querySelectorAll &&
             ((target.matches && target.matches('h1,h2,h3')) || target.querySelector('h1,h2,h3'))) {

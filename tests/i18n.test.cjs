@@ -11,6 +11,8 @@ assert.equal(
   localizeText('白名單只提供網域比對提示；所有郵件仍會完成四層分析。', 'en'),
   'Allowlist matches are domain hints; every message still goes through all four analysis layers.',
 );
+assert.equal(localizeText('目前白名單（14 個）', 'en'), 'Current allowlist (14 domains)');
+assert.equal(localizeText('貼上郵件的純文字內容（必填）...', 'en'), 'Paste the email text (required)…');
 assert.match(
   localizeText('寄件網域命中白名單「google.com」，系統將略過分析，直接判定為安全。', 'en'),
   /still goes through all four analysis layers/,
@@ -22,5 +24,5 @@ assert.match(
 assert.equal(shouldTranslate('alert@accounts.google.com', true), false);
 assert.equal(shouldTranslate('案件簿', false), true);
 
-process.stdout.write('i18n helpers: 9 assertions passed\n');
+process.stdout.write('i18n helpers: 11 assertions passed\n');
 
