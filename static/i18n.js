@@ -349,6 +349,7 @@
     result = result.replace(/資料集　(.+)，清理後 ([\d,]+) 筆（訓練 ([\d,]+) \/ 測試 ([\d,]+)）/g,
       'Dataset: $1; $2 cleaned rows ($3 train / $4 test).');
     result = result.replace(/目前白名單（\s*(\d+)\s*個）/g, 'Current allowlist ($1 domains)');
+    result = result.replace(/(\d+)\s*個）/g, '$1 domains)');
     result = result.replace(/者直接略過全部分析。/g,
       ' is only a domain hint; every message still goes through all four analysis layers.');
     return result;
