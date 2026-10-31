@@ -1,0 +1,26 @@
+const assert = require('node:assert/strict');
+const { localizeText, resolveLocale, shouldTranslate } = require('../static/i18n.js');
+
+assert.equal(resolveLocale('en', 'zh'), 'en');
+assert.equal(resolveLocale('fr', 'en'), 'en');
+assert.equal(resolveLocale('fr', 'fr'), 'zh');
+
+assert.equal(localizeText('偵測規則', 'en'), 'Detection rules');
+assert.equal(localizeText('開啟郵件分析結果：Invoice update', 'en'), 'Open email analysis: Invoice update');
+assert.equal(
+  localizeText('白名單只提供網域比對提示；所有郵件仍會完成四層分析。', 'en'),
+  'Allowlist matches are domain hints; every message still goes through all four analysis layers.',
+);
+assert.match(
+  localizeText('寄件網域命中白名單「google.com」，系統將略過分析，直接判定為安全。', 'en'),
+  /still goes through all four analysis layers/,
+);
+assert.match(
+  localizeText('已知安全網域自動略過重複分析。', 'zh'),
+  /所有郵件仍會完成四層分析/,
+);
+assert.equal(shouldTranslate('alert@accounts.google.com', true), false);
+assert.equal(shouldTranslate('案件簿', false), true);
+
+process.stdout.write('i18n helpers: 9 assertions passed\n');
+
