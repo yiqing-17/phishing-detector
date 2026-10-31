@@ -14,6 +14,8 @@ assert.equal(
 assert.equal(localizeText('目前白名單（14 個）', 'en'), 'Current allowlist (14 domains)');
 assert.equal(localizeText('Current allowlist (14 個）', 'en'), 'Current allowlist (14 domains)');
 assert.equal(localizeText('14 個）', 'en'), '14 domains)');
+assert.equal(localizeText('個）', 'en'), 'domains)');
+assert.equal(localizeText('子網域比對：The sender matched.', 'en'), 'Domain match: The sender matched.');
 assert.equal(localizeText('Current allowlist (14 個）', 'en'), 'Current allowlist (14 domains)');
 assert.equal(localizeText('R1 緊急語句', 'en'), 'R1 Urgent language');
 assert.equal(localizeText('範例④：白名單網域放在前面（不命中）', 'en'), 'Example 4: allowlist domain appears first (no match)');
