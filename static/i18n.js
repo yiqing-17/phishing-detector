@@ -213,7 +213,7 @@
     '猜猜看': 'Test your instincts',
     '答對 0': 'Correct: 0',
     '資料集 Phishing Email Dataset，清理後 82,077 筆（訓練 65,661 / 測試 16,416）': 'Dataset: Phishing Email Dataset; 82,077 cleaned messages (65,661 train / 16,416 test).',
-    '已放行': 'Allowlist hint',
+    '已放行': 'Domain hint',
     '送檢中｜phishing-detector': 'Analysis in progress | phishing-detector',
     '唯讀授權，只讀取收件匣最新 15 封信。每檢驗完一封，右邊就蓋上一枚印章。': 'Read-only access checks your 15 most recent inbox messages. Each completed scan adds a stamp to the case file.',
     '已等待 0 秒': 'Waiting: 0 seconds',
@@ -407,6 +407,10 @@
             if (translated !== value) target.setAttribute(name, translated);
           }
         });
+        if (locale === 'en' && target.querySelectorAll &&
+            ((target.matches && target.matches('h1,h2,h3')) || target.querySelector('h1,h2,h3'))) {
+          fixHeadingSpacing();
+        }
       }
     }
 
@@ -416,6 +420,33 @@
       if (Number.isFinite(value) && element.textContent !== value.toFixed(2)) {
         element.textContent = value.toFixed(2);
       }
+    }
+
+    function edgeText(node, fromEnd) {
+      if (node.nodeType === 3) return node;
+      const children = node.childNodes || [];
+      for (let i = fromEnd ? children.length - 1 : 0;
+           fromEnd ? i >= 0 : i < children.length;
+           i += fromEnd ? -1 : 1) {
+        const found = edgeText(children[i], fromEnd);
+        if (found && found.nodeValue) return found;
+      }
+      return null;
+    }
+
+    function fixHeadingSpacing() {
+      if (locale !== 'en' || !doc.body) return;
+      doc.body.querySelectorAll('h1,h2,h3').forEach(function (heading) {
+        const children = heading.childNodes;
+        for (let i = 0; i < children.length - 1; i++) {
+          const left = edgeText(children[i], true);
+          const right = edgeText(children[i + 1], false);
+          if (!left || !right || !left.nodeValue || !right.nodeValue) continue;
+          if (/[A-Za-z0-9]$/.test(left.nodeValue) && /^[A-Za-z0-9]/.test(right.nodeValue)) {
+            left.nodeValue += ' ';
+          }
+        }
+      });
     }
 
     const titleMap = {
