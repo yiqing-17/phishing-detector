@@ -385,6 +385,8 @@
     }
     if (Object.prototype.hasOwnProperty.call(text, result)) return text[result];
     result = result.replace(/^開啟郵件分析結果：/, 'Open email analysis: ');
+    result = result.replace(/^個）$/, 'domains)');
+    result = result.replace(/^子網域比對：/, 'Domain match: ');
     result = result.replace(/寄件網域命中白名單「([^」]+)」，系統將略過分析，直接判定為安全。/g,
       'The sender domain matched the allowlist (“$1”). This does not authenticate the sender; the email still goes through all four analysis layers.');
     result = result.replace(/寄件網域 ([^ ]+) 命中白名單「([^」]+)」（([^）]+)）。白名單只表示網域比對命中，不能驗證寄件者真實身分；此郵件仍完成四層分析。/g,
