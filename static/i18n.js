@@ -348,6 +348,7 @@
       'Sender domain $1 matched allowlisted domain "$2" ($3). This is only a domain match, does not verify the sender’s identity, and does not skip the four analysis layers.');
     result = result.replace(/資料集　(.+)，清理後 ([\d,]+) 筆（訓練 ([\d,]+) \/ 測試 ([\d,]+)）/g,
       'Dataset: $1; $2 cleaned rows ($3 train / $4 test).');
+    result = result.replace(/Current allowlist \(\s*(\d+)\s*個）/g, 'Current allowlist ($1 domains)');
     result = result.replace(/目前白名單（\s*(\d+)\s*個）/g, 'Current allowlist ($1 domains)');
     result = result.replace(/(\d+)\s*個）/g, '$1 domains)');
     result = result.replace(/者直接略過全部分析。/g,
