@@ -12,6 +12,7 @@ assert.equal(
   'Allowlist matches are domain hints; every message still goes through all four analysis layers.',
 );
 assert.equal(localizeText('目前白名單（14 個）', 'en'), 'Current allowlist (14 domains)');
+assert.equal(localizeText('Current allowlist (14 個）', 'en'), 'Current allowlist (14 domains)');
 assert.equal(localizeText('14 個）', 'en'), '14 domains)');
 assert.equal(localizeText('貼上郵件的純文字內容（必填）...', 'en'), 'Paste the email text (required)…');
 assert.match(
