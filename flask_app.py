@@ -6,7 +6,7 @@ import sqlite3
 import threading
 import uuid
 from datetime import datetime, timedelta
-from flask import Flask, g, jsonify, redirect, render_template_string, request, session
+from flask import Flask, jsonify, redirect, render_template_string, request, session
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
 from google.oauth2.credentials import Credentials
@@ -23,18 +23,10 @@ from storage import (
 from analysis import (
     Groq, RULE_HTML_ITEMS, RULE_KEYWORD_GROUPS, RULE_URL_ITEMS,
     analyze_html, analyze_url, full_pipeline,
-    model, model_metrics, run_risk_score_self_test, vectorizer,
+    model, run_risk_score_self_test, vectorizer,
 )
 from email_parser import get_body, get_header, get_html
 from result_builder import build_analyzed_entry
-from scan_policy import analyze_email
-from site_quality import (
-    add_home_privacy_note,
-    apply_model_metrics,
-    correct_legacy_copy,
-    inject_locale_assets,
-    resolve_language,
-)
 from templates import (
     HISTORY_HTML, HOME_HTML, LOADING_HTML, RESULT_HTML,
     RULES_HTML, WHITELIST_HTML, _kw_json, render_error, render_home_page, render_paste_page,
@@ -88,34 +80,11 @@ def add_security_headers(response):
         "Permissions-Policy",
         "camera=(), microphone=(), geolocation=()"
     )
-    if response.mimetype == 'text/html':
-        language = getattr(g, 'language', 'zh')
-        response.headers['Content-Language'] = language
-        vary = {value.strip() for value in response.headers.get('Vary', '').split(',') if value.strip()}
-        if '*' not in vary:
-            vary.add('Cookie')
-            response.headers['Vary'] = ', '.join(sorted(vary))
-        page = response.get_data(as_text=True)
-        if request.path == '/scan':
-            page = page.replace('白名單／略過', '略過（系統通知）')
-        elif not request.path.startswith('/result/'):
-            page = correct_legacy_copy(page)
-        response.set_data(inject_locale_assets(page, language))
     return response
-
-
-@app.before_request
-def select_language():
-    requested = request.args.get('lang')
-    if requested in ('zh', 'en'):
-        session['language'] = requested
-    g.language = resolve_language(requested, session.get('language'))
 
 @app.route('/')
 def index():
-    page = correct_legacy_copy(render_home_page(RULE_KEYWORD_GROUPS))
-    page = apply_model_metrics(page, model_metrics)
-    return add_home_privacy_note(page, getattr(g, 'language', 'zh'))
+    return render_home_page(RULE_KEYWORD_GROUPS)
 
 def create_google_flow(state=None):
     """建立 Google OAuth Flow。優先使用環境變數，沒有才讀 credentials.json。"""
@@ -154,7 +123,6 @@ def login():
     session['code_verifier'] = cv
     flow = create_google_flow()
     auth_url, state = flow.authorization_url(prompt='consent', access_type='offline',
-                                              hl=getattr(g, 'language', 'zh'),
                                               code_challenge=cc, code_challenge_method='S256')
     session['oauth_state'] = state
     return redirect(auth_url)
@@ -215,29 +183,34 @@ def do_scan(token_data, scan_id, uid):
                 _scan_progress(scan_id, 'sk')
                 continue
 
-            entry = analyze_email(
-                sender=sender, subject=subject, body=body, text=text, html=html, uid=uid,
-                whitelist_match=whitelist_match, full_pipeline=full_pipeline,
-                build_entry=build_analyzed_entry,
+            if is_whitelisted(sender, uid):
+                entry = {'level':'wl','risk_score':-1,'subject':subject[:55],
+                         'sender':sender[:60],'explanation':'來自白名單寄件者，系統判定為安全。',
+                         'action':'可安全閱讀','tags':[],'scores':[],
+                         'category':'白名單安全信件','ir':None}
+                wl_list.append(entry)
+                all_emails.append(entry)
+                _scan_progress(scan_id, 'wl')
+                continue
+
+            report, html_score, _, rule_score, spam_prob = full_pipeline(text, html)
+            entry = build_analyzed_entry(
+                sender, subject, body, report, html_score, rule_score, spam_prob
             )
 
-            if any(x.get('title') == '白名單提示' for x in entry.get('explainable_findings', [])):
-                wl_list.append(entry)
-
-            if entry['level'] == 'high':
+            if report['risk_level'] == 'high':
                 high_list.append(entry)
-            elif entry['level'] == 'medium':
+            elif report['risk_level'] == 'medium':
                 med_list.append(entry)
             else:
                 low_list.append(entry)
             all_emails.append(entry)
-            _scan_progress(scan_id, entry['level'])
+            _scan_progress(scan_id, report['risk_level'])
 
         scan_time = datetime.now().strftime('%Y-%m-%d %H:%M')
-        # Keep persistent risk buckets mutually exclusive; allowlist matches are in-memory annotations.
         save_scan(scan_id, scan_time,
-                  len(high_list)+len(med_list)+len(low_list),
-                  high_list, med_list, low_list, 0, skipped, uid)
+                  len(high_list)+len(med_list)+len(low_list)+len(wl_list),
+                  high_list, med_list, low_list, len(wl_list), skipped, uid)
 
         _scans[scan_id] = {
             'owner': uid,
@@ -294,15 +267,27 @@ def paste_analyze():
     text = f"From: {sender}\nSubject: {subject}\nBody: {body}"
 
     try:
-        entry = analyze_email(
-            sender=sender, subject=subject, body=body, text=text, html=html, uid=uid,
-            whitelist_match=whitelist_match, full_pipeline=full_pipeline,
-            build_entry=build_analyzed_entry,
-        )
-        high = int(entry['level'] == 'high')
-        med = int(entry['level'] == 'medium')
-        low = int(entry['level'] == 'low')
-        wl = int(any(x.get('title') == '白名單提示' for x in entry.get('explainable_findings', [])))
+        wl_domain, wl_hit, wl_mode = whitelist_match(sender, uid)
+        if wl_hit:
+            entry = {'level': 'wl', 'risk_score': -1, 'subject': subject[:55],
+                     'sender': sender[:60],
+                     'explanation': f'寄件網域 {wl_domain} 命中白名單「{wl_hit}」（{wl_mode}），系統略過規則、ML、HTML 與 AI 分析，直接判定為安全。',
+                     'action': '可安全閱讀', 'tags': [], 'scores': [],
+                     'category': '白名單安全信件', 'ir': None}
+            high = med = low = 0
+            wl = 1
+        else:
+            report, html_score, _, rule_score, spam_prob = full_pipeline(text, html)
+            entry = build_analyzed_entry(
+                sender, subject, body, report, html_score, rule_score, spam_prob
+            )
+            high = med = low = wl = 0
+            if report['risk_level'] == 'high':
+                high = 1
+            elif report['risk_level'] == 'medium':
+                med = 1
+            else:
+                low = 1
 
         scan_id = str(uuid.uuid4())[:8]
         _scans[scan_id] = {
@@ -313,8 +298,7 @@ def paste_analyze():
             'total': 1
         }
         scan_time = datetime.now().strftime('%Y-%m-%d %H:%M')
-        # The case result retains the allowlist hint; history stores non-overlapping risk counts.
-        save_scan(scan_id, scan_time, 1, ['x'] * high, ['x'] * med, ['x'] * low, 0, 0, uid)
+        save_scan(scan_id, scan_time, 1, ['x'] * high, ['x'] * med, ['x'] * low, wl, 0, uid)
         return redirect(f'/result/{scan_id}')
     except Exception:
         import traceback
@@ -347,16 +331,7 @@ def result(scan_id):
         subject = html_lib.escape(str(e.get('subject','')))
         sender = html_lib.escape(str(e.get('sender','')))
         category = html_lib.escape(str(e.get('category','')))
-        item_subject = html_lib.escape(str(e.get('subject', '')))
-        accessible_label = (
-            '開啟郵件分析結果：' + item_subject
-            if getattr(g, 'language', 'zh') == 'zh'
-            else 'Open email analysis: ' + item_subject
-        )
-        return (f'<div class="email-item" role="button" tabindex="0" '
-                f'aria-label="{accessible_label}" data-idx="{idx}" '
-                f'onkeydown="if(event.key===\'Enter\'||event.key===\' \'){{event.preventDefault();this.click();}}" '
-                f'onclick="showDetail({idx}, this)">'
+        return (f'<div class="email-item" data-idx="{idx}" onclick="showDetail({idx}, this)">'
                 f'<div class="risk-dot {dot}"></div>'
                 f'<div class="item-body">'
                 f'<div class="item-subj">{subject}</div>'
@@ -393,11 +368,8 @@ def result(scan_id):
     page = page.replace('HIGH_PCT', f"{data['high'] / total_for_pct * 100:.2f}")
     page = page.replace('MED_PCT', f"{data['med'] / total_for_pct * 100:.2f}")
     page = page.replace('LOW_PCT', f"{data['low'] / total_for_pct * 100:.2f}")
-    # Allowlist matches are a subset of analyzed risk buckets, never a separate slice.
-    page = page.replace('WL_PCT', '0.00')
+    page = page.replace('WL_PCT', f"{data['wl'] / total_for_pct * 100:.2f}")
     page = page.replace('ANALYZED_COUNT', str(analyzed_count))
-    # Correct static template copy before inserting subject/body values from the email.
-    page = correct_legacy_copy(page)
     # 使用者內容（信件列表、信件資料）最後才注入，避免內容中的字串被誤替換
     page = page.replace('LIST_PLACEHOLDER', list_html)
     page = page.replace('PLACEHOLDER_DATA', emails_json)
@@ -571,4 +543,3 @@ def health():
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
-
