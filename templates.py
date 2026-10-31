@@ -2,7 +2,8 @@
 import json
 
 # ── CSS 共用樣式 (全站統一風格：極簡工程風／終端機質感，黑白為主) ───────────────────
-COMMON_CSS = """
+COMMON_CSS = """<!DOCTYPE html>
+<html lang="zh-Hant">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#141414">
@@ -16,11 +17,18 @@ html.sxin::after{content:"";position:fixed;inset:0;z-index:9999;background:#1414
 <meta property="og:type" content="website">
 <meta property="og:title" content="phishing-detector">
 <meta property="og:description" content="授權 Gmail 或直接貼信，四層分析逐層比對，找出可疑信件。">
+<meta property="og:site_name" content="phishing-detector">
+<meta property="og:locale" content="zh_TW">
+<meta property="og:image" content="https://phishing-detector-n8rv.onrender.com/static/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="phishing-detector：四層分析，找出可疑信件">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23ffb6d5'/%3E%3Ctext x='16' y='25' font-size='25' font-family='Georgia,serif' font-weight='900' text-anchor='middle' fill='%23141414'%3Ep%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@700;900&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&display=swap">
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@700;900&family=Klee+One&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@700;900&family=Klee+One&display=swap"></noscript>
 <style>
 :root {
   --sans: 'Noto Sans TC', system-ui, sans-serif;
@@ -365,7 +373,7 @@ kbd.k { display: inline-flex; align-items: center; justify-content: center; min-
 body .container, body .paste-wrap { margin-left: 0; margin-right: 0; padding-left: 2rem; padding-right: 2rem; }
 body .back { display: flex; width: fit-content; border: 0; padding: 0; background: transparent; color: #141414; font-family: var(--mono); font-size: 12.5px; margin-bottom: 2.25rem; }
 body .back:hover { background: transparent; text-decoration: underline; text-decoration-color: #ff6fae; text-decoration-thickness: 3px; text-underline-offset: 4px; }
-.ftab { display: inline-flex; align-items: center; gap: .6rem; font-family: var(--mono); font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 1.1rem; }
+.ftab { display: flex; width: fit-content; align-items: center; gap: .6rem; font-family: var(--mono); font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; padding-bottom: 1.1rem; }
 .ftab mark { background: var(--hl); color: #141414; padding: 1px 7px; font-weight: 600; }
 .hl { background: linear-gradient(transparent 58%, var(--hl) 58%); -webkit-box-decoration-break: clone; box-decoration-break: clone; padding: 0 .08em; }
 body .page-title, body .paste-title { font-family: var(--serif); font-weight: 900; font-size: clamp(2rem, 4.6vw, 3.9rem); line-height: 1.22; letter-spacing: -.01em; color: #141414; margin-bottom: 1.4rem; text-wrap: balance; }
@@ -376,6 +384,7 @@ body .submit-btn:hover, body .add-btn:hover { background: var(--hl); color: #141
 body .sample-btn, body .ir-dl-btn { background: transparent; color: #141414; border: 1px solid #141414; border-radius: 0; font-family: var(--mono); font-size: 12px; }
 body .sample-btn:hover, body .ir-dl-btn:hover { background: var(--hl); color: #141414; border-color: #141414; }
 body input, body textarea, body select { border-radius: 0; font-family: var(--mono); background: #fff; }
+body textarea { vertical-align: top; }
 body input:focus, body textarea:focus, body select:focus { border-color: #141414; outline: none; box-shadow: 0 0 0 3px var(--hl); }
 body .field-label::before, body .sample-title::before, body .why-title::before, body .safety-title::before,
 body .sec-h::before, body .sec-label::before, body .demo-title::before, body .loading-title::before, body .score-breakdown h4::before { content: none; }
@@ -405,7 +414,7 @@ footer.f .cp { margin-top: 2.25rem; color: #6b6b6b; }
 .nums { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: #141414; border: 1px solid #141414; margin-top: 1.5rem; }
 .nums div { background: var(--paper); padding: .8rem .9rem; }
 .nums b { display: block; font-family: var(--serif); font-weight: 900; font-size: 2.1rem; line-height: 1.05; }
-.nums span { font-family: var(--mono); font-size: 11px; color: var(--text-muted); }
+.nums span { display: block; font-family: var(--mono); font-size: 11px; color: var(--text-muted); }
 .idx { list-style: none; margin: 1.5rem 0 0; padding: 0; font-family: var(--mono); font-size: 12px; }
 .idx a { display: flex; gap: .7rem; padding: .4rem 0; border-top: 1px solid #d4d4d4; color: #141414; text-decoration: none; }
 .idx a em { font-style: normal; color: var(--text-dim); }
@@ -423,7 +432,7 @@ footer.f .cp { margin-top: 2.25rem; color: #6b6b6b; }
 .card .kws { display: flex; flex-wrap: wrap; gap: .3rem; margin-top: .2rem; }
 .card .kws span { background: var(--hl); font-family: var(--mono); font-size: 11.5px; padding: 0 .38rem; }
 .st { display: inline-block; border: 2px solid currentColor; padding: .02rem .5rem; font-family: var(--serif); font-weight: 900; font-size: .85rem; line-height: 1.4; transform: rotate(-4deg); mix-blend-mode: multiply; }
-.st.red { color: #c8321e; } .st.grn { color: #2e6a4d; } .st.org { color: #a8650f; } .st.ink { color: #141414; }
+.st.red { color: #c8321e; } .st.grn { color: #2e6a4d; } .st.org { color: #925709; } .st.ink { color: #141414; }
 .card .st { position: absolute; right: .85rem; top: .95rem; font-size: .75rem; max-width: 11rem; text-align: center; }
 .note2 { margin-top: .9rem; font-family: var(--mono); font-size: 12px; color: var(--text-muted); line-height: 1.8; }
 .note2 b { background: var(--hl); font-weight: 500; padding: 0 .25rem; }
@@ -539,6 +548,13 @@ main.ew{margin:3.5rem auto;padding:3rem 2.4rem 2.4rem;width:calc(100% - 2.5rem)}
 #pipeline .meter b{color:var(--hl)}
 #pipeline .meter .track{background:#3a3a3a}
 #pipeline .meter .track s{background:#f1f1f1}
+#pipeline .meter .lv{color:#b5b5b5;border-color:#9a9a9a}
+#pipeline .meter.lo .lv{color:#7fd6a0;border-color:#7fd6a0}
+#pipeline .meter.mid .lv{color:#ffb25c;border-color:#ffb25c}
+#pipeline .meter.hi .lv{color:#ff8a78;border-color:#ff8a78}
+#pipeline .meter.lo .track i{background:#7fd6a0}
+#pipeline .meter.mid .track i{background:#ffb25c}
+#pipeline .meter.hi .track i{background:#ff8a78}
 @media(min-width:1000px){
  .scrolly{align-items:stretch}
  .stage{position:sticky;top:var(--stick);height:calc(100svh - var(--stick));display:flex;flex-direction:column;justify-content:center;align-self:start;transition:top .28s ease,height .28s ease}
@@ -691,8 +707,7 @@ main.ew{margin:3.5rem auto;padding:3rem 2.4rem 2.4rem;width:calc(100% - 2.5rem)}
  .dz-wide>.dz-side .nums{margin-top:0}
  .dz-wide>.dz-side .br>*:first-child{margin-top:0}
  .dz-wide>.idx{position:sticky;top:var(--stick);z-index:20;display:flex;gap:2rem;margin:0;padding:0 clamp(1.25rem,4vw,3.5rem);overflow-x:auto;background:#f1f1f1;border-bottom:1.5px solid #141414;transition:top .28s ease}
- .dz-wide>.idx li{list-style:none;flex:none}
- .dz-wide>.idx a{border-top:0;padding:.85rem 0;white-space:nowrap}
+  .dz-wide>.idx a{flex:none;border-top:0;padding:.85rem 0;white-space:nowrap}
  .dz-wide>.dz-main{padding-top:2.2rem}
  .dz-split .dz-main{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);column-gap:3.5rem;align-items:start}
  .dz-split .dz-main>.sh:first-child{grid-column:1;grid-row:1;margin-top:0}
@@ -1227,8 +1242,9 @@ mark.m[data-n="3"]{cursor:pointer;text-decoration:underline dotted;text-underlin
 .meter .track s{position:absolute;top:-3px;bottom:-3px;width:1px;background:#141414;opacity:.45}
 .meter .hint{margin-top:.6rem;color:#6b6b6b;font-size:11px}
 .steps{padding-bottom:12vh}
-.step{display:grid;grid-template-columns:2.6rem 1fr;gap:.3rem 1rem;align-content:center;min-height:56vh;padding:1.4rem 0;border-top:1px solid #d4d4d4;opacity:.38;transition:opacity .35s,background .15s}
+.step{display:grid;grid-template-columns:2.6rem 1fr;gap:.3rem 1rem;align-content:center;min-height:56vh;padding:1.4rem 0;border-top:1px solid #d4d4d4;opacity:.85;transition:opacity .35s,background .15s}
 .step.act{opacity:1}
+.step h3{transition:opacity .35s}.step:not(.act) h3{opacity:.5}
 .step:focus-visible{outline:2px solid #141414;outline-offset:2px}
 .step .n{grid-row:span 3;display:grid;place-items:center;width:2rem;height:2rem;border-radius:50%;background:#141414;color:var(--paper);font:600 12px/1 var(--mono)}
 .step h3{font-family:var(--serif);font-weight:900;font-size:1.7rem}
@@ -1284,7 +1300,7 @@ mark.m[data-n="3"]{cursor:pointer;text-decoration:underline dotted;text-underlin
 @keyframes slam{from{opacity:0;transform:rotate(-18deg) scale(2.2)}to{opacity:.92;transform:rotate(-6deg) scale(1)}}
 @media(prefers-reduced-motion:reduce){.doc,.js .row,.js h2 .hl,.meter .track i,.js .bb::after{transition:none}.clear.in .stamp2{animation:none}}
 </style>
-<div class="hdr"><div class="hdr-left"><a href="/">phishing-detector</a></div><div class="hdr-nav"><a href="/rules">偵測規則</a><a href="/whitelist">白名單</a><a href="/history">案件簿</a><a href="/paste">貼信送檢</a></div></div>
+<header class="hdr"><div class="hdr-left"><a href="/">phishing-detector</a></div><div class="hdr-nav"><a href="/rules">偵測規則</a><a href="/whitelist">白名單</a><a href="/history">案件簿</a><a href="/paste">貼信送檢</a></div></header>
 <main>
 <section class="hero"><div class="wrap">
   <div>
@@ -1297,7 +1313,7 @@ mark.m[data-n="3"]{cursor:pointer;text-decoration:underline dotted;text-underlin
     </div>
   </div>
   <div class="docwrap" data-parallax="0.05">
-    <div class="stamp" role="button" tabindex="0" aria-label="重播標記動畫" title="點擊重播">可疑<small>SUSPICIOUS</small></div>
+    <div class="stamp" role="button" tabindex="0" aria-label="可疑 SUSPICIOUS 印章，重播標記動畫" title="點擊重播">可疑<small>SUSPICIOUS</small></div>
     <article class="doc" aria-label="示意郵件">
     <div class="lh">secure-account.example</div>
       <dl>
@@ -1669,7 +1685,7 @@ LOADING_HTML = COMMON_CSS + """
 
 
 </style>
-<div class="hdr"><div class="hdr-left"><a href="/">phishing-detector</a></div><div class="hdr-nav"><a href="/rules">偵測規則</a><a href="/whitelist">白名單</a><a href="/history">案件簿</a><a href="/paste">貼信送檢</a></div></div>
+<header class="hdr"><div class="hdr-left"><a href="/">phishing-detector</a></div><div class="hdr-nav"><a href="/rules">偵測規則</a><a href="/whitelist">白名單</a><a href="/history">案件簿</a><a href="/paste">貼信送檢</a></div></header>
 <div class="dz dz-short">
   <aside class="dz-side">
     <div class="ftab"><mark>FILE</mark><span>scanning</span></div>
@@ -1808,7 +1824,7 @@ ERROR_HTML = COMMON_CSS + """
 .ew .acts a:hover { background: var(--hl); color: #141414; }
 
 </style>
-<div class="hdr"><div class="hdr-left"><a href="/">phishing-detector</a></div><div class="hdr-nav"><a href="/rules">偵測規則</a><a href="/whitelist">白名單</a><a href="/history">案件簿</a><a href="/paste">貼信送檢</a></div></div>
+<header class="hdr"><div class="hdr-left"><a href="/">phishing-detector</a></div><div class="hdr-nav"><a href="/rules">偵測規則</a><a href="/whitelist">白名單</a><a href="/history">案件簿</a><a href="/paste">貼信送檢</a></div></header>
 <main class="ew">
   <div class="stamp-lg">退回<small>RETURNED</small></div>
   <h1>ERR_TITLE</h1>
@@ -2203,7 +2219,7 @@ document.addEventListener('DOMContentLoaded', function () {
   window.addEventListener('pageshow', function (ev) { if (ev.persisted) cleanup(); });
 });
 </script>
-<div class="hdr"><div class="hdr-left"><a href="/">phishing-detector</a></div><div class="hdr-nav"><a href="/rules">偵測規則</a><a href="/whitelist">白名單</a><a href="/history">案件簿</a><a href="/paste">貼信送檢</a></div></div>
+<header class="hdr"><div class="hdr-left"><a href="/">phishing-detector</a></div><div class="hdr-nav"><a href="/rules">偵測規則</a><a href="/whitelist">白名單</a><a href="/history">案件簿</a><a href="/paste">貼信送檢</a></div></header>
 <div class="dz dz-short">
   <aside class="dz-side">
     <div class="ftab"><mark>FILE</mark><span>paste</span></div>
@@ -2212,7 +2228,7 @@ document.addEventListener('DOMContentLoaded', function () {
     <form method="GET" action="/paste" class="sample-form">
       <div class="lb" style="font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.08em;margin-top:1.8rem">快速調閱測試信件</div>
       <div class="sr">
-        <select name="sample" class="sample-select">
+        <select name="sample" class="sample-select" aria-label="選擇範例信">
           <option value="">請選擇測試範例</option>
           <option value="account" SELECT_ACCOUNT>帳戶停用釣魚信</option>
           <option value="prize" SELECT_PRIZE>中獎詐騙信</option>
@@ -2788,7 +2804,6 @@ function showDetail(idx, element) {
       }
     });
   }
-  /* 偵探牆紅線：標記 ↔ 批註 ↔ 分析層卡片 */
   function hotLc(n, on) { panel.querySelectorAll('.lc').forEach(function (lc) { const b = lc.querySelector('.ln b'); if (b && b.textContent === n) lc.classList.toggle('hot', on); }); }
   panel.querySelectorAll('mark.m').forEach(function (m) { const n = m.getAttribute('data-n'); m.addEventListener('mouseenter', function () { hotLc(n, true); }); m.addEventListener('mouseleave', function () { hotLc(n, false); }); });
   panel.querySelectorAll('.notes li').forEach(function (li) { const n = li.getAttribute('data-n'); li.addEventListener('mouseenter', function () { hotLc(n, true); }); li.addEventListener('mouseleave', function () { hotLc(n, false); }); });
@@ -2893,7 +2908,7 @@ window.addEventListener('DOMContentLoaded', function () {
   }
 });
 </script>
-<div class="hdr"><div class="hdr-left"><a href="/">phishing-detector</a></div><div class="hdr-nav"><a href="/rules">偵測規則</a><a href="/whitelist">白名單</a><a href="/history">案件簿</a><a href="/paste">貼信送檢</a></div></div>
+<header class="hdr"><div class="hdr-left"><a href="/">phishing-detector</a></div><div class="hdr-nav"><a href="/rules">偵測規則</a><a href="/whitelist">白名單</a><a href="/history">案件簿</a><a href="/paste">貼信送檢</a></div></header>
 <div class="dz">
   <aside class="dz-side">
     <div class="ftab"><mark>FILE</mark><span>result</span></div>
@@ -2972,7 +2987,7 @@ HISTORY_HTML = COMMON_CSS + """
 
 
 </style>
-<div class="hdr"><div class="hdr-left"><a href="/">phishing-detector</a></div><div class="hdr-nav"><a href="/rules">偵測規則</a><a href="/whitelist">白名單</a><a href="/history">案件簿</a><a href="/paste">貼信送檢</a></div></div>
+<header class="hdr"><div class="hdr-left"><a href="/">phishing-detector</a></div><div class="hdr-nav"><a href="/rules">偵測規則</a><a href="/whitelist">白名單</a><a href="/history">案件簿</a><a href="/paste">貼信送檢</a></div></header>
 <div class="dz dz-wide dz-short">
   <aside class="dz-side">
 <div class="bl">
@@ -3149,10 +3164,12 @@ RULES_HTML = COMMON_CSS + """
 :is(#kwcards,#url + .cards,#html + .cards) .card[data-cg="3"]{--cc:#c5ecd2}
 .card[data-cg="0"] .clip mark{background:#ffc3dc}.card[data-cg="1"] .clip mark{background:#ffe58a}.card[data-cg="2"] .clip mark{background:#bfe0ff}.card[data-cg="3"] .clip mark{background:#c5ecd2}
 .card[data-cg="1"] .kws span{background:#ffe58a}.card[data-cg="2"] .kws span{background:#bfe0ff}.card[data-cg="3"] .kws span{background:#c5ecd2}
+.card .kws{gap:.5rem .6rem}.card div.kws span{padding:.18rem .3em}
+@media (pointer:coarse){.card .kws span[role="button"]{padding:.5rem .65em;line-height:1.2}}
 
 
 </style>
-<div class="hdr"><div class="hdr-left"><a href="/">phishing-detector</a></div><div class="hdr-nav"><a href="/rules">偵測規則</a><a href="/whitelist">白名單</a><a href="/history">案件簿</a><a href="/paste">貼信送檢</a></div></div>
+<header class="hdr"><div class="hdr-left"><a href="/">phishing-detector</a></div><div class="hdr-nav"><a href="/rules">偵測規則</a><a href="/whitelist">白名單</a><a href="/history">案件簿</a><a href="/paste">貼信送檢</a></div></header>
 <div class="dz dz-wide">
   <aside class="dz-side">
 <div class="bl">
@@ -3170,20 +3187,20 @@ RULES_HTML = COMMON_CSS + """
   
 </div>
 </aside>
-    <ul class="idx" id="idx">
-      <li><a href="#try"><em>00</em><span>試試看</span></a></li>
-      <li><a href="#kw"><em>01</em><span>關鍵字規則 R1–R6</span></a></li>
-      <li><a href="#url"><em>02</em><span>URL 結構 U1–U8</span></a></li>
-      <li><a href="#html"><em>03</em><span>HTML 結構 H1–H7</span></a></li>
-      <li><a href="#fuse"><em>04</em><span>融合與分級</span></a></li>
-    </ul>
+    <nav class="idx" id="idx" aria-label="規則索引">
+      <a href="#try"><em>00</em><span>試試看</span></a>
+      <a href="#kw"><em>01</em><span>關鍵字規則 R1–R6</span></a>
+      <a href="#url"><em>02</em><span>URL 結構 U1–U8</span></a>
+      <a href="#html"><em>03</em><span>HTML 結構 H1–H7</span></a>
+      <a href="#fuse"><em>04</em><span>融合與分級</span></a>
+    </nav>
   <main class="dz-main">
     <div class="sh" id="try"><span class="n">00</span><h2>試試看</h2>
       <p>貼上一段文字，命中的關鍵字會被螢光筆標出，並依下方 R1–R5 的計分方式估算。僅為前端示意，不含 URL / HTML 結構規則、ML 與 AI 判讀，實際結果以後端為準。</p></div>
     <div class="play">
       <div class="in">
         <div class="lb">輸入文字</div>
-        <textarea id="pt">親愛的客戶，您的帳戶將於 24 小時內停用，請立即點擊 https://example.com/verify 驗證密碼。</textarea>
+        <textarea id="pt" aria-label="輸入文字">親愛的客戶，您的帳戶將於 24 小時內停用，請立即點擊 https://example.com/verify 驗證密碼。</textarea>
         <div class="lb" style="margin-top:.9rem">命中標記</div>
         <div id="mirror"></div>
       </div>
@@ -3553,7 +3570,7 @@ document.addEventListener('DOMContentLoaded', function () {
   checkSender('no-reply@accounts.google.com');
 });
 </script>
-<div class="hdr"><div class="hdr-left"><a href="/">phishing-detector</a></div><div class="hdr-nav"><a href="/rules">偵測規則</a><a href="/whitelist">白名單</a><a href="/history">案件簿</a><a href="/paste">貼信送檢</a></div></div>
+<header class="hdr"><div class="hdr-left"><a href="/">phishing-detector</a></div><div class="hdr-nav"><a href="/rules">偵測規則</a><a href="/whitelist">白名單</a><a href="/history">案件簿</a><a href="/paste">貼信送檢</a></div></header>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><filter id="ink"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="4" result="t"/><feColorMatrix in="t" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -2.4 2.0" result="m"/><feComposite in="SourceGraphic" in2="m" operator="in"/></filter></defs></svg>
 <div class="dz dz-wide dz-split">
   <aside class="dz-side">
