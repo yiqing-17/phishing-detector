@@ -17,6 +17,10 @@ html.sxin::after{content:"";position:fixed;inset:0;z-index:9999;background:#1414
 <meta property="og:type" content="website">
 <meta property="og:title" content="phishing-detector">
 <meta property="og:description" content="授權 Gmail 或直接貼信，四層分析逐層比對，找出可疑信件。">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#141414">
+<link rel="icon" type="image/png" href="/static/icon-192.png">
+<link rel="apple-touch-icon" href="/static/icon-192.png">
 <meta property="og:site_name" content="phishing-detector">
 <meta property="og:locale" content="zh_TW">
 <meta property="og:image" content="https://phishing-detector-n8rv.onrender.com/static/og.png">
@@ -441,7 +445,8 @@ body .hdr-left a { color: inherit; text-decoration: none; font-weight: 600; }
 body .hdr-nav a.cur { background: var(--hl); padding: 2px .45rem; }
 @media (max-width: 700px) {
   body .hdr { height: auto; min-height: 3rem; flex-wrap: wrap; gap: .3rem 1rem; padding: .6rem 1rem; }
-  body .hdr-nav { gap: .9rem; flex-wrap: wrap; }
+  body .hdr-nav { width: 100%; display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; }
+  body .hdr-nav a, body .hdr-nav a.cur { justify-content: center; min-height: 44px; padding: 0 .2rem; }
   body .hdr-nav a kbd.k { display: none; }
   .dz-side { padding: 1.25rem 1rem 1.5rem; }
 }
@@ -589,7 +594,7 @@ main.ew{margin:3.5rem auto;padding:3rem 2.4rem 2.4rem;width:calc(100% - 2.5rem)}
 @media(min-width:900px){.clear .wrap>div:last-child{border-left:2px solid #141414;padding-left:2.5rem}}
 
 /* ── 規則頁：色帶索引卡 ── */
-:is(#kwcards,#url + .cards,#html + .cards){display:grid;grid-template-columns:repeat(auto-fill,minmax(19rem,1fr));gap:1.2rem;border-top:0}
+:is(#kwcards,#url + .cards,#html + .cards){display:grid;grid-template-columns:repeat(auto-fill,minmax(min(19rem,100%),1fr));gap:1.2rem;border-top:0}
 :is(#kwcards,#url + .cards,#html + .cards) .card{
  --cc:#e2e2e2;display:grid;grid-template-columns:auto minmax(0,1fr) auto;grid-template-rows:auto auto 1fr;
  column-gap:.7rem;row-gap:0;align-items:center;padding:0;
@@ -886,6 +891,7 @@ html,body{overflow-x:clip}
 .pd-help li kbd.k{flex:none;min-width:2.2rem}
 .pd-help .ft{margin-top:.8rem;color:#6b6b6b;font-size:11px}
 @media(prefers-reduced-motion:reduce){body .hdr,.dz-side,.js footer.f .big span{transition:none}.pd-toast{animation:none}}
+#sender-input:focus-visible,#subject-input:focus-visible,#body-input:focus-visible{outline:2px solid #141414;outline-offset:-2px;background-color:rgba(255,182,213,.22)}
 @media print{ #pgbar,.pd-toasts,.pd-help{display:none}}
 </style>
 <script>
@@ -1134,11 +1140,12 @@ html,body{background:var(--paper);color:#141414;font-family:var(--sans);-webkit-
 .mono{font-family:var(--mono)}
 .hero{padding:clamp(2.5rem,7vh,5rem) 0 clamp(3rem,8vh,6rem)}
 .hero .wrap{display:grid;gap:3rem;align-items:center}
-@media(min-width:1000px){.hero .wrap{grid-template-columns:1fr 1.02fr;gap:3rem;min-height:calc(100svh - 3rem - 8rem)}}
+@media(min-width:1000px){.hero .wrap{grid-template-columns:1fr 1.02fr;gap:3rem;min-height:calc(100svh - 3rem - 12.5rem)}}
 h1{font-family:var(--serif);font-weight:900;font-size:clamp(2.3rem,4.7vw,4.4rem);line-height:1.2;letter-spacing:-.01em;text-wrap:balance}
 h1 .hl{background:linear-gradient(transparent 56%,var(--hl) 56%)}
 .sub{margin-top:1.5rem;max-width:36rem;color:#4a4a4a;font-size:16px;line-height:1.85}
 .cta{margin-top:2.25rem;display:flex;flex-direction:column;gap:.6rem;max-width:30rem}
+.priv{margin:1.1rem 0 0;max-width:30rem;font-size:12.5px;line-height:1.75;color:#555}
 .btn{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.7rem .8rem;border:1px solid #141414;background:#141414;color:var(--paper);font-family:var(--mono);font-size:12.5px;text-decoration:none;transition:background .15s,color .15s}
 .btn.o{background:transparent;color:#141414}
 .btn .key{display:flex;align-items:center;justify-content:center;min-width:1.35rem;height:1.35rem;background:var(--paper);color:#141414;font-weight:600;font-size:11px;text-transform:uppercase}
@@ -1262,6 +1269,23 @@ mark.m[data-n="3"]{cursor:pointer;text-decoration:underline dotted;text-underlin
 .qmail dl div{display:grid;grid-template-columns:4.2em 1fr;gap:.5rem}
 .qmail dt{color:#6b6b6b;font-size:11.5px;letter-spacing:.06em}.qmail dd{margin:0;word-break:break-all}
 .qmail p{margin:0;font-family:var(--sans);font-size:15px;line-height:2.1;white-space:pre-wrap}
+.qpick{display:flex;justify-content:space-between;gap:1rem;margin-top:-.2rem;font:12.5px var(--sans);color:#4a4a4a}
+.qpick b{flex:none;white-space:nowrap;font:600 12px var(--mono);color:#141414}
+.qpick.off{display:none}
+.qmail .pk{display:inline-block;position:relative;margin:0;padding:0 1px;border:0;border-radius:0;background:none;color:inherit;font:inherit;line-height:inherit;text-align:inherit;cursor:pointer;word-break:break-all}
+.qmail .pk:hover:not(:disabled){text-decoration:underline dotted #141414;text-underline-offset:3px}
+.qmail .lw{white-space:nowrap}.qmail .lw .pk{white-space:normal}
+.qmail .pk:disabled{cursor:default}
+.qmail .pk::after{content:"";position:absolute;inset:-1px -2px;border:1.5px dashed #141414;pointer-events:none;clip-path:inset(0 100% 0 0);transition:clip-path .28s ease-out}
+.qmail .pk.on::after{clip-path:inset(0 0 0 0)}
+.qmail .pk:focus-visible{outline:2px solid #141414;outline-offset:2px}
+.qcmp{margin:.2rem 0 .8rem;padding:.7rem .9rem;border:1px solid #141414;background:#fff;font:13.5px/1.8 var(--sans)}
+.qcmp .sw{display:inline-block;width:.95rem;height:.7rem;margin:0 .35rem -.05rem 0}
+.qcmp .sw.h{background:var(--hl)}
+.qcmp .sw.o{border:1.5px dashed #141414;box-sizing:border-box}
+.qcmp small{display:block;color:#6b6b6b;font-size:12.5px}
+@media(pointer:coarse){.qmail .pk{min-height:28px;padding:.2rem .2rem;margin:.05rem 0}}
+@media(prefers-reduced-motion:reduce){.qmail .pk::after{transition:none}}
 .qmail .lnk{text-decoration:underline dotted;text-underline-offset:3px;color:#2b4c8c}
 .qmail mark{background:var(--hl);color:#141414;padding:.05em .1em}
 .qmail mark::after{content:attr(data-r);position:relative;top:-.7em;margin-left:.15em;font:600 9px/1 var(--mono);background:#141414;color:var(--paper);padding:1px 3px}
@@ -1311,6 +1335,7 @@ mark.m[data-n="3"]{cursor:pointer;text-decoration:underline dotted;text-underlin
       <a class="btn" href="/login" data-key="s"><span>授權 Google 送檢</span><span class="key">S</span></a>
       <a class="btn o" href="/paste" data-key="p"><span>不想連接 Gmail？直接貼信送檢</span><span class="key">P</span></a>
     </div>
+    <p class="priv">只讀取信件（Gmail 唯讀權限），不會修改或刪除。授權憑證在掃描結束後清除，信件內容只暫存於伺服器記憶體、不寫入資料庫，案件簿只保存統計數字。AI 語意判讀會把信件文字送到第三方 AI 服務 Groq 分析。</p>
   </div>
   <div class="docwrap" data-parallax="0.05">
     <div class="stamp" role="button" tabindex="0" aria-label="可疑 SUSPICIOUS 印章，重播標記動畫" title="點擊重播">可疑<small>SUSPICIOUS</small></div>
@@ -1370,6 +1395,7 @@ mark.m[data-n="3"]{cursor:pointer;text-decoration:underline dotted;text-underlin
   <p class="note">先憑直覺判斷，再看四層分析怎麼拆這封信。範例皆為虛構郵件；第 1 層的命中詞由實際規則詞庫即時比對，其餘三層為預先寫好的示意，並非即時模型輸出。</p>
   <div class="quiz" id="quizbox">
     <div class="qhead"><span id="qn">1 / 5</span><span id="qs">答對 0</span></div>
+    <div class="qpick" id="qpick"><span>先圈出你覺得可疑的地方（也可以不圈），再判斷。</span><b id="qpc" aria-live="polite">已圈 0</b></div>
     <article class="qmail" id="qmail" aria-live="polite"></article>
     <div class="qact" id="qact">
       <button type="button" class="btn o" data-g="safe"><span>看起來安全</span><span class="key">←</span></button>
@@ -1536,25 +1562,27 @@ var qbox=document.getElementById('quizbox');
 if(qbox&&KW&&KW.length){
   var groups=KW.map(function(g){var m=/[+]([0-9]+)/.exec(String(g[4]||''));return{id:g[0],name:g[1],words:(g[3]||[]).filter(Boolean).map(function(w){return String(w).toLowerCase();}),w:m?+m[1]:2};});
   var Q=[
-   {phish:true,from:'service@twbank-secure.example',hw:'網址和顯示文字不一樣',subj:'【重要】您的帳戶將於 24 小時內凍結',
-    body:['親愛的客戶：偵測到您的帳戶有異常登入。請立即點擊「',{l:'登入驗證',u:'http://twbank-secure.example/verify'},'」，輸入帳號與密碼，否則帳戶將被停用。'],
+   {phish:true,from:'service@twbank-secure.example',hw:'網址和顯示文字不一樣',subj:'【重要】|您的帳戶|將於 24 小時內|凍結',
+    body:['親愛的客戶：|偵測到您的帳戶|有異常登入。|請立即|點擊「',{l:'登入驗證',u:'http://twbank-secure.example/verify'},'」，|輸入帳號與密碼，|否則帳戶|將被停用。'],
     ml:['hot','偏高','整體用詞接近釣魚樣本'],url:['hot','不一致','連結顯示為銀行登入，實際網域卻是 twbank-secure.example'],ai:['hot','索取憑證','信件要求輸入帳號與密碼']},
-   {phish:false,from:'amy.chen@company.example',hw:'沒有連結，也沒有要資料',subj:'週五專案會議改期',
-    body:['各位好，','週五的專案會議改到下午三點，議程請見附件。','有問題再跟我說，謝謝。'],
+   {phish:false,from:'amy.chen@company.example',hw:'沒有連結，也沒有要資料',subj:'週五專案會議|改期',
+    body:['各位好，','週五的專案會議|改到下午三點，|議程請見附件。','有問題再跟我說，|謝謝。'],
     ml:['cool','偏低','用詞接近一般工作信件'],url:['cool','無連結','內文沒有網址，也沒有隱藏元素'],ai:['cool','意圖正常','只是通知時間變更，沒有索取資訊']},
-   {phish:false,from:'receipts@shop.example',hw:'只通知出貨，沒要任何資料',subj:'您的訂單 #A1024 已出貨',
-    body:['您的訂單 #A1024 已出貨，預計 2 日內送達。','可到官網「訂單查詢」頁面查看物流，不需要提供任何個人資料。'],
+   {phish:false,from:'receipts@shop.example',hw:'只通知出貨，沒要任何資料',subj:'您的訂單 #A1024 |已出貨',
+    body:['您的訂單 #A1024 |已出貨，|預計 2 日內送達。','可到官網「訂單查詢」頁面|查看物流，|不需要提供|任何個人資料。'],
     ml:['cool','偏低','用詞接近訂單通知'],url:['cool','無連結','沒有可點擊的網址'],ai:['cool','意圖正常','單純通知出貨，沒有要求付款或登入']},
-   {phish:true,from:'no-reply@parcel-tw.example',hw:'小額運費是常見誘餌',subj:'包裹無法投遞，請補繳運費',
-    body:['您的包裹地址不完整，請立即點擊 ',{l:'補繳運費',u:'http://parcel-tw-pay.example/pay'},' 完成付款 NT$25，逾期將退回寄件人。'],
+   {phish:true,from:'no-reply@parcel-tw.example',hw:'小額運費是常見誘餌',subj:'包裹無法投遞，|請補繳運費',
+    body:['您的包裹地址不完整，|請立即|點擊 ',{l:'補繳運費',u:'http://parcel-tw-pay.example/pay'},' 完成付款 NT$25，|逾期將退回寄件人。'],
     ml:['hot','偏高','運費補繳類用詞常見於釣魚樣本'],url:['hot','不一致','連結指向 parcel-tw-pay.example，與寄件網域不同'],ai:['hot','誘導付款','以小額運費誘使輸入付款資料']},
-   {phish:true,from:'support@paypa1-help.example',hw:'paypa1：數字 1 假扮字母 l',subj:'Action required: your account is suspended',
-    body:['Your account has been suspended. Verify now to avoid permanent closure. Enter your password and credit card number at ',{l:'http://paypal.com/login',u:'http://paypa1-help.example/login'},'.'],
+   {phish:true,from:'support@paypa1-help.example',hw:'paypa1：數字 1 假扮字母 l',subj:'Action required:| your account is suspended',
+    body:['Your account has been suspended. |Verify now |to avoid permanent closure. |Enter your password |and credit card number at ',{l:'http://paypal.com/login',u:'http://paypa1-help.example/login'},'.'],
     ml:['hot','偏高','用詞接近釣魚樣本'],url:['hot','仿冒網域','paypa1 把字母 l 換成數字 1，且顯示網址與實際不符'],ai:['hot','索取憑證','要求提供密碼與信用卡號']}
   ];
-  var qi=0,qok=0,answered=false,visible=false;
+  Q.forEach(function(q){q.subjc=q.subj.split('|');q.subj=q.subjc.join('');q.bodyc=q.body.map(function(p){return typeof p==='string'?p.split('|'):p;});q.body=q.bodyc.map(function(p){return Array.isArray(p)?p.join(''):p;});q.bodyc.forEach(function(e,k){if(Array.isArray(e))return;e.pre='';e.post='';var pv=q.bodyc[k-1],nx=q.bodyc[k+1],m1,m2;if(Array.isArray(pv)){m1=/[「『（(]+$/.exec(pv[pv.length-1]);if(m1){e.pre=m1[0];pv[pv.length-1]=pv[pv.length-1].slice(0,pv[pv.length-1].length-m1[0].length);}}if(Array.isArray(nx)){m2=/^[」』）),，。、；：！？.]+/.exec(nx[0]);if(m2){e.post=m2[0];nx[0]=nx[0].slice(m2[0].length);}}});});
+  var qi=0,qok=0,qov=0,qrh=0,qmk=0,answered=false,visible=false,chunks=[];
   var elMail=document.getElementById('qmail'),elAct=document.getElementById('qact'),elRes=document.getElementById('qres'),elN=document.getElementById('qn'),elS=document.getElementById('qs');
-  function hlText(txt,words){
+  var qpick=document.getElementById('qpick'),qpc=document.getElementById('qpc');
+  function hitRanges(txt){
     var low=txt.toLowerCase(),r=[],i,k;
     for(i=0;i<low.length;i++){
       for(k=0;k<groups.length;k++){
@@ -1563,9 +1591,33 @@ if(qbox&&KW&&KW.length){
         if(hit){r.push([i,i+hit.length,g.id]);i+=hit.length-1;break;}
       }
     }
-    var out='',pos=0;
+    return r;
+  }
+  function hlText(txt){
+    var r=hitRanges(txt),out='',pos=0;
     r.forEach(function(x){out+=esc(txt.slice(pos,x[0]))+'<mark data-r="'+x[2]+'">'+esc(txt.slice(x[0],x[1]))+'</mark>';pos=x[1];});
     return out+esc(txt.slice(pos));
+  }
+  function isWord(t){
+    for(var i=0;i<t.length;i++){var c=t.charCodeAt(i);if((c>=48&&c<=57)||(c>=65&&c<=90)||(c>=97&&c<=122)||(c>=13312&&c<=40959))return true;}
+    return false;
+  }
+  function pkPart(txt,pieces,isLink){
+    var r=hitRanges(txt),pos=0,out='';
+    pieces.forEach(function(p){
+      var core=p.replace(/^ +/,'').replace(/ +$/,''),lead=p.length-p.replace(/^ +/,'').length,trail=p.length-lead-core.length,s0=pos+lead,e0=s0+core.length;
+      pos+=p.length;
+      if(!isWord(core)){out+=esc(p);return;}
+      var c={txt:core,s:s0,r:r,on:false,hit:r.some(function(x){return x[0]<e0&&x[1]>s0;}),i:chunks.length};
+      chunks.push(c);
+      out+=esc(p.slice(0,lead))+'<button type="button" class="pk'+(isLink?' lnk':'')+'" data-i="'+c.i+'" aria-pressed="false">'+esc(core)+'</button>'+esc(p.slice(p.length-trail));
+    });
+    return out;
+  }
+  function markChunk(c){
+    var out='',pos=c.s,e=c.s+c.txt.length;
+    c.r.forEach(function(x){var a=Math.max(x[0],c.s),b=Math.min(x[1],e);if(a>=b)return;out+=esc(c.txt.slice(pos-c.s,a-c.s))+'<mark data-r="'+x[2]+'">'+esc(c.txt.slice(a-c.s,b-c.s))+'</mark>';pos=b;});
+    return out+esc(c.txt.slice(pos-c.s));
   }
   function layer1(q){
     var full=('from: '+q.from+' subject: '+q.subj+' body: '+q.body.map(function(p){return typeof p==='string'?p:p.l;}).join('')).toLowerCase(),raw=0,hits=[];
@@ -1574,9 +1626,11 @@ if(qbox&&KW&&KW.length){
   }
   function showQ(){
     answered=false;var q=Q[qi];
-    elN.textContent=(qi+1)+' / '+Q.length;elS.textContent='答對 '+qok;
+    elN.textContent=(qi+1)+' / '+Q.length;elS.textContent='答對 '+qok;chunks=[];qpick.className='qpick';qpc.textContent='已圈 0';
     elMail.className='qmail';void elMail.offsetWidth;elMail.className='qmail in';
-    elMail.innerHTML='<div class="lh">'+esc(q.from.split('@')[1])+'</div><dl><div><dt>寄件者</dt><dd>'+esc(q.from)+'</dd></div><div><dt>主　旨</dt><dd>'+esc(q.subj)+'</dd></div></dl><p>'+q.body.map(function(p){return typeof p==='string'?esc(p):'<span class="lnk">'+esc(p.l)+'</span>';}).join('')+'</p><div class="status" id="qst">將游標移到藍色連結上，看它真正會連到哪裡。</div>';
+    var pf=pkPart(q.from,[q.from],false),ps=pkPart(q.subj,q.subjc,false),pb=q.bodyc.map(function(e){if(Array.isArray(e))return pkPart(e.join(''),e.filter(function(x){return x!=='';}),false);var b=pkPart(e.l,[e.l],true);return (e.pre||e.post)?'<span class="lw">'+esc(e.pre)+b+esc(e.post)+'</span>':b;}).join('');
+    elMail.innerHTML='<div class="lh">'+esc(q.from.split('@')[1])+'</div><dl><div><dt>寄件者</dt><dd>'+pf+'</dd></div><div><dt>主　旨</dt><dd>'+ps+'</dd></div></dl><p>'+pb+'</p><div class="status" id="qst">將游標移到藍色連結上，看它真正會連到哪裡。</div>';
+    all('.pk',elMail).forEach(function(b){chunks[+b.getAttribute('data-i')].el=b;});
     var lk=elMail.querySelector('.lnk'),st=document.getElementById('qst'),lq=q.body.filter(function(p){return typeof p!=='string';})[0];
     if(lk&&lq){
       lk.addEventListener('mouseenter',function(){st.className='status on';st.innerHTML='<span class="k">顯示文字</span> '+esc(lq.l)+' <span class="k">→ 實際連結</span> <span class="u">'+esc(lq.u)+'</span>';});
@@ -1589,9 +1643,11 @@ if(qbox&&KW&&KW.length){
     var q=Q[qi],right=(g==='phish')===q.phish;if(right)qok++;
     elS.textContent='答對 '+qok;elAct.className='qact off';
     var l1=layer1(q);
-    var bodyHtml=q.body.map(function(p){return typeof p==='string'?hlText(p):'<span class="lnk">'+esc(p.l)+'</span>';}).join('');
-    elMail.querySelector('p').innerHTML=bodyHtml;
-    elMail.querySelector('dl div:nth-child(2) dd').innerHTML=hlText(q.subj);
+    qpick.className='qpick off';
+    var ov=0,ms=0,ex=0,hc=0,mk=0;
+    chunks.forEach(function(c){c.el.disabled=true;c.el.innerHTML=markChunk(c);if(c.hit){hc++;c.el.classList.add('hit');}if(c.on)mk++;if(c.hit&&c.on)ov++;else if(c.hit)ms++;else if(c.on)ex++;});
+    qov+=ov;qrh+=hc;qmk+=mk;
+    var cmpHtml='<div class="qcmp">'+(mk?'<span class="sw o"></span>你圈了 '+mk+' 處　<span class="sw h"></span>規則引擎命中 '+hc+' 處<br>重疊 '+ov+'．漏標 '+ms+'．多標 '+ex+(ex?'<small>'+(q.phish?'多標不算錯：規則引擎沒命中的地方，可能由其他層抓到。':'這封是正常信件：你圈的地方規則引擎都沒有命中，不算破綻。')+'</small>':''):(hc?'你這題沒有圈選；規則引擎命中 '+hc+' 處（粉色標記）。':'你這題沒有圈選；規則引擎沒有命中任何關鍵字。'))+'</div>';
     var vs=document.createElement('div');vs.className='vstamp '+(q.phish?'red':'grn');vs.innerHTML=(q.phish?'可疑':'安全')+'<small>'+(q.phish?'SUSPICIOUS':'CLEARED')+'</small>';
     elMail.appendChild(vs);void vs.offsetWidth;vs.classList.add('show');elMail.classList.add('shake');
     var hwEl=document.createElement('div');hwEl.className='hw';hwEl.setAttribute('aria-hidden','true');hwEl.textContent='↙ '+q.hw;elMail.appendChild(hwEl);
@@ -1602,7 +1658,7 @@ if(qbox&&KW&&KW.length){
       ['AI 語意','<i class="'+q.ai[0]+'">'+q.ai[1]+'</i>'+esc(q.ai[2])]
     ];
     var last=qi===Q.length-1;
-    elRes.innerHTML='<div class="qfb '+(right?'ok':'no')+'"><span>'+(right?'猜對了':'差一點')+'</span>　'+(q.phish?'這是釣魚信':'這封是正常信件')+'</div><ul class="layers">'+rows.map(function(r,i){return '<li><b>'+(i+1)+'</b><span class="nm">'+r[0]+'</span><span class="ds">'+r[1]+'</span></li>';}).join('')+'</ul><div class="qnext"><button type="button" class="btn" id="qnext"><span>'+(last?'看結果':'下一封')+'</span><span class="key">→</span></button></div>';
+    elRes.innerHTML='<div class="qfb '+(right?'ok':'no')+'"><span>'+(right?'猜對了':'差一點')+'</span>　'+(q.phish?'這是釣魚信':'這封是正常信件')+'</div>'+cmpHtml+'<ul class="layers">'+rows.map(function(r,i){return '<li><b>'+(i+1)+'</b><span class="nm">'+r[0]+'</span><span class="ds">'+r[1]+'</span></li>';}).join('')+'</ul><div class="qnext"><button type="button" class="btn" id="qnext"><span>'+(last?'看結果':'下一封')+'</span><span class="key">→</span></button></div>';
     elRes.className='qres on';
     all('.layers li',elRes).forEach(function(li,i){setTimeout(function(){li.classList.add('in');},PD.RM?0:260*(i+1));});
     document.getElementById('qnext').addEventListener('click',next);
@@ -1613,10 +1669,18 @@ if(qbox&&KW&&KW.length){
     elMail.className='qmail';elMail.innerHTML='';elMail.style.display='none';elAct.className='qact off';
     elN.textContent='完成';
     var msg=qok>=5?'全對。再細微的偽裝，你都看得出來。':qok>=3?'不錯。真正的信件還會混著更多干擾，交給四層分析逐層比對會更穩。':'沒關係，這正是需要四層分析的原因：人眼容易被急迫語氣帶著走。';
+    var pkmsg=qmk?'你一共圈了 '+qmk+' 處，其中 '+qov+' 處和規則引擎的命中重疊（規則引擎共命中 '+qrh+' 處）。':'你這次沒有圈選。下次先圈出可疑的地方，再看規則引擎抓到什麼。';
     elRes.className='qres on';
-    elRes.innerHTML='<div class="qsum"><b>'+qok+' / '+Q.length+'</b><p>'+msg+'</p><div class="qnext"><a class="btn" href="/paste" data-key="p"><span>貼上你的信試試</span><span class="key">P</span></a><a class="btn o" href="/login"><span>授權 Google 送檢</span><span class="key">S</span></a><button type="button" class="btn o" id="qagain"><span>再玩一次</span><span class="key">R</span></button></div></div>';
-    document.getElementById('qagain').addEventListener('click',function(){qi=0;qok=0;elMail.style.display='';showQ();});
+    elRes.innerHTML='<div class="qsum"><b>'+qok+' / '+Q.length+'</b><p>'+msg+'</p><p>'+pkmsg+'</p><div class="qnext"><a class="btn" href="/paste" data-key="p"><span>貼上你的信試試</span><span class="key">P</span></a><a class="btn o" href="/login"><span>授權 Google 送檢</span><span class="key">S</span></a><button type="button" class="btn o" id="qagain"><span>再玩一次</span><span class="key">R</span></button></div></div>';
+    document.getElementById('qagain').addEventListener('click',function(){qi=0;qok=0;qov=0;qrh=0;qmk=0;elMail.style.display='';showQ();});
   }
+  elMail.addEventListener('click',function(e){
+    var b=e.target.closest?e.target.closest('.pk'):null;if(!b||answered)return;
+    var c=chunks[+b.getAttribute('data-i')];if(!c)return;
+    c.on=!c.on;b.classList.toggle('on',c.on);b.setAttribute('aria-pressed',c.on?'true':'false');
+    qpc.textContent='已圈 '+chunks.filter(function(x){return x.on;}).length;
+    if(b.classList.contains('lnk')){var lq=Q[qi].body.filter(function(p){return typeof p!=='string';})[0],st=document.getElementById('qst');if(lq&&st){st.className='status on';st.innerHTML='<span class="k">顯示文字</span> '+esc(lq.l)+' <span class="k">→ 實際連結</span> <span class="u">'+esc(lq.u)+'</span>';}}
+  });
   all('#qact [data-g]').forEach(function(b){b.addEventListener('click',function(){guess(b.getAttribute('data-g'));});});
   if(HAS_IO){new IntersectionObserver(function(es){visible=es[0].isIntersecting;},{threshold:.2}).observe(qbox);}else{visible=true;}
   document.addEventListener('keydown',function(e){
