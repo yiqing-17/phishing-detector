@@ -892,6 +892,20 @@ html,body{overflow-x:clip}
 .pd-help .ft{margin-top:.8rem;color:#6b6b6b;font-size:11px}
 @media(prefers-reduced-motion:reduce){body .hdr,.dz-side,.js footer.f .big span{transition:none}.pd-toast{animation:none}}
 #sender-input:focus-visible,#subject-input:focus-visible,#body-input:focus-visible{outline:2px solid #141414;outline-offset:-2px;background-color:rgba(255,182,213,.22)}
+@media(min-width:1000px){.dz-wide>.idx a{position:relative}.dz-wide>.idx a::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:linear-gradient(#141414,#141414) 0 0/calc(var(--sp,0)*100%) 100% no-repeat,#d4d4d4;pointer-events:none}}
+.idxm{display:none}
+@media(max-width:999px){
+.idxm{position:fixed;left:0;right:0;top:var(--stick);z-index:90;display:flex;align-items:center;min-height:44px;background:#f1f1f1;border-bottom:1.5px solid #141414;transform:translateY(-120%);visibility:hidden;transition:transform .25s ease,top .28s ease,visibility 0s .25s}
+.idxm.show{transform:none;visibility:visible;transition:transform .25s ease,top .28s ease}
+.idxm-t{display:flex;flex:none}
+.idxm-t a{position:relative;display:flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;color:#141414;font:600 12px var(--mono);text-decoration:none}
+.idxm-t a.on{background:var(--hl)}
+.idxm-t a::after{content:"";position:absolute;left:6px;right:6px;bottom:0;height:3px;background:linear-gradient(#141414,#141414) 0 0/calc(var(--sp,0)*100%) 100% no-repeat,#d4d4d4;pointer-events:none}
+.idxm-n{flex:1;min-width:0;padding:0 .8rem 0 .5rem;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font:12px var(--mono)}
+:is(#try,#kw,#url,#html,#fuse){scroll-margin-top:5.5rem}
+}
+@media(min-width:1000px){:is(#try,#kw,#url,#html,#fuse){scroll-margin-top:3rem}}
+@media(prefers-reduced-motion:reduce){.idxm,.idxm.show{transition:none}}
 @media print{ #pgbar,.pd-toasts,.pd-help{display:none}}
 </style>
 <script>
@@ -1008,11 +1022,32 @@ document.addEventListener('DOMContentLoaded',function(){
   var links=all('.idx a[href^="#"]');
   if(links.length){
     var secs=links.map(function(a){return[a,document.getElementById(a.getAttribute('href').slice(1))];}).filter(function(p){return p[1];});
+    var m2=[],mbar=document.createElement('nav'),mtabs=document.createElement('div'),mname=document.createElement('span'),acts=[],mx=0,lastH=0,lastIH=0,listEl=document.getElementById('idx');
+    mbar.className='idxm';mbar.setAttribute('aria-label','規則索引（捲動後顯示）');mtabs.className='idxm-t';mname.className='idxm-n';mname.setAttribute('aria-hidden','true');
+    m2=secs.map(function(p,i){var a=document.createElement('a'),em=p[0].querySelector('em'),sp=p[0].querySelector('span');a.href=p[0].getAttribute('href');a.textContent=em?em.textContent:String(i);a.setAttribute('aria-label',(em?em.textContent+' ':'')+(sp?sp.textContent:''));mtabs.appendChild(a);return a;});
+    mbar.appendChild(mtabs);mbar.appendChild(mname);document.body.appendChild(mbar);
+    var calcActs=function(){lastH=html.scrollHeight;lastIH=innerHeight;mx=lastH-lastIH;acts=secs.map(function(p){return p[1].getBoundingClientRect().top+window.scrollY-lastIH*0.3;});};
+    var idxSync=function(cur){
+      if(!acts.length||html.scrollHeight!==lastH||innerHeight!==lastIH)calcActs();
+      var y=window.scrollY;
+      secs.forEach(function(p,i){
+        var a=acts[i],b=i<secs.length-1?acts[i+1]:Math.max(mx,a+1),v=b>a?Math.min(1,Math.max(0,(y-a)/(b-a))):(y>=a?1:0);
+        if(i===secs.length-1&&innerHeight+y>=html.scrollHeight-4)v=1;
+        var sv=v.toFixed(3),on=!!cur&&p===cur;
+        p[0].style.setProperty('--sp',sv);m2[i].style.setProperty('--sp',sv);
+        m2[i].classList.toggle('on',on);
+        if(on)m2[i].setAttribute('aria-current','location');else m2[i].removeAttribute('aria-current');
+      });
+      var nm=cur?cur[0].querySelector('span'):null;mname.textContent=nm?nm.textContent:'';
+      var r=listEl?listEl.getBoundingClientRect():null;mbar.classList.toggle('show',!!r&&r.bottom<0);
+    };
+    window.addEventListener('resize',function(){acts=[];});
     spyFn=function(){
       var y=innerHeight*0.3,cur=secs[0];
       secs.forEach(function(p){if(p[1].getBoundingClientRect().top<=y)cur=p;});
       if(window.innerHeight+window.scrollY>=html.scrollHeight-4)cur=secs[secs.length-1];
-      links.forEach(function(a){a.classList.toggle('on',!!cur&&a===cur[0]);});
+      links.forEach(function(a){var on=!!cur&&a===cur[0];a.classList.toggle('on',on);if(on)a.setAttribute('aria-current','location');else a.removeAttribute('aria-current');});
+      idxSync(cur);
     };
     spyFn();
   }
@@ -2411,7 +2446,7 @@ RESULT_HTML = COMMON_CSS + """
 .vd-r { display: flex; flex-direction: column; align-items: flex-end; gap: 1rem; padding-right: .6rem; }
 .stamp-lg { border: 4px solid currentColor; padding: .15rem 1rem .25rem; font-family: var(--serif); font-weight: 900; font-size: 2.4rem; line-height: 1.15; text-align: center; transform: rotate(-6deg); mix-blend-mode: multiply; animation: stampin .45s cubic-bezier(.2,1.7,.4,1) both; }
 .stamp-lg small { display: block; font-family: var(--mono); font-size: .7rem; letter-spacing: .2em; font-weight: 600; }
-.stamp-lg.red { color: #c8321e; } .stamp-lg.org { color: #a8650f; } .stamp-lg.grn { color: #2e6a4d; } .stamp-lg.ink { color: #141414; }
+.stamp-lg.red { color: #c8321e; } .stamp-lg.org { color: #925709; } .stamp-lg.grn { color: #2e6a4d; } .stamp-lg.ink { color: #141414; }
 @keyframes stampin { from { opacity: 0; transform: rotate(14deg) scale(2.2); } to { opacity: .95; transform: rotate(-6deg) scale(1); } }
 .vscore { font-family: var(--serif); font-weight: 900; font-size: 3.4rem; line-height: 1; }
 .vscore small { font-family: var(--mono); font-size: 13px; font-weight: 400; color: #4a4a4a; margin-left: .3rem; }
@@ -2467,6 +2502,34 @@ mark.m::after { content: attr(data-n); position: relative; top: -.7em; margin-le
 .ev summary { cursor: pointer; padding: .7rem 1rem; font-family: var(--mono); font-size: 12px; font-weight: 600; }
 .ev div.it { padding: .5rem 1rem; border-top: 1px dashed #9a9a9a; font-size: 13px; line-height: 1.7; color: #4a4a4a; word-break: break-word; }
 .rec { border-left: 6px solid #141414; background: #fff; padding: 1rem 1.2rem; font-family: var(--serif); font-weight: 700; font-size: 1.15rem; line-height: 1.75; }
+.vc{position:relative;margin:2.4rem 0 0;border:1px solid #141414;background:#fff;padding:1.2rem 1.4rem 1.1rem;scroll-margin-top:5.5rem}
+.vc .vch{margin-bottom:.7rem;font:600 11px var(--mono);letter-spacing:.14em;color:#6b6b6b}
+.vc .vcl{margin:0;padding-right:9.5rem;font-family:var(--serif);font-weight:900;font-size:1.55rem;line-height:1.4}
+.vc.nost .vcl{padding-right:0}
+.vc .vst{position:absolute;right:1.1rem;top:.9rem;padding:.1rem .7rem .15rem;border:3px solid currentColor;font-family:var(--serif);font-weight:900;font-size:1.5rem;line-height:1.15;text-align:center;transform:rotate(-6deg);mix-blend-mode:multiply;opacity:.95}
+.vc .vst small{display:block;font:600 .55rem var(--mono);letter-spacing:.2em}
+.vc .vst.red{color:#c8321e}.vc .vst.org{color:#925709}.vc .vst.grn{color:#2e6a4d}.vc .vst.ink{color:#141414}
+.js .vc.arm .vst{opacity:0}
+.vc.go .vst{animation:stampin .45s cubic-bezier(.2,1.7,.4,1) both}
+.vc .vr{list-style:none;margin:1rem 0 0;padding:0}
+.vc .vr li{border-top:1px solid #d4d4d4}
+.vc .vri{display:grid;grid-template-columns:5.2rem minmax(0,1fr);gap:.2rem 1rem;align-items:baseline;width:100%;padding:.7rem .2rem;border:0;background:none;font:inherit;color:inherit;text-align:left;cursor:pointer}
+.vc .vri:hover .vrt{text-decoration:underline dotted;text-underline-offset:3px}
+.vc .vri:focus-visible,.vc .vgo:focus-visible{outline:2px solid #141414;outline-offset:-2px}
+.vc .vrt{font-weight:700}
+.vc .vrs{grid-column:2;font:11px var(--mono);color:#6b6b6b}
+.vc .vnone{margin:1rem 0 0;padding:.7rem 0;border-top:1px solid #d4d4d4;font-size:14px;color:#4a4a4a}
+.vc .vcf{display:flex;flex-wrap:wrap;align-items:baseline;gap:.4rem .8rem;margin-top:.2rem;padding-top:.8rem;border-top:1px solid #141414;font-size:14px;line-height:1.7}
+.vc .vcf .k{padding:0 .4rem;background:var(--hl);font:600 11px var(--mono);letter-spacing:.1em}
+.vc .vgo{margin-left:auto;padding:.3rem .2rem;border:0;background:none;color:inherit;font:600 12.5px var(--mono);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.vc .vcn{margin:.8rem 0 0;font-size:12.5px;line-height:1.7;color:#6b6b6b}
+.vc .vcl + .vcf{margin-top:1rem}
+.why li{transition:background-color .6s}
+.why li.fl{background:var(--hl)}
+.why li,.sh{scroll-margin-top:5.5rem}
+@media(max-width:560px){.vc{padding:1.1rem 1rem}.vc .vcl{padding-right:0;padding-top:3.6rem;font-size:1.3rem}.vc.nost .vcl{padding-top:0}.vc .vst{font-size:1.2rem}.vc .vri{grid-template-columns:4.4rem minmax(0,1fr)}.vc .vgo{margin-left:0}}
+@media(pointer:coarse){.vc .vri,.vc .vgo{min-height:44px}}
+@media(prefers-reduced-motion:reduce){.why li{transition:none}.vc.go .vst{animation:none}}
 .chk { margin-top: 1.2rem; }
 .chk label { display: flex; gap: .75rem; padding: .6rem 0; border-top: 1px dashed #9a9a9a; cursor: pointer; font-size: 14px; line-height: 1.7; }
 .chk input { flex: none; width: 1.1rem; height: 1.1rem; margin-top: .25rem; accent-color: #141414; }
@@ -2724,6 +2787,46 @@ function initIV(panel, d) {
   hint();
   if (acc && !PD.RM) PD.onView([iv.querySelector('.ivg')], function () { timers.push(setTimeout(function () { if (!touched) play(); }, 350)); }, 0.6);
 }
+function verdictHtml(d, V, score, layers) {
+  const lv = d.level, ex = d.explainable_findings || [];
+  const rs0 = d.risk_score, sv = (rs0 !== null && rs0 !== undefined && rs0 !== '' && Number(rs0) >= 0) ? Number(rs0) : null;
+  const sc = sv !== null ? '（風險 ' + sv + ' / 100）' : '';
+  const T = { high: '高度可疑' + sc, medium: '有可疑之處，建議人工確認' + sc, low: '目前沒有發現明顯風險' + sc, wl: '寄件網域在白名單，已直接放行' }[lv] || '這封信無法判定';
+  const stamp = V[1] ? '<div class="vst ' + V[2] + '" aria-hidden="true">' + V[0] + '<small>' + V[1] + '</small></div>' : '';
+  let rs = '';
+  if (lv === 'high' || lv === 'medium' || lv === 'low') {
+    const rank = function (v) { return v === 'high' ? 0 : v === 'low' ? 2 : 1; };
+    const top = ex.map(function (x, i) { return { x: x, i: i }; }).sort(function (a, b) { return rank(a.x.severity) - rank(b.x.severity) || a.i - b.i; }).slice(0, 3);
+    if (top.length) {
+      rs = '<ol class="vr">' + top.map(function (t) {
+        const x = t.x, cls = x.severity === 'high' ? 'red' : x.severity === 'low' ? 'grn' : 'org';
+        const lab = x.severity === 'high' ? '高風險' : x.severity === 'low' ? '低風險' : '注意';
+        return '<li><button type="button" class="vri" data-fi="' + t.i + '"><span class="st ' + cls + '">' + lab + '</span><span class="vrt">' + escapeHtml(x.title || '') + '</span><span class="vrs">' + escapeHtml(x.source || '') + '</span></button></li>';
+      }).join('') + '</ol>';
+    } else if (lv === 'low') rs = '<p class="vnone">沒有發現可疑證據。</p>';
+  }
+  const step = d.action ? '<div class="vcf"><span class="k">第一步</span><span>' + escapeHtml(d.action) + '</span><button type="button" class="vgo">看完整建議行動 ↓</button></div>' : '';
+  const notes = [];
+  if (layers.llm && layers.llm.score == null) notes.push('AI 層未提供分數，此結論來自其餘各層。');
+  notes.push('系統自動判讀，仍需人工確認。');
+  return '<section class="vc arm' + (stamp ? '' : ' nost') + '" role="region" aria-label="判決書"><div class="vch">判決書</div>' + stamp + '<p class="vcl">' + escapeHtml(T) + '</p>' + rs + step + '<p class="vcn">' + notes.map(escapeHtml).join('　') + '</p></section>';
+}
+function initVC(panel) {
+  const vc = panel.querySelector('.vc'); if (!vc) return;
+  vc.addEventListener('click', function (e) {
+    const b = e.target.closest ? e.target.closest('button') : null; if (!b) return;
+    let el = null;
+    if (b.classList.contains('vri')) {
+      el = panel.querySelectorAll('.why li')[Number(b.getAttribute('data-fi'))];
+      if (el) { el.classList.add('fl'); setTimeout(function () { el.classList.remove('fl'); }, 1800); }
+    } else if (b.classList.contains('vgo')) {
+      el = Array.prototype.slice.call(panel.querySelectorAll('.sh')).filter(function (h) { return h.textContent.indexOf('建議行動') > -1; })[0];
+    }
+    if (el) el.scrollIntoView({ behavior: PD.RM ? 'auto' : 'smooth', block: 'start' });
+  });
+  const go = function () { vc.classList.remove('arm'); vc.classList.add('go'); };
+  if (PD.RM || !window.IntersectionObserver) go(); else PD.onView([vc], go, 0.4);
+}
 function showDetail(idx, element) {
   const d = emailData[idx];
   if (!d) return;
@@ -2776,6 +2879,8 @@ function showDetail(idx, element) {
       '<div class="mbody">' + bd.html + '</div>' + (notes ? '<ul class="notes">' + notes + '</ul>' : '') + '</article>';
   }
 
+  html += verdictHtml(d, V, score, layers);
+
   /* 3 四層分析 */
   let layerHtml = '';
   order.forEach(function (key, n) {
@@ -2805,10 +2910,10 @@ function showDetail(idx, element) {
   const ex = d.explainable_findings || [];
   html += H('AI 分析說明') + '<p style="font-size:14.5px;line-height:1.9;color:#333;max-width:70ch">' + escapeHtml(d.explanation || '—') + '</p>';
   if (ex.length) {
-    html += H('為什麼會被判定為可疑？') + '<ul class="why">' + ex.map(function (x) {
+    html += H('為什麼會被判定為可疑？') + '<ul class="why">' + ex.map(function (x, i) {
       const cls = x.severity === 'high' ? 'red' : x.severity === 'low' ? 'grn' : 'org';
       const lab = x.severity === 'high' ? '高風險' : x.severity === 'low' ? '低風險' : '注意';
-      return '<li><div><span class="st ' + cls + '">' + lab + '</span></div><div><div class="src">' + escapeHtml(x.source || '') + '</div><div class="hd">' + escapeHtml(x.title || '') + '</div><div class="dt">' + escapeHtml(x.detail || '') + '</div></div></li>';
+      return '<li data-fi="' + i + '"><div><span class="st ' + cls + '">' + lab + '</span></div><div><div class="src">' + escapeHtml(x.source || '') + '</div><div class="hd">' + escapeHtml(x.title || '') + '</div><div class="dt">' + escapeHtml(x.detail || '') + '</div></div></li>';
     }).join('') + '</ul>';
   }
   let evHtml = '';
@@ -2872,6 +2977,7 @@ function showDetail(idx, element) {
   panel.querySelectorAll('mark.m').forEach(function (m) { const n = m.getAttribute('data-n'); m.addEventListener('mouseenter', function () { hotLc(n, true); }); m.addEventListener('mouseleave', function () { hotLc(n, false); }); });
   panel.querySelectorAll('.notes li').forEach(function (li) { const n = li.getAttribute('data-n'); li.addEventListener('mouseenter', function () { hotLc(n, true); }); li.addEventListener('mouseleave', function () { hotLc(n, false); }); });
   initIV(panel, d);
+  initVC(panel);
   panel.querySelectorAll('.cn').forEach(function (b) { b.addEventListener('click', function () { go(Number(b.getAttribute('data-d'))); }); });
   const md = panel.querySelector('.mdoc'); if (md && !PD.RM) md.classList.add(navDir < 0 ? 'pin-l' : 'pin-r');
   PD.arm('#right-panel .sh');

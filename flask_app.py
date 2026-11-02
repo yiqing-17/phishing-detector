@@ -1,4 +1,5 @@
 """Flask routes and application wiring for the phishing detector."""
+import gzip
 import json
 import os
 import secrets
@@ -6,7 +7,7 @@ import sqlite3
 import threading
 import uuid
 from datetime import datetime, timedelta
-from flask import Flask, jsonify, redirect, render_template_string, request, session
+from flask import Flask, Response, jsonify, redirect, render_template_string, request, session
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
 from google.oauth2.credentials import Credentials
@@ -81,6 +82,53 @@ def add_security_headers(response):
         "camera=(), microphone=(), geolocation=()"
     )
     return response
+
+_CANONICAL_PATHS = {'/', '/rules', '/paste', '/whitelist', '/history'}
+_COMPRESSIBLE = ('text/', 'application/json', 'application/javascript', 'application/manifest+json', 'image/svg+xml')
+
+
+@app.after_request
+def optimize_response(response):
+    if response.direct_passthrough or response.status_code != 200:
+        return response
+    mimetype = response.mimetype or ''
+    if request.method == 'GET' and mimetype == 'text/html' and request.path in _CANONICAL_PATHS:
+        body = response.get_data(as_text=True)
+        tag = f'<link rel="canonical" href="{BASE_URL.rstrip("/")}{request.path}">'
+        if '<meta charset="utf-8">' in body and 'rel="canonical"' not in body:
+            response.set_data(body.replace('<meta charset="utf-8">', '<meta charset="utf-8">\r\n' + tag, 1))
+    if request.path.startswith('/static/'):
+        response.headers['Cache-Control'] = 'public, max-age=86400'
+    if ('gzip' in request.headers.get('Accept-Encoding', '')
+            and 'Content-Encoding' not in response.headers
+            and mimetype.startswith(_COMPRESSIBLE)):
+        data = response.get_data()
+        if len(data) >= 600:
+            response.set_data(gzip.compress(data, compresslevel=6))
+            response.headers['Content-Encoding'] = 'gzip'
+            response.headers['Content-Length'] = str(len(response.get_data()))
+    response.vary.add('Accept-Encoding')
+    return response
+
+
+@app.route('/manifest.webmanifest')
+def web_manifest():
+    manifest = {
+        'name': 'phishing-detector',
+        'short_name': 'phishing-detector',
+        'description': '四層分析，找出可疑信件',
+        'lang': 'zh-Hant',
+        'start_url': '/',
+        'display': 'standalone',
+        'background_color': '#141414',
+        'theme_color': '#141414',
+        'icons': [
+            {'src': '/static/icon-192.png', 'sizes': '192x192', 'type': 'image/png'},
+            {'src': '/static/icon-512.png', 'sizes': '512x512', 'type': 'image/png'},
+        ],
+    }
+    return Response(json.dumps(manifest, ensure_ascii=False), mimetype='application/manifest+json')
+
 
 @app.route('/')
 def index():
