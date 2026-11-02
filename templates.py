@@ -686,7 +686,9 @@ main.ew{margin:3.5rem auto;padding:3rem 2.4rem 2.4rem;width:calc(100% - 2.5rem)}
 .vd-from{color:#9a9a9a}
 .vscore{color:var(--hl)}
 .vscore small{color:#9a9a9a}
-.vd .stamp-lg{mix-blend-mode:normal;background:#f1f1f1}
+.vd .stamp-lg{mix-blend-mode:normal;background:#f1f1f1;animation-name:stampvd}
+@keyframes stampvd{from{opacity:0;transform:rotate(14deg) scale(2.2)}to{opacity:1;transform:rotate(-6deg) scale(1)}}
+@media(prefers-reduced-motion:reduce){.vd .stamp-lg{animation:none}}
 .vd .cn{border-color:#f1f1f1;color:#f1f1f1}
 .vd .cn:hover{background:var(--hl);color:#141414}
 .lgrid{grid-template-columns:repeat(4,minmax(0,1fr));gap:0;border-top:5px solid #141414;border-bottom:1.5px solid #141414}
@@ -3791,7 +3793,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 for _n in ("HOME_HTML","LOADING_HTML","ERROR_HTML","PASTE_HTML","RESULT_HTML","HISTORY_HTML","RULES_HTML","WHITELIST_HTML"):
-    globals()[_n] += DESIGN2_CSS
+    _h = globals()[_n]
+    _i = _h.rfind("</style>") + len("</style>")
+    globals()[_n] = _h[:_i] + DESIGN2_CSS + _h[_i:]
 
 _TITLES = {
     "HOME_HTML": "phishing-detector｜找出可疑郵件",
