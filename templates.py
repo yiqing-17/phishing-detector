@@ -1360,6 +1360,8 @@ mark.m[data-n="3"]{cursor:pointer;text-decoration:underline dotted;text-underlin
 .clear.in .stamp2{opacity:.92;animation:slam .45s cubic-bezier(.2,1.7,.4,1) .35s both}
 @keyframes slam{from{opacity:0;transform:rotate(-18deg) scale(2.2)}to{opacity:.92;transform:rotate(-6deg) scale(1)}}
 @media(prefers-reduced-motion:reduce){.doc,.js .row,.js h2 .hl,.meter .track i,.js .bb::after{transition:none}.clear.in .stamp2{animation:none}}
+/* 手機：印章縮小並上移，避免壓住信頭網域 */
+@media(max-width:480px){.stamp{font-size:1.35rem;top:-1.95rem;right:-.8rem}.stamp small{font-size:.52rem}.vstamp{font-size:1.35rem;top:-1.75rem}.vstamp small{font-size:.52rem}.qmail .vstamp{top:-1.9rem;right:-.6rem}}
 </style>
 <header class="hdr"><div class="hdr-left"><a href="/">phishing-detector</a></div><div class="hdr-nav"><a href="/rules">偵測規則</a><a href="/whitelist">白名單</a><a href="/history">案件簿</a><a href="/paste">貼信送檢</a></div></header>
 <main>
