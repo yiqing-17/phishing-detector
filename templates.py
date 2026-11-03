@@ -1374,7 +1374,7 @@ mark.m[data-n="3"]{cursor:pointer;text-decoration:underline dotted;text-underlin
       <a class="btn" href="/login" data-key="s"><span>授權 Google 送檢</span><span class="key">S</span></a>
       <a class="btn o" href="/paste" data-key="p"><span>不想連接 Gmail？直接貼信送檢</span><span class="key">P</span></a>
     </div>
-    <p class="priv">只讀取信件（Gmail 唯讀權限），不會修改或刪除。授權憑證在掃描結束後清除，信件內容只暫存於伺服器記憶體、不寫入資料庫，案件簿只保存統計數字。AI 語意判讀會把信件文字送到第三方 AI 服務 Groq 分析。</p>
+    <p class="priv">只讀取信件（Gmail 唯讀權限），不會修改或刪除。掃描結束後伺服器不再保留授權憑證，可隨時到 Google 帳戶撤銷授權。信件內容只存在伺服器記憶體、不寫入資料庫，案件簿只保存統計數字。疑似可疑的信件會連同寄件者與主旨送到第三方 AI 服務 Groq 分析。</p>
   </div>
   <div class="docwrap" data-parallax="0.05">
     <div class="stamp" role="button" tabindex="0" aria-label="可疑 SUSPICIOUS 印章，重播標記動畫" title="點擊重播">可疑<small>SUSPICIOUS</small></div>
@@ -1973,6 +1973,7 @@ PASTE_HTML = COMMON_CSS + """
 .act { display: flex; flex-wrap: wrap; align-items: center; gap: .8rem 1.4rem; margin-top: 1.2rem; }
 .act .submit-btn { padding: .8rem 1.6rem; font-size: 14px; }
 .act span { font-family: var(--mono); font-size: 11.5px; color: #6b6b6b; }
+.pnote { margin: .9rem 0 0; max-width: 34rem; font-size: 12.5px; line-height: 1.75; color: #555; }
 .pv { margin-top: 2.2rem; border: 1px dashed #9a9a9a; background: #fff; padding: 1rem 1.2rem 1.1rem; }
 .pv .lb { font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; display: flex; justify-content: space-between; gap: 1rem; }
 .pv .lb em { font-style: normal; color: #6b6b6b; font-weight: 400; letter-spacing: 0; }
@@ -2360,6 +2361,7 @@ document.addEventListener('DOMContentLoaded', function () {
         <div class="fh">在大部分信箱可透過「顯示原始郵件 / 檢視原始碼」取得 HTML 內容。</div></div>
       </details>
       <div class="act"><button class="submit-btn" type="submit">送檢</button><label class="sample-btn emlbtn">調閱 .eml 檔<input type="file" id="emlf" accept=".eml,message/rfc822" hidden></label><span>送出後會進行完整的四層分析</span></div>
+      <p class="pnote">貼上的內容只存在伺服器記憶體、不寫入資料庫；疑似可疑時，寄件者、主旨與內文會送到第三方 AI 服務 Groq 分析。請勿貼上密碼或其他敏感資料。</p>
     </form>
     <div class="pv">
       <div class="lb"><span>預檢標記（即時）</span><em id="pv-stat"></em></div>
