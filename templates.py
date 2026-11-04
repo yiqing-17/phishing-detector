@@ -3206,6 +3206,28 @@ HISTORY_HTML = COMMON_CSS + """
 .spark .area{fill:rgba(200,50,30,.1);stroke:none}
 .spark .ln{fill:none;stroke:#c8321e;stroke-width:2;stroke-linejoin:round;vector-effect:non-scaling-stroke;stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset 1.1s ease-out}
 .spark.in .ln{stroke-dashoffset:0}
+.lg{display:inline-flex;align-items:center;font:12px var(--mono);color:#141414;background:#fff;border:1px solid #141414;border-radius:0;padding:.3rem .7rem;cursor:pointer}
+.lg b{font-weight:600;margin-left:.5rem;color:#4a4a4a}
+.lg:hover{background:#ececec}
+.lg[aria-pressed="true"]{background:#141414;color:#f1f1f1}
+.lg[aria-pressed="true"] b{color:#d0d0d0}
+.lg[aria-pressed="true"] .dot{border-color:#f1f1f1}
+.lg:disabled{opacity:.45;cursor:default}
+.lg:focus-visible{outline:2px solid #141414;outline-offset:2px}
+.lr{transition:background .15s,opacity .2s}
+.lr.dim{opacity:.28}
+.heat .hc{transition:filter .2s}
+.heat .hc.dim{filter:opacity(.22)}
+.bar3 i{transition:transform .7s cubic-bezier(.2,.7,.2,1) calc(var(--k,0) * .12s),opacity .2s ease 0s}
+.led.f-h .bar3 i:not(.h),.led.f-m .bar3 i:not(.m),.led.f-l .bar3 i:not(.l),.led.f-w .bar3 i:not(.w){opacity:.22}
+.lr.lk{outline:2px solid #141414;outline-offset:-2px}
+.led .lr:first-of-type.lk{outline-color:#ffb6d5;outline-offset:-5px}
+.heat .hc.lk{outline:2px solid #141414;outline-offset:2px}
+.lr .dlt{font:11.5px var(--mono);color:#6b6b6b}
+.lr .dlt.up{color:#c8321e}.lr .dlt.dn{color:#2e6a4d}
+.led .lr:first-of-type .dlt{color:#b5b5b5}
+.led .lr:first-of-type .dlt.up{color:#ff8a78}.led .lr:first-of-type .dlt.dn{color:#7fd6a0}
+@media (min-width:900px){.lr .tm{grid-column:1;grid-row:1}.lr .bar3{grid-column:2;grid-row:1}.lr .nm{grid-column:3;grid-row:1}.lr .dlt{grid-column:2;grid-row:2;margin-top:-1rem}}
 @media (prefers-reduced-motion: reduce) { .bar3 i, .spark .ln { transition: none; } .lr.open .more { animation: none; } }
 
 
@@ -3234,7 +3256,12 @@ HISTORY_HTML = COMMON_CSS + """
   <main class="dz-main">
     {% if history %}
     <div class="sh"><span class="n">01</span><h2>近期案件</h2></div>
-    <div class="leg"><span><i class="dot h"></i>高風險</span><span><i class="dot m"></i>中風險</span><span><i class="dot l"></i>安全</span><span><i class="dot w"></i>白名單</span></div>
+    <div class="leg" role="group" aria-label="依風險等級篩選案件">
+      <button type="button" class="lg" data-k="h" aria-pressed="false"{{ ' disabled' if not history|sum(attribute=3) }}><i class="dot h"></i>高風險<b>{{ history|sum(attribute=3) }}</b></button>
+      <button type="button" class="lg" data-k="m" aria-pressed="false"{{ ' disabled' if not history|sum(attribute=4) }}><i class="dot m"></i>中風險<b>{{ history|sum(attribute=4) }}</b></button>
+      <button type="button" class="lg" data-k="l" aria-pressed="false"{{ ' disabled' if not history|sum(attribute=5) }}><i class="dot l"></i>安全<b>{{ history|sum(attribute=5) }}</b></button>
+      <button type="button" class="lg" data-k="w" aria-pressed="false"{{ ' disabled' if not history|sum(attribute=6) }}><i class="dot w"></i>白名單<b>{{ history|sum(attribute=6) }}</b></button>
+    </div>
     <div class="heat" id="heat"></div>
 <div class="led">
     {% for h in history %}
@@ -3321,6 +3348,37 @@ if(sp&&rows.length>1){
   sp.innerHTML='<div>高風險封數趨勢（舊 → 新，共 '+data.length+' 次，最新 '+data[data.length-1]+' 封）</div><svg viewBox="0 0 300 64" preserveAspectRatio="none" role="img" aria-label="高風險封數趨勢"><line class="ax" x1="0" y1="60" x2="300" y2="60"/><polygon class="area" points="0,60 '+pts.join(' ')+' 300,60"/><polyline class="ln" pathLength="1" points="'+pts.join(' ')+'"/></svg>';
   PD.onView([sp],function(){sp.classList.add('in');},.4);
 }else if(sp){sp.style.display='none';}
+var led=document.querySelector('.led'),lgs=PD.all('.lg'),hcs=PD.all('.hc'),cur='';
+rows.slice().reverse().forEach(function(r,i){var c=hcs[i];if(c){r._hc=c;c._lr=r;}});
+function mark(el,on){if(el)el.classList.toggle('lk',on);}
+rows.forEach(function(r){
+  ['mouseenter','focus'].forEach(function(t){r.addEventListener(t,function(){mark(r._hc,true);});});
+  ['mouseleave','blur'].forEach(function(t){r.addEventListener(t,function(){mark(r._hc,false);});});
+});
+hcs.forEach(function(c){
+  ['mouseenter','focus'].forEach(function(t){c.addEventListener(t,function(){mark(c._lr,true);});});
+  ['mouseleave','blur'].forEach(function(t){c.addEventListener(t,function(){mark(c._lr,false);});});
+});
+function applyFilter(k){
+  cur=k;
+  ['h','m','l','w'].forEach(function(x){if(led)led.classList.remove('f-'+x);});
+  if(k&&led)led.classList.add('f-'+k);
+  rows.forEach(function(r){
+    var off=!!k&&!(+r.getAttribute('data-'+k));
+    r.classList.toggle('dim',off);
+    if(r._hc)r._hc.classList.toggle('dim',off);
+  });
+  lgs.forEach(function(b){b.setAttribute('aria-pressed',b.getAttribute('data-k')===k?'true':'false');});
+}
+lgs.forEach(function(b){b.addEventListener('click',function(){var k=b.getAttribute('data-k');applyFilter(cur===k?'':k);});});
+rows.forEach(function(r,i){
+  var nx=rows[i+1],bar=r.querySelector('.bar3');
+  if(!nx||!bar)return;
+  var d=(+r.getAttribute('data-h')||0)-(+nx.getAttribute('data-h')||0),e=document.createElement('div');
+  e.className='dlt'+(d>0?' up':d<0?' dn':'');
+  e.textContent='較上次　高風險 '+(d>0?'+'+d:d<0?'−'+(-d):'持平');
+  bar.insertAdjacentElement('afterend',e);
+});
 })();
 </script>
 """
