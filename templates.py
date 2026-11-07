@@ -1785,13 +1785,6 @@ LOADING_HTML = COMMON_CSS + """
 .big3.bump{animation:bump .3s ease-out}
 @keyframes bump{50%{transform:scale(1.06)}}
 @media (prefers-reduced-motion: reduce) { .slip.shake, .phase li.dn b, .big3.bump { animation: none; } .wall.gather .slip { transition: none; } }
-.fly{position:fixed;left:0;top:0;z-index:120;width:16px;height:20px;background:#fff;border:1px solid #141414;border-bottom-width:4px;pointer-events:none;will-change:transform}
-.fly.red{border-bottom-color:#c8321e}.fly.org{border-bottom-color:#a8650f}.fly.grn{border-bottom-color:#2e6a4d}.fly.ink{border-bottom-color:#4a4a4a}
-.tally>div.land{animation:tsink .32s ease-out}
-.tally>div.flash{animation:tsink .32s ease-out,tflash .7s ease-out}
-@keyframes tsink{40%{transform:translateY(3px)}}
-@keyframes tflash{from{background-color:#ffd3cb}}
-@media (prefers-reduced-motion: reduce){.fly{display:none}.tally>div.land,.tally>div.flash{animation:none}}
 
 
 </style>
@@ -1843,21 +1836,22 @@ function setPhase(p) {
 }
 function paint(progress) {
   const t = { high: 0, medium: 0, low: 0, other: 0 };
-  const fresh = [];
   progress.forEach(function (lv, i) {
     const el = document.getElementById('slip-' + i); if (!el) return;
     if (!el.classList.contains('dn')) {
       const v = LV[lv] || ['—', 'ink'];
       el.className = 'slip dn lv-' + (lv === 'high' ? 'h' : lv === 'medium' ? 'm' : lv === 'low' ? 'l' : 'w') + (lv === 'high' ? ' shake' : '');
     el.insertAdjacentHTML('beforeend', '<span class="stp ' + v[1] + '">' + v[0] + '</span>');
-    fresh.push([el, lv]);
     }
     if (lv === 'high') t.high++; else if (lv === 'medium') t.medium++; else if (lv === 'low') t.low++; else t.other++;
   });
   const cur = document.getElementById('slip-' + progress.length);
   if (cur && !finished) cur.className = 'slip now';
   num('cnt', progress.length);
-  flyAll(fresh, t);
+  num('t-high', t.high);
+  num('t-med', t.medium);
+  num('t-low', t.low);
+  num('t-wl', t.other);
 }
 function num(id, v) {
   const el = document.getElementById(id); if (!el) return;
@@ -1866,47 +1860,6 @@ function num(id, v) {
   PD.tween(from, v, 450, function (x) { if (el._tk === tk) el.textContent = Math.round(x); });
   if (id === 'cnt') { const b = el.closest('.big3'); if (b) { b.classList.remove('bump'); void b.offsetWidth; b.classList.add('bump'); } }
 }
-const CELL = { high: 't-high', medium: 't-med', low: 't-low' };
-function cellOf(lv) {
-  const el = document.getElementById(CELL[lv] || 't-wl');
-  return el && el.parentNode;
-}
-function land(cell, lv) {
-  cell.classList.remove('land', 'flash'); void cell.offsetWidth;
-  cell.classList.add(lv === 'high' ? 'flash' : 'land');
-  setTimeout(function () { cell.classList.remove('land', 'flash'); }, 760);
-}
-function fly(slip, lv, wait) {
-  const cell = cellOf(lv);
-  if (!cell || !slip.isConnected) return;
-  const a = slip.getBoundingClientRect(), b = cell.getBoundingClientRect();
-  const sx = a.left + a.width / 2 - 8, sy = a.top + a.height / 2 - 10;
-  const tx = b.left + b.width / 2 - 8, ty = b.top + b.height / 2 - 10;
-  const p = document.createElement('i');
-  p.className = 'fly ' + (LV[lv] ? LV[lv][1] : 'ink');
-  p.setAttribute('aria-hidden', 'true');
-  if (!p.animate) return;
-  document.body.appendChild(p);
-  const my = Math.min(sy, ty) - Math.max(36, Math.abs(ty - sy) * .2);
-  const mx = (sx + tx) / 2;
-  const an = p.animate([
-    { transform: 'translate(' + sx + 'px,' + sy + 'px) rotate(-8deg) scale(1.1)', opacity: 0, offset: 0 },
-    { transform: 'translate(' + sx + 'px,' + sy + 'px) rotate(-8deg) scale(1.1)', opacity: 1, offset: .1 },
-    { transform: 'translate(' + mx + 'px,' + my + 'px) rotate(10deg) scale(.9)', opacity: 1, offset: .5 },
-    { transform: 'translate(' + tx + 'px,' + ty + 'px) rotate(0deg) scale(.5)', opacity: .9, offset: 1 }
-  ], { duration: 520, delay: wait, easing: 'cubic-bezier(.3,.1,.3,1)', fill: 'both' });
-  an.onfinish = function () { p.remove(); land(cell, lv); };
-  an.oncancel = function () { p.remove(); };
-}
-function flyAll(fresh, t) {
-  const n = (PD.RM || document.hidden) ? 0 : Math.min(fresh.length, 6);
-  const upd = function () { num('t-high', t.high); num('t-med', t.medium); num('t-low', t.low); num('t-wl', t.other); };
-  if (n) setTimeout(upd, (n - 1) * 80 + 520); else upd();
-  try { for (let i = 0; i < n; i++) fly(fresh[i][0], fresh[i][1], i * 80); } catch (e) {}
-}
-window.addEventListener('pagehide', function () {
-  document.querySelectorAll('.fly').forEach(function (e) { e.remove(); });
-});
 function gather() {
   if (PD.RM) return;
   const wall = document.getElementById('wall'); if (!wall) return;
