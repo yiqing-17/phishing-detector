@@ -24,6 +24,8 @@ def build_analyzed_entry(sender, subject, body, report, html_score, rule_score, 
         'explainable_findings': report.get('explainable_findings', []),
         'safety_actions': report.get('safety_actions', []),
         'category': report.get('category', ''),
+        'agent_trace': report.get('agent_trace', []),
+        'agent_meta': report.get('agent_meta', {}),
         'ir': None,
     }
 

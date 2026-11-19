@@ -26,7 +26,7 @@ from analysis import (
     analyze_html, analyze_url, full_pipeline,
     model, run_risk_score_self_test, vectorizer,
 )
-from email_parser import get_body, get_header, get_html
+from email_parser import get_agent_headers, get_body, get_header, get_html
 from result_builder import build_analyzed_entry
 from templates import (
     HISTORY_HTML, HOME_HTML, LOADING_HTML, RESULT_HTML,
@@ -241,7 +241,8 @@ def do_scan(token_data, scan_id, uid):
                 _scan_progress(scan_id, 'wl')
                 continue
 
-            report, html_score, _, rule_score, spam_prob = full_pipeline(text, html)
+            report, html_score, _, rule_score, spam_prob = full_pipeline(
+                text, html, headers=get_agent_headers(msg), sender=sender)
             entry = build_analyzed_entry(
                 sender, subject, body, report, html_score, rule_score, spam_prob
             )
@@ -325,7 +326,7 @@ def paste_analyze():
             high = med = low = 0
             wl = 1
         else:
-            report, html_score, _, rule_score, spam_prob = full_pipeline(text, html)
+            report, html_score, _, rule_score, spam_prob = full_pipeline(text, html, sender=sender)
             entry = build_analyzed_entry(
                 sender, subject, body, report, html_score, rule_score, spam_prob
             )

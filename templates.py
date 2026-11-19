@@ -2895,6 +2895,31 @@ function showDetail(idx, element) {
   });
   if (evHtml) html += H('各層偵測證據') + evHtml;
 
+  /* 4b AI Agent 調查過程 */
+  const am = d.agent_meta || {}, atr = d.agent_trace || [];
+  function agentSummary(s) {
+    const r = s.result || {};
+    if (r.error) return '⚠ ' + r.error;
+    if (s.tool === 'check_auth_headers') return r.status === 'unavailable' ? '無可用標頭（貼信模式）' : 'SPF=' + r.spf + '　DKIM=' + r.dkim + '　DMARC=' + r.dmarc + (r.reply_to_mismatch ? '　Reply-To 與寄件網域不同' : '');
+    if (s.tool === 'expand_url') return r.hops + ' 次跳轉 → ' + (r.final_host || '—') + (r.blocked ? '（已阻擋）' : '');
+    if (s.tool === 'domain_age') return r.age_days == null ? '查無註冊資料（未知，不視為安全）' : '註冊 ' + r.age_days + ' 天';
+    if (s.tool === 'lookalike_check') return (r.matches && r.matches.length) ? '疑似仿冒：' + r.matches.map(function (m) { return m.brand; }).join('、') : '未發現仿冒';
+    if (s.tool === 'dns_lookup') return r.resolves === true ? '可解析' : r.resolves === false ? '無法解析' : '未知';
+    return '';
+  }
+  if (atr.length) {
+    html += H('AI Agent 調查過程', 'Agent 決定要查什麼；風險分數只來自工具查到的證據。查無資料視為未知，不會降低風險。') +
+      '<div class="agent-tl">' + atr.map(function (s) {
+        const sig = (s.signal_labels || []).map(function (l) { return '<span class="st red" style="margin-left:6px">' + escapeHtml(l) + '</span>'; }).join('');
+        const arg = s.args && (s.args.url || s.args.domain) ? '（' + escapeHtml(s.args.url || s.args.domain) + '）' : '';
+        return '<div class="it" style="border-left:3px solid #999;padding-left:10px;margin:6px 0"><b>步驟 ' + s.step + '　' + escapeHtml(s.tool) + '</b>' + arg + '<div>' + escapeHtml(agentSummary(s)) + sig + '</div></div>';
+      }).join('') + '</div>';
+  } else if (am.status && am.status !== 'skipped' && am.error) {
+    html += H('AI Agent 調查過程') + '<p style="font-size:13.5px;color:#666">調查未取得工具結果：' + escapeHtml(am.error) + '</p>';
+  } else if (am.pre_score != null && !am.triggered) {
+    html += H('AI Agent 調查過程') + '<p style="font-size:13.5px;color:#666">未啟動：預估風險 ' + escapeHtml(String(am.pre_score)) + ' 未達中等風險門檻 ' + escapeHtml(String(am.trigger_score)) + '，為節省成本不進行調查。</p>';
+  }
+
   /* 5 處置 */
   html += H('建議行動') + '<div class="rec">' + escapeHtml(d.action || '—') + '</div>';
   const sa = d.safety_actions || [];

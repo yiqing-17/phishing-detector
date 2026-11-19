@@ -7,6 +7,17 @@ def get_header(msg, name):
         if h['name'].lower() == name.lower(): return h['value']
     return ''
 
+_AGENT_HEADERS = ('From', 'Reply-To', 'Return-Path', 'Authentication-Results')
+
+def get_agent_headers(msg):
+    """取出調查 Agent 需要的標頭（Authentication-Results 可能出現多次，全部串起來）。"""
+    out = {}
+    for h in msg.get('payload', {}).get('headers', []):
+        for name in _AGENT_HEADERS:
+            if h['name'].lower() == name.lower():
+                out[name] = (out[name] + '; ' + h['value']) if name in out else h['value']
+    return out
+
 def _walk_parts(payload):
     yield payload
     for part in payload.get('parts', []) or []:

@@ -12,6 +12,7 @@ try:
 except ImportError:
     Groq = None
 from config import GROQ_API_KEY
+from agent import run_investigation
 
 # ── ML 模型：Phishing Email Dataset ───────────────────────────
 # V5 不再使用 SMS Spam/ham 資料。
@@ -234,9 +235,20 @@ def ai_agent_analyze(text, rule_score, triggered_rules):
         }
 
 
-def build_explainable_findings(rules, html_findings, spam_prob, report):
+def build_explainable_findings(rules, html_findings, spam_prob, report, agent_trace=None):
     """把各分析層的原始證據整理成使用者看得懂的「為什麼可疑」。"""
     findings = []
+
+    # Agent 實際查證到的事實放最前面，並標明來自第幾步，事件回應報告可直接引用。
+    from agent import SIGNAL_LABELS
+    for step in agent_trace or []:
+        for sig in step.get('signals', []):
+            findings.append({
+                'severity': 'high',
+                'source': 'AI Agent 查證',
+                'title': SIGNAL_LABELS.get(sig, sig),
+                'detail': f"步驟 {step['step']}・{step['tool']}"
+            })
 
     for item in rules or []:
         s = str(item)
@@ -551,7 +563,23 @@ def build_safety_actions(risk_level, rules=None, html_findings=None, category=''
         '若郵件要求提供密碼、付款或敏感資訊，請改用官方管道再次確認。'
     ]
 
-def full_pipeline(text, html=''):
+AGENT_TRIGGER_SCORE = 40  # 規則 + ML + HTML 的預估分數達「中等風險」才啟動調查 Agent
+
+
+def _extract_urls(text, html=''):
+    urls = [u.rstrip('.,);]') for u in re.findall(r'https?://[^\s<>"\']+', text or '')]
+    if html:
+        urls += [a['href'].strip() for a in BeautifulSoup(html, 'html.parser').find_all('a', href=True)
+                 if a['href'].strip().lower().startswith(('http://', 'https://'))]
+    seen, out = set(), []
+    for u in urls:
+        if u not in seen:
+            seen.add(u)
+            out.append(u)
+    return out[:8]
+
+
+def full_pipeline(text, html='', headers=None, sender=''):
     rule_score, rules = rule_based_score(text)
 
     # ML 模型使用 1 = phishing、0 = legitimate。
@@ -567,16 +595,24 @@ def full_pipeline(text, html=''):
     if html:
         html_score, html_findings = analyze_html(html)
 
-    # 有明顯證據才呼叫 LLM，降低不必要 API 成本。
-    should_call_llm = (
-        rule_score >= 4 or
-        spam_prob >= 0.30 or
-        html_score >= 4
-    )
+    # 先用規則 + ML + HTML 算出預估分數；達到中等風險才啟動調查 Agent，控制 API 成本與延遲。
+    pre_score = calculate_risk_score(rule_score, spam_prob, html_score, None)
+    agent_result = None
+    should_call_llm = pre_score >= AGENT_TRIGGER_SCORE and groq_client is not None
 
     if should_call_llm:
-        report = ai_agent_analyze(text, rule_score, rules)
-        llm_score = report.get('risk_score')
+        agent_result = run_investigation(
+            groq_client, text, _extract_urls(text, html), sender=sender, headers=headers)
+        final_info = agent_result.get('final') or {}
+        report = {
+            'risk_level': 'unknown',
+            'category': final_info.get('category', '調查未完成'),
+            'explanation': final_info.get('explanation') or '調查 Agent 未能產生結論，請依規則與 ML 結果人工檢查。',
+            'recommended_action': final_info.get('recommended_action') or '不要點擊信件中的連結。',
+            'suspicious_points': list(final_info.get('suspicious_points') or []),
+        }
+        # 分數只來自工具回傳的證據（agent.SIGNAL_POINTS），不採用 LLM 自己給的分數。
+        llm_score = agent_result['agent_score'] if agent_result['status'] != 'error' else None
     else:
         report = {
             'risk_level': 'low',
@@ -598,10 +634,18 @@ def full_pipeline(text, html=''):
     final_score = calculate_risk_score(
         rule_score, spam_prob, html_score, llm_score
     )
+    # Agent 只能加分、不能扣分：「查不到問題」不等於「安全」（驗證通過只代表寄件者身分，
+    # 查無資料也只是未知），所以最終分數不會低於三層融合的預估分數。
+    agent_floor_applied = llm_score is not None and pre_score > final_score
+    if agent_floor_applied:
+        final_score = pre_score
     report = apply_risk_level(report, final_score)
     report['risk_breakdown'] = build_risk_breakdown(
         rule_score, spam_prob, html_score, llm_score
     )
+    if agent_floor_applied:
+        report['risk_breakdown']['floor_applied'] = True
+        report['risk_breakdown']['rounded_final'] = final_score
     report['score_validation'] = {
         'formula_total': report['risk_breakdown']['raw_total'],
         'final_score': final_score,
@@ -618,7 +662,7 @@ def full_pipeline(text, html=''):
 
     # 給前端的「為什麼可疑」證據清單。
     report['explainable_findings'] = build_explainable_findings(
-        rules, html_findings, spam_prob, report
+        rules, html_findings, spam_prob, report, (agent_result or {}).get('trace')
     )
 
     # 依最終風險產生可執行的安全處置建議。
@@ -659,16 +703,28 @@ def full_pipeline(text, html=''):
             ]
         },
         'llm': {
-            'name': 'AI 深度分析',
+            'name': 'AI Agent 調查',
             'score': round(llm_component, 1) if llm_component is not None else None,
             'weight': 15 if llm_score is not None else 0,
-            'status': 'AI 分析完成' if llm_score is not None else '本次未呼叫或分析失敗',
-            'findings': report.get('suspicious_points', [])[:6]
+            'status': 'AI Agent 調查完成' if llm_score is not None else '本次未啟動（風險未達中等）或調查失敗',
+            'findings': (agent_result['signal_labels'] if agent_result else [])[:6]
         }
     }
 
+    # 調查過程（時間軸）：每一步用了什麼工具、查到什麼、對應哪些風險訊號。
+    report['agent_trace'] = (agent_result or {}).get('trace', [])
+    report['agent_meta'] = {
+        'triggered': agent_result is not None,
+        'pre_score': pre_score,
+        'trigger_score': AGENT_TRIGGER_SCORE,
+        'status': (agent_result or {}).get('status', 'skipped'),
+        'error': (agent_result or {}).get('error', ''),
+        'elapsed_s': (agent_result or {}).get('elapsed_s'),
+        'signals': (agent_result or {}).get('signals', []),
+    }
+
     report['fusion_formula'] = (
-        '規則 35% + ML 35% + HTML 15% + AI 15%'
+        '規則 35% + ML 35% + HTML 15% + AI Agent 15%（Agent 只加分、不低於三層融合分數）'
         if llm_score is not None
         else '規則 42.5% + ML 42.5% + HTML 15%'
     )
