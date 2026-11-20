@@ -98,6 +98,26 @@ def whitelist_match(sender, uid=None):
 def is_whitelisted(sender, uid=None):
     return bool(whitelist_match(sender, uid)[1])
 
+def whitelist_verdict(sender, auth=None, uid=None):
+    """白名單不再只看 From（From 可以偽造）。回傳 (verdict, domain, hit, mode)：
+
+    trusted        命中白名單，且 Gmail 的 DMARC 驗證通過、header.from 與寄件網域一致 → 可略過分析
+    spoof_suspect  命中白名單，但 DMARC / SPF / DKIM 明確失敗 → 疑似冒用，完整分析並至少列為中風險
+    unverified     命中白名單，但沒有可信的驗證結果（貼信模式、標頭缺失）→ 不能信 From，完整分析
+    none           未命中白名單
+    """
+    domain, hit, mode = whitelist_match(sender, uid)
+    if not hit:
+        return 'none', domain, '', ''
+    if not auth or not auth.get('available'):
+        return 'unverified', domain, hit, mode
+    if auth.get('dmarc') == 'pass' and auth.get('header_from', '').lower() == domain:
+        return 'trusted', domain, hit, mode
+    if 'fail' in (auth.get('dmarc'), auth.get('dkim')) or auth.get('spf') in ('fail', 'softfail'):
+        return 'spoof_suspect', domain, hit, mode
+    return 'unverified', domain, hit, mode
+
+
 def is_system_report(sender, subject, label_ids=()):
     """辨識「本系統自己寄給自己的報告信」。
 

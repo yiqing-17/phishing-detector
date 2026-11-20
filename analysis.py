@@ -664,7 +664,8 @@ def ml_reliability(text):
     return True, '', stats
 
 
-def full_pipeline(text, html='', headers=None, sender=''):
+def full_pipeline(text, html='', headers=None, sender='', wl_note=None):
+    """wl_note：白名單驗證結果 {'verdict','domain','hit','floor'}；spoof_suspect 時最終分數至少為 floor。"""
     rule_score, rules = rule_based_score(text)
 
     # ML 模型使用 1 = phishing、0 = legitimate。
@@ -686,6 +687,8 @@ def full_pipeline(text, html='', headers=None, sender=''):
 
     # 先用規則 + ML + HTML 算出預估分數；達到中等風險才啟動調查 Agent，控制 API 成本與延遲。
     pre_score = calculate_risk_score(rule_score, spam_prob, html_score, None)
+    wl_floor = (wl_note or {}).get('floor', 0) if (wl_note or {}).get('verdict') == 'spoof_suspect' else 0
+    pre_score = max(pre_score, wl_floor)   # 冒用白名單網域：至少達到啟動 Agent 的門檻
     agent_result = None
     should_call_llm = pre_score >= AGENT_TRIGGER_SCORE and groq_client is not None
 
@@ -728,10 +731,16 @@ def full_pipeline(text, html='', headers=None, sender=''):
     agent_floor_applied = llm_score is not None and pre_score > final_score
     if agent_floor_applied:
         final_score = pre_score
+    wl_floor_applied = wl_floor > final_score
+    if wl_floor_applied:
+        final_score = wl_floor
     report = apply_risk_level(report, final_score)
     report['risk_breakdown'] = build_risk_breakdown(
         rule_score, spam_prob, html_score, llm_score
     )
+    if wl_floor_applied:
+        report['risk_breakdown']['floor_applied'] = True
+        report['risk_breakdown']['rounded_final'] = final_score
     if agent_floor_applied:
         report['risk_breakdown']['floor_applied'] = True
         report['risk_breakdown']['rounded_final'] = final_score
@@ -753,6 +762,18 @@ def full_pipeline(text, html='', headers=None, sender=''):
     report['explainable_findings'] = build_explainable_findings(
         rules, html_findings, spam_prob, report, (agent_result or {}).get('trace')
     )
+
+    if wl_note and wl_note.get('verdict') in ('spoof_suspect', 'unverified'):
+        spoof = wl_note['verdict'] == 'spoof_suspect'
+        report['explainable_findings'].insert(0, {
+            'severity': 'high' if spoof else 'low',
+            'source': '白名單驗證',
+            'title': '疑似冒用白名單網域' if spoof else '白名單寄件者無法驗證身分',
+            'detail': (f"寄件網域 {wl_note.get('domain','')} 在白名單內，但 Gmail 的 DMARC / SPF / DKIM 驗證失敗，"
+                       '可能是偽造寄件者，因此不採信白名單、完整分析，且風險至少為中等。') if spoof else
+                      (f"寄件網域 {wl_note.get('domain','')} 在白名單內，但沒有可信的驗證結果（例如貼信模式），"
+                       'From 可以被偽造，因此不略過分析。'),
+        })
 
     # 依最終風險產生可執行的安全處置建議。
     report['safety_actions'] = build_safety_actions(

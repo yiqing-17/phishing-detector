@@ -1,5 +1,6 @@
 """Gmail MIME parsing helpers."""
 import base64
+import re
 from bs4 import BeautifulSoup
 
 def get_header(msg, name):
@@ -17,6 +18,32 @@ def get_agent_headers(msg):
             if h['name'].lower() == name.lower():
                 out[name] = (out[name] + '; ' + h['value']) if name in out else h['value']
     return out
+
+_TRUSTED_AUTHSERV = 'mx.google.com'
+
+
+def get_trusted_auth(msg):
+    """取出 Gmail 自己（收件端）做的 SPF/DKIM/DMARC 驗證結果。
+
+    只信「最上面第一個」authserv-id 為 mx.google.com 的 Authentication-Results：
+    收件伺服器會把自己的標頭加在最上方，攻擊者偽造的標頭只能出現在它下面，
+    所以不能把所有同名標頭串起來，也不能取後面的。
+    回傳 {'available': bool, 'dmarc','spf','dkim', 'header_from'}。"""
+    for h in msg.get('payload', {}).get('headers', []):
+        if h.get('name', '').lower() != 'authentication-results':
+            continue
+        v = h.get('value', '')
+        if not v.strip().lower().startswith(_TRUSTED_AUTHSERV):
+            continue
+        low = v.lower()
+        def res(name):
+            m = re.search(r'(?:^|[;\s])' + name + r'=(\w+)', low)
+            return m.group(1) if m else 'none'
+        m = re.search(r'dmarc=\w+[^;]*?header\.from=([^\s;]+)', low)
+        return {'available': True, 'dmarc': res('dmarc'), 'spf': res('spf'),
+                'dkim': res('dkim'), 'header_from': (m.group(1).strip('<>').rstrip('.') if m else '')}
+    return {'available': False, 'dmarc': 'none', 'spf': 'none', 'dkim': 'none', 'header_from': ''}
+
 
 def _walk_parts(payload):
     yield payload

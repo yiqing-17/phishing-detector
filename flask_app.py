@@ -19,14 +19,14 @@ from config import (
 from storage import (
     get_history, get_uid, get_whitelist, get_whitelist_rows, init_db,
     is_system_report, is_whitelisted, normalize_whitelist_domain,
-    save_scan, whitelist_match,
+    save_scan, whitelist_match, whitelist_verdict,
 )
 from analysis import (
     Groq, RULE_HTML_ITEMS, RULE_KEYWORD_GROUPS, RULE_URL_ITEMS,
     analyze_html, analyze_url, full_pipeline,
     model, run_risk_score_self_test, vectorizer,
 )
-from email_parser import get_agent_headers, get_body, get_header, get_html
+from email_parser import get_agent_headers, get_body, get_header, get_html, get_trusted_auth
 from result_builder import build_analyzed_entry
 from templates import (
     HISTORY_HTML, HOME_HTML, LOADING_HTML, RESULT_HTML,
@@ -231,9 +231,10 @@ def do_scan(token_data, scan_id, uid):
                 _scan_progress(scan_id, 'sk')
                 continue
 
-            if is_whitelisted(sender, uid):
+            verdict, wl_dom, wl_hit, wl_mode = whitelist_verdict(sender, get_trusted_auth(msg), uid)
+            if verdict == 'trusted':
                 entry = {'level':'wl','risk_score':-1,'subject':subject[:55],
-                         'sender':sender[:60],'explanation':'來自白名單寄件者，系統判定為安全。',
+                         'sender':sender[:60],'explanation':f'寄件網域 {wl_dom} 在白名單內，且 Gmail 的 DMARC 驗證通過，判定為安全。',
                          'action':'可安全閱讀','tags':[],'scores':[],
                          'category':'白名單安全信件','ir':None}
                 wl_list.append(entry)
@@ -242,7 +243,8 @@ def do_scan(token_data, scan_id, uid):
                 continue
 
             report, html_score, _, rule_score, spam_prob = full_pipeline(
-                text, html, headers=get_agent_headers(msg), sender=sender)
+                text, html, headers=get_agent_headers(msg), sender=sender,
+                wl_note={'verdict': verdict, 'domain': wl_dom, 'hit': wl_hit, 'floor': 40})
             entry = build_analyzed_entry(
                 sender, subject, body, report, html_score, rule_score, spam_prob
             )
@@ -316,27 +318,21 @@ def paste_analyze():
     text = f"From: {sender}\nSubject: {subject}\nBody: {body}"
 
     try:
+        # 貼信模式的寄件者是使用者自己輸入的，無法驗證，因此白名單只加註記、不略過分析。
         wl_domain, wl_hit, wl_mode = whitelist_match(sender, uid)
-        if wl_hit:
-            entry = {'level': 'wl', 'risk_score': -1, 'subject': subject[:55],
-                     'sender': sender[:60],
-                     'explanation': f'寄件網域 {wl_domain} 命中白名單「{wl_hit}」（{wl_mode}），系統略過規則、ML、HTML 與 AI 分析，直接判定為安全。',
-                     'action': '可安全閱讀', 'tags': [], 'scores': [],
-                     'category': '白名單安全信件', 'ir': None}
-            high = med = low = 0
-            wl = 1
+        report, html_score, _, rule_score, spam_prob = full_pipeline(
+            text, html, sender=sender,
+            wl_note={'verdict': 'unverified', 'domain': wl_domain, 'hit': wl_hit, 'floor': 0} if wl_hit else None)
+        entry = build_analyzed_entry(
+            sender, subject, body, report, html_score, rule_score, spam_prob
+        )
+        high = med = low = wl = 0
+        if report['risk_level'] == 'high':
+            high = 1
+        elif report['risk_level'] == 'medium':
+            med = 1
         else:
-            report, html_score, _, rule_score, spam_prob = full_pipeline(text, html, sender=sender)
-            entry = build_analyzed_entry(
-                sender, subject, body, report, html_score, rule_score, spam_prob
-            )
-            high = med = low = wl = 0
-            if report['risk_level'] == 'high':
-                high = 1
-            elif report['risk_level'] == 'medium':
-                med = 1
-            else:
-                low = 1
+            low = 1
 
         scan_id = str(uuid.uuid4())[:8]
         _scans[scan_id] = {

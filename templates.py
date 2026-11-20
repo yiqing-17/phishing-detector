@@ -2303,8 +2303,8 @@ document.addEventListener('DOMContentLoaded', function () {
           <option value="prize" SELECT_PRIZE>中獎詐騙信</option>
           <option value="delivery" SELECT_DELIVERY>假物流通知</option>
           <option value="normal" SELECT_NORMAL>正常商業信件</option>
-          <option value="wl_real" SELECT_WL_REAL>白名單演示 ①：google.com 官方寄件者（會被略過）</option>
-          <option value="wl_fake" SELECT_WL_FAKE>白名單演示 ②：偽冒網域 google.com.verify-login.xyz（不會被略過）</option>
+          <option value="wl_real" SELECT_WL_REAL>白名單演示 ①：google.com 官方寄件者（貼信模式無法驗證寄件者，仍會完整分析）</option>
+          <option value="wl_fake" SELECT_WL_FAKE>白名單演示 ②：偽冒網域 google.com.verify-login.xyz（不命中白名單）</option>
         </select>
         <button type="submit" class="sample-btn">調閱範例</button>
       </div>
@@ -2762,7 +2762,7 @@ function verdictHtml(d, V, score, layers) {
   const lv = d.level, ex = d.explainable_findings || [];
   const rs0 = d.risk_score, sv = (rs0 !== null && rs0 !== undefined && rs0 !== '' && Number(rs0) >= 0) ? Number(rs0) : null;
   const sc = sv !== null ? '（風險 ' + sv + ' / 100）' : '';
-  const T = { high: '高度可疑' + sc, medium: '有可疑之處，建議人工確認' + sc, low: '目前沒有發現明顯風險' + sc, wl: '寄件網域在白名單，已直接放行' }[lv] || '這封信無法判定';
+  const T = { high: '高度可疑' + sc, medium: '有可疑之處，建議人工確認' + sc, low: '目前沒有發現明顯風險' + sc, wl: '寄件網域在白名單且 DMARC 驗證通過，已放行' }[lv] || '這封信無法判定';
   const stamp = V[1] ? '<div class="vst ' + V[2] + '" aria-hidden="true">' + V[0] + '<small>' + V[1] + '</small></div>' : '';
   let rs = '';
   if (lv === 'high' || lv === 'medium' || lv === 'low') {
@@ -3464,7 +3464,7 @@ RULES_HTML = COMMON_CSS + """
     </div>
     <p class="note2">HTML 分數會正規化為 <b>min(HTML 分數 × 8, 100)</b> 後再進入融合。</p>
 
-    <div class="sh" id="fuse"><span class="n">04</span><h2>融合與分級</h2><p>各層分數依固定權重融合；寄件網域命中<a href="/whitelist" style="color:#141414;text-decoration:underline">白名單</a>者直接略過全部分析。</p></div>
+    <div class="sh" id="fuse"><span class="n">04</span><h2>融合與分級</h2><p>各層分數依固定權重融合；寄件網域命中<a href="/whitelist" style="color:#141414;text-decoration:underline">白名單</a>者，需通過 Gmail 的 DMARC 驗證才會略過分析（防止偽造寄件者）。</p></div>
     <div class="fz">
       <div class="box"><h3>有 AI 判讀</h3>
         <div class="seg"><i class="a" style="flex:35">規則 35%</i><i class="b" style="flex:35">ML 35%</i><i class="c" style="flex:15">HTML/URL 15%</i><i class="d" style="flex:15">AI 15%</i></div>
@@ -3760,7 +3760,7 @@ function checkSender(value) {
     if (d.matched) {
       const wl = d.whitelist_domain, pre = dom.slice(0, dom.length - wl.length);
       out.innerHTML = '<div class="dom">' + escH(pre) + '<span class="hl">' + escH(wl) + '</span></div>' +
-        '<div class="verdict"><span class="st grn">放行</span><p>' + escH(d.mode) + '：寄件網域命中白名單「' + escH(wl) + '」，系統將略過分析，直接判定為安全。</p></div>';
+        '<div class="verdict"><span class="st grn">放行</span><p>' + escH(d.mode) + '：寄件網域命中白名單「' + escH(wl) + '」。Gmail 掃描時需 DMARC 驗證通過才會略過分析；驗證失敗會視為疑似冒用，貼信模式無法驗證寄件者，仍會完整分析。</p></div>';
     } else {
       const fake = WL.find(function (w) { return dom.indexOf(w) >= 0; });
       let shown = escH(dom), why = '未命中任何白名單網域，將進入完整四層分析。';
@@ -3801,7 +3801,7 @@ document.addEventListener('DOMContentLoaded', function () {
 <div class="bl">
     <div class="ftab"><mark>FILE</mark><span>whitelist</span></div>
     <h1 class="pg-title"><span class="hl">白名單設定</span></h1>
-    <p class="pg-sub">加入白名單後，來自該網域及其子網域的信件將直接標記為安全，不進行 AI 分析。請只加入確定可信任的網域。</p>
+    <p class="pg-sub">加入白名單後，來自該網域的信件在 Gmail 的 DMARC 驗證通過時，才會直接標記為安全、不進行分析；驗證失敗會視為疑似冒用並提高風險，沒有驗證結果（如貼信模式）則照常完整分析。請只加入確定可信任的網域。</p>
 </div>
 <div class="br">
     <div class="nums"><div><b id="wl-count">{{ count }}</b><span>目前白名單網域</span></div><div><b>2</b><span>比對方式：完全相同／子網域</span></div></div>
