@@ -107,6 +107,23 @@ def whitelist_match(sender, uid=None):
 def is_whitelisted(sender, uid=None):
     return bool(whitelist_match(sender, uid)[1])
 
+# 常見的「公共後綴」：header.from 若只剩這些就不能當成「組織網域」。（不是完整的 Public Suffix List，只是保險）
+_PUBLIC_SUFFIX_GUARD = {'com.tw', 'org.tw', 'net.tw', 'gov.tw', 'edu.tw', 'idv.tw', 'co.uk', 'org.uk', 'com.au',
+                        'co.jp', 'com.cn', 'com.hk', 'co.kr', 'com.sg', 'com.my', 'co.nz', 'github.io', 'blogspot.com'}
+
+
+def _aligned(header_from, domain):
+    """DMARC 的「寬鬆对齐」：寄件網域等於 header.from，或是它的子網域。
+
+    Gmail 在 Authentication-Results 寫的 header.from 常是「組織網域」(skims.com)，
+    而品牌常用子網域寄信（emails.skims.com）。舊版要求逐字相同，會把這類信全部擋成「無法驗證」。
+    只接受「寄件網域在 header.from 之下」這個方向；反方向、無關網域、公共後綴一律不對齊。"""
+    hf = (header_from or '').lower().rstrip('.')
+    if not hf or '.' not in hf or hf in _PUBLIC_SUFFIX_GUARD:
+        return False
+    return domain == hf or domain.endswith('.' + hf)
+
+
 def whitelist_reason(sender, auth=None, uid=None):
     """白名單命中但未被信任時，說明「哪一項沒過」，讓使用者能判斷是設定問題還是真的可疑。"""
     domain, hit, _ = whitelist_match(sender, uid)
@@ -117,8 +134,8 @@ def whitelist_reason(sender, auth=None, uid=None):
     parts = []
     if auth.get('dmarc') != 'pass':
         parts.append(f"DMARC={auth.get('dmarc')}（需要 pass）")
-    if (auth.get('header_from') or '').lower() != domain:
-        parts.append(f"header.from={auth.get('header_from') or '（空）'} 與寄件網域 {domain} 不一致")
+    if not _aligned(auth.get('header_from', ''), domain):
+        parts.append(f"header.from={auth.get('header_from') or '（空）'} 與寄件網域 {domain} 不對齊（需相同，或寄件網域是它的子網域）")
     parts.append(f"SPF={auth.get('spf')}、DKIM={auth.get('dkim')}")
     return '；'.join(parts)
 
@@ -136,7 +153,7 @@ def whitelist_verdict(sender, auth=None, uid=None):
         return 'none', domain, '', ''
     if not auth or not auth.get('available'):
         return 'unverified', domain, hit, mode
-    if auth.get('dmarc') == 'pass' and auth.get('header_from', '').lower() == domain:
+    if auth.get('dmarc') == 'pass' and _aligned(auth.get('header_from', ''), domain):
         return 'trusted', domain, hit, mode
     if 'fail' in (auth.get('dmarc'), auth.get('dkim')) or auth.get('spf') in ('fail', 'softfail'):
         return 'spoof_suspect', domain, hit, mode

@@ -43,8 +43,32 @@ def test_trusted_requires_dmarc_pass_and_aligned_from():
     assert storage.whitelist_verdict('a@google.com', get_trusted_auth(msg(GOOD)))[0] == 'trusted'
 
 
-def test_subdomain_not_aligned_is_not_trusted():
-    assert storage.whitelist_verdict('x@accounts.google.com', get_trusted_auth(msg(GOOD)))[0] == 'unverified'
+def test_subdomain_sender_with_org_domain_dmarc_pass_is_trusted():
+    """Gmail 的 header.from 寫組織網域（google.com），寄件者用子網域（accounts.google.com）：DMARC 寬鬆对齐 → 信任。
+    （舊版逐字比對，會讓 emails.skims.com 這類行銷子網域永遠「無法驗證」。）"""
+    assert storage.whitelist_verdict('x@accounts.google.com', get_trusted_auth(msg(GOOD)))[0] == 'trusted'
+
+
+def test_real_gmail_skims_case(monkeypatch):
+    monkeypatch.setattr(storage, 'get_whitelist', lambda uid=None: ['skims.com'])
+    v = ('mx.google.com; dkim=pass header.i=@emails.skims.com header.s=s1 header.b=x; '
+         'spf=pass (google.com: domain of b@bounces.emails.skims.com designates 137.22.239.172 as permitted sender) smtp.mailfrom=b@bounces.emails.skims.com; '
+         'dmarc=pass (p=NONE sp=NONE dis=NONE) header.from=skims.com')
+    assert storage.whitelist_verdict('SKIMS <no-reply@emails.skims.com>', get_trusted_auth(msg(v)))[0] == 'trusted'
+
+
+def test_alignment_is_one_directional_and_ignores_unrelated_or_public_suffix():
+    a = lambda hf: {'available': True, 'dmarc': 'pass', 'spf': 'pass', 'dkim': 'pass', 'header_from': hf}
+    # 反方向：寄件者是上層，header.from 反而是子網域 → 不信任
+    assert storage.whitelist_verdict('a@google.com', a('accounts.google.com'))[0] == 'unverified'
+    # 無關網域、長得像的網域 → 不信任
+    assert storage.whitelist_verdict('a@google.com', a('evil.com'))[0] == 'unverified'
+    assert storage.whitelist_verdict('a@google.com', a('notgoogle.com'))[0] == 'unverified'
+    # 空值 / 只剩公共後綴 → 不信任
+    assert storage.whitelist_verdict('a@google.com', a(''))[0] == 'unverified'
+    assert storage._aligned('com.tw', 'shop.com.tw') is False
+    # DMARC 不是 pass 一律不信任，即使網域對齊
+    assert storage.whitelist_verdict('a@google.com', dict(a('google.com'), dmarc='none'))[0] == 'unverified'
 
 
 def test_spoofed_whitelisted_sender_is_flagged():
@@ -91,7 +115,7 @@ def test_unverified_reason_names_the_failing_check(monkeypatch):
     none = dict(ok, dmarc='none')
     assert storage.whitelist_verdict(sender, none)[0] == 'unverified'
     assert 'DMARC=none' in storage.whitelist_reason(sender, none)
-    skew = dict(ok, header_from='skims.com')
+    skew = dict(ok, header_from='evil.com')
     assert storage.whitelist_verdict(sender, skew)[0] == 'unverified'
-    assert 'header.from=skims.com' in storage.whitelist_reason(sender, skew)
+    assert 'header.from=evil.com' in storage.whitelist_reason(sender, skew)
     assert '貼信模式' in storage.whitelist_reason(sender, None)
