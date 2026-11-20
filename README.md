@@ -85,6 +85,29 @@ python eval/leakage_check.py --data dataset/phishing_email.csv    # ML 近似重
 python eval/import_external.py --help            # 匯入外部語料並去重
 ```
 
+## 加入真實樣本
+
+| 來源 | 內容 | 用途 | 工具 |
+|---|---|---|---|
+| 你信箱的垃圾信／正常信（去識別化） | 完整信件 + 標頭 | **整體系統**評估（含 Agent 的 SPF/DKIM/DMARC） | `eval/import_mailbox.py` |
+| 165 開放資料（data.gov.tw 176455、160055） | 詐騙網域／網址 | **網址層**評估（無信件本文） | `eval/url_eval.py` |
+
+```bash
+# A. 信箱樣本（Gmail「顯示原始郵件」下載 .eml，或 Takeout 的 .mbox）
+python eval/import_mailbox.py ingest --src ~/eml/ --my-names "你的姓名" --my-emails "你的信箱"
+#   用 Excel 填 eval/real_label_sheet.csv 的 kind 欄：phish / spam / benign
+python eval/import_mailbox.py merge
+python eval/evaluate.py real
+python eval/agent_ablation.py --dataset eval/dataset_real.jsonl --split real --live
+
+# B. 165 網域清單
+python eval/url_eval.py --scam-csv 165_stopped.csv --limit 200 --emit
+python eval/agent_ablation.py --dataset eval/dataset_url.jsonl --split url --live
+```
+
+少於 20 封釣魚或負例時，只能逐封列出當案例分析，不要給 Recall／誤報率。
+真實信件含個資風險：`real_*` 檔已列入 `.gitignore`，去識別化並人工檢視前不要提交。
+
 ## 目錄
 
 ```
@@ -104,3 +127,4 @@ tests/                      單元與整合測試
 - 觸發門檻（預設 40）以下的漏報，Agent 不會被啟動。
 - 品牌清單與 `registrable_domain` 為簡化版（未用 Public Suffix List）；未處理附件與 QR code。
 - IR 狀態流轉為人工操作；不會對信箱做隔離／刪除（刻意維持唯讀授權）。
+- Gmail 掃描為逐封串行；每次掃描最多讓 `AGENT_PER_SCAN`（6）封啟動 Agent、`IR_LLM_PER_SCAN`（3）封用 LLM 產生事件單文字，其餘只做規則／ML／HTML 分析。單次 LLM 呼叫硬上限 8 秒、不自動重試。Render 日誌會逐封印出耗時，可用來定位瓶頸。

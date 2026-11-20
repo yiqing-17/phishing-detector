@@ -12,7 +12,7 @@ try:
 except ImportError:
     Groq = None
 from config import GROQ_API_KEY
-from agent import run_investigation
+from agent import run_investigation, timed_client
 
 # ── ML 模型：Phishing Email Dataset ───────────────────────────
 # V5 不再使用 SMS Spam/ham 資料。
@@ -704,7 +704,7 @@ def ml_reliability(text):
     return True, '', stats
 
 
-def full_pipeline(text, html='', headers=None, sender='', wl_note=None):
+def full_pipeline(text, html='', headers=None, sender='', wl_note=None, use_agent=True):
     """wl_note：白名單驗證結果 {'verdict','domain','hit','floor'}；spoof_suspect 時最終分數至少為 floor。"""
     rule_score, rules = rule_based_score(text)
 
@@ -730,7 +730,7 @@ def full_pipeline(text, html='', headers=None, sender='', wl_note=None):
     wl_floor = (wl_note or {}).get('floor', 0) if (wl_note or {}).get('verdict') == 'spoof_suspect' else 0
     pre_score = max(pre_score, wl_floor)   # 冒用白名單網域：至少達到啟動 Agent 的門檻
     agent_result = None
-    should_call_llm = pre_score >= AGENT_TRIGGER_SCORE and groq_client is not None
+    should_call_llm = pre_score >= AGENT_TRIGGER_SCORE and groq_client is not None and use_agent
 
     if should_call_llm:
         agent_result = run_investigation(
@@ -813,7 +813,8 @@ def full_pipeline(text, html='', headers=None, sender='', wl_note=None):
             'title': '疑似冒用白名單網域' if spoof else '白名單寄件者無法驗證身分',
             'detail': (f"寄件網域 {wl_note.get('domain','')} 在白名單內，但 Gmail 的 DMARC / SPF / DKIM 驗證失敗，"
                        '可能是偽造寄件者，因此不採信白名單、完整分析，且風險至少為中等。') if spoof else
-                      (f"寄件網域 {wl_note.get('domain','')} 在白名單內，但沒有可信的驗證結果（例如貼信模式），"
+                      (f"寄件網域 {wl_note.get('domain','')} 在白名單內，但未通過驗證："
+                       f"{wl_note.get('reason') or '沒有可信的驗證結果（例如貼信模式）'}。"
                        'From 可以被偽造，因此不略過分析。'),
         })
 
@@ -875,6 +876,7 @@ def full_pipeline(text, html='', headers=None, sender='', wl_note=None):
         'pre_score': pre_score,
         'trigger_score': AGENT_TRIGGER_SCORE,
         'status': (agent_result or {}).get('status', 'skipped'),
+        'skipped_reason': 'scan_budget' if (not use_agent and pre_score >= AGENT_TRIGGER_SCORE and groq_client is not None) else '',
         'error': (agent_result or {}).get('error', ''),
         'elapsed_s': (agent_result or {}).get('elapsed_s'),
         'signals': (agent_result or {}).get('signals', []),
@@ -895,7 +897,10 @@ def full_pipeline(text, html='', headers=None, sender='', wl_note=None):
 
     return report, html_score, html_findings, rule_score, spam_prob
 
-def gen_ir(email_data, report):
+IR_LLM_TIMEOUT = 10.0
+
+
+def gen_ir(email_data, report, use_llm=True):
     incident_id = f"IR-{datetime.now().strftime('%Y%m%d')}-{str(uuid.uuid4())[:6].upper()}"
     risk = int(report.get('risk_score', 0))
     if risk >= 85:
@@ -923,9 +928,9 @@ def gen_ir(email_data, report):
         '"containment":"繁體中文", "verification":"繁體中文", "recovery":"繁體中文"}'
     )
     try:
-        if not groq_client:
-            raise RuntimeError('AI client unavailable')
-        resp = groq_client.chat.completions.create(
+        if not groq_client or not use_llm:
+            raise RuntimeError('AI client unavailable or skipped')   # 走下方的固定模板
+        resp = timed_client(groq_client, IR_LLM_TIMEOUT).chat.completions.create(
             model='openai/gpt-oss-120b',
             messages=[{'role':'user','content':prompt}], temperature=0.2)
         raw = resp.choices[0].message.content.strip().replace('```json','').replace('```','').strip()

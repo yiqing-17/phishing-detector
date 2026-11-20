@@ -107,6 +107,22 @@ def whitelist_match(sender, uid=None):
 def is_whitelisted(sender, uid=None):
     return bool(whitelist_match(sender, uid)[1])
 
+def whitelist_reason(sender, auth=None, uid=None):
+    """白名單命中但未被信任時，說明「哪一項沒過」，讓使用者能判斷是設定問題還是真的可疑。"""
+    domain, hit, _ = whitelist_match(sender, uid)
+    if not hit:
+        return ''
+    if not auth or not auth.get('available'):
+        return '沒有取得 Gmail 的 Authentication-Results（貼信模式，或標頭缺失）'
+    parts = []
+    if auth.get('dmarc') != 'pass':
+        parts.append(f"DMARC={auth.get('dmarc')}（需要 pass）")
+    if (auth.get('header_from') or '').lower() != domain:
+        parts.append(f"header.from={auth.get('header_from') or '（空）'} 與寄件網域 {domain} 不一致")
+    parts.append(f"SPF={auth.get('spf')}、DKIM={auth.get('dkim')}")
+    return '；'.join(parts)
+
+
 def whitelist_verdict(sender, auth=None, uid=None):
     """白名單不再只看 From（From 可以偽造）。回傳 (verdict, domain, hit, mode)：
 

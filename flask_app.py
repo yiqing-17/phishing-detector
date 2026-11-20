@@ -22,7 +22,7 @@ from config import (
 from storage import (
     get_history, get_uid, get_whitelist, get_whitelist_rows, init_db, list_incidents, transition_incident,
     is_system_report, is_whitelisted, normalize_whitelist_domain,
-    save_scan, whitelist_match, whitelist_verdict,
+    save_scan, whitelist_match, whitelist_reason, whitelist_verdict,
 )
 from analysis import (
     Groq, RULE_HTML_ITEMS, RULE_KEYWORD_GROUPS, RULE_URL_ITEMS,
@@ -40,6 +40,9 @@ from templates import (
 init_db()
 
 # ── Flask ─────────────────────────────────────────────────────
+AGENT_PER_SCAN = 6      # 每次掃描最多讓幾封信啟動調查 Agent
+IR_LLM_PER_SCAN = 3     # 每次掃描最多讓幾封高風險信用 LLM 產生事件單文字
+
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024  # 2 MB
 app.config['SESSION_COOKIE_HTTPONLY'] = True
@@ -246,8 +249,13 @@ def do_scan(token_data, scan_id, uid):
         high_list, med_list, low_list = [], [], []
         wl_list = []
         skipped = 0
+        # 每次掃描的 LLM 預算：逐封串行，一次 15 封，每封最壞要等 Agent + 事件單兩次 LLM。
+        # 超過預算的信件仍會做規則 / ML / HTML 分析，只是不再呼叫 LLM（事件單改用固定模板）。
+        agent_left, ir_left, agent_skipped = AGENT_PER_SCAN, IR_LLM_PER_SCAN, 0
+        t_scan = time.monotonic()
 
         for msg_ref in messages:
+            t_mail = time.monotonic()
             msg = service.users().messages().get(
                 userId='me', id=msg_ref['id'], format='full').execute()
             sender  = get_header(msg, 'From')
@@ -273,11 +281,20 @@ def do_scan(token_data, scan_id, uid):
                 continue
 
             report, html_score, _, rule_score, spam_prob = full_pipeline(
-                text, html, headers=get_agent_headers(msg), sender=sender,
-                wl_note={'verdict': verdict, 'domain': wl_dom, 'hit': wl_hit, 'floor': 40})
+                text, html, headers=get_agent_headers(msg), sender=sender, use_agent=agent_left > 0,
+                wl_note={'verdict': verdict, 'domain': wl_dom, 'hit': wl_hit, 'floor': 40,
+                      'reason': whitelist_reason(sender, get_trusted_auth(msg), uid)})
+            if report['agent_meta']['triggered']:
+                agent_left -= 1
+            if report['agent_meta'].get('skipped_reason'):
+                agent_skipped += 1
             entry = build_analyzed_entry(
-                sender, subject, body, report, html_score, rule_score, spam_prob, uid=uid
+                sender, subject, body, report, html_score, rule_score, spam_prob, uid=uid, use_llm=ir_left > 0
             )
+            if int(report.get('risk_score') or 0) >= 85:
+                ir_left -= 1
+            print(f"[scan {scan_id}] {len(all_emails)+1}/{inbox_count} {time.monotonic()-t_mail:.1f}s "
+                  f"agent={report['agent_meta']['status']} risk={report.get('risk_score')} verdict={verdict}", flush=True)
 
             if report['risk_level'] == 'high':
                 high_list.append(entry)
@@ -300,7 +317,9 @@ def do_scan(token_data, scan_id, uid):
             'high': len(high_list), 'med': len(med_list),
             'low': len(low_list), 'wl': len(wl_list), 'skipped': skipped,
             'total': len(all_emails),
-            'inbox_messages_fetched': inbox_count
+            'inbox_messages_fetched': inbox_count,
+            'agent_skipped': agent_skipped,
+            'scan_seconds': round(time.monotonic() - t_scan, 1)
         }
     except Exception as e:
         import traceback

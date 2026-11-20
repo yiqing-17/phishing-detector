@@ -4,7 +4,7 @@ from analysis import gen_ir, ir_download_fields
 from storage import create_incident
 
 
-def build_analyzed_entry(sender, subject, body, report, html_score, rule_score, spam_prob, uid=''):
+def build_analyzed_entry(sender, subject, body, report, html_score, rule_score, spam_prob, uid='', use_llm=True):
     entry = {
         'level': report['risk_level'],
         'risk_score': report['risk_score'],
@@ -31,7 +31,7 @@ def build_analyzed_entry(sender, subject, body, report, html_score, rule_score, 
     }
 
     if report['risk_level'] == 'high':
-        incident_id, incident = gen_ir({'sender': sender, 'subject': subject}, report)
+        incident_id, incident = gen_ir({'sender': sender, 'subject': subject}, report, use_llm=use_llm)
         entry['ir'] = {
             'id': incident_id,
             'severity': incident.get('severity', 'High'),

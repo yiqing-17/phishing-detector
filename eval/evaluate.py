@@ -7,7 +7,10 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 import analysis
 
 def load(split):
-    p = os.path.join(os.path.dirname(__file__), 'dataset_zh_hard.jsonl' if split == 'hard' else 'dataset_zh.jsonl')
+    name = {'hard': 'dataset_zh_hard.jsonl', 'real': 'dataset_real.jsonl', 'url': 'dataset_url.jsonl'}.get(split, 'dataset_zh.jsonl')
+    p = os.path.join(os.path.dirname(__file__), name)
+    if not os.path.exists(p):
+        sys.exit(f'找不到 {p}；請先產生（見 README「加入真實樣本」）')
     rows = [json.loads(l) for l in open(p, encoding='utf-8')]
     return [r for r in rows if split == 'all' or r['split'] == split]
 

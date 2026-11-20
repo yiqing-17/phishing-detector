@@ -79,3 +79,19 @@ def test_unverified_note_does_not_change_score():
         base, *_ = analysis.full_pipeline(text, sender='a@google.com')
         rep, *_ = analysis.full_pipeline(text, sender='a@google.com', wl_note=note)
     assert rep['risk_score'] == base['risk_score']
+
+
+
+def test_unverified_reason_names_the_failing_check(monkeypatch):
+    monkeypatch.setattr(storage, 'get_whitelist', lambda uid=None: ['skims.com'])
+    sender = 'SKIMS <no-reply@emails.skims.com>'
+    ok = {'available': True, 'dmarc': 'pass', 'spf': 'pass', 'dkim': 'pass', 'header_from': 'emails.skims.com'}
+    assert storage.whitelist_verdict(sender, ok)[0] == 'trusted'
+    assert storage.whitelist_reason(sender, ok) .startswith('SPF=')           # 全過時只剩資訊列
+    none = dict(ok, dmarc='none')
+    assert storage.whitelist_verdict(sender, none)[0] == 'unverified'
+    assert 'DMARC=none' in storage.whitelist_reason(sender, none)
+    skew = dict(ok, header_from='skims.com')
+    assert storage.whitelist_verdict(sender, skew)[0] == 'unverified'
+    assert 'header.from=skims.com' in storage.whitelist_reason(sender, skew)
+    assert '貼信模式' in storage.whitelist_reason(sender, None)

@@ -39,7 +39,7 @@ def wilson(k, n, z=1.96):
     d = 1 + z * z / n
     c = p + z * z / (2 * n)
     h = z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n))
-    return ((c - h) / d, (c + h) / d)
+    return (max(0.0, (c - h) / d), min(1.0, (c + h) / d))
 
 
 def mcnemar_exact(b, c):
@@ -89,11 +89,12 @@ def run_one(row, client):
     """回傳 (baseline_score, agent_score, meta)。"""
     sender = row.get('from', '')
     analysis.groq_client = None
-    base = analysis.full_pipeline(row['text'], sender=sender)[0]['risk_score']
+    kw = {'html': row.get('html', ''), 'headers': row.get('headers') or None}
+    base = analysis.full_pipeline(row['text'], sender=sender, **kw)[0]['risk_score']
     analysis.groq_client = client
     client.reset()
     t0 = time.monotonic()
-    rep = analysis.full_pipeline(row['text'], sender=sender)[0]
+    rep = analysis.full_pipeline(row['text'], sender=sender, **kw)[0]
     wall = time.monotonic() - t0
     meta = rep['agent_meta']
     return base, rep['risk_score'], {
@@ -129,6 +130,7 @@ def main():
     if a.dataset:
         rows = [json.loads(l) for l in open(a.dataset, encoding='utf-8')]
         rows = [r for r in rows if a.split == 'all' or r.get('split') == a.split]
+        a.split = a.split if a.split != 'all' else os.path.splitext(os.path.basename(a.dataset))[0]
     else:
         rows = load(a.split)
     if a.limit:

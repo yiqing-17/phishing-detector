@@ -23,6 +23,18 @@ import agent_tools as tools
 MODEL = 'openai/gpt-oss-120b'
 MAX_STEPS = 6
 TOTAL_TIMEOUT = 20.0
+LLM_CALL_TIMEOUT = 8.0   # 單次 LLM 呼叫的硬上限（秒）。舊版只在每步開始前檢查總時間，卡住的呼叫不會被中斷。
+
+
+def timed_client(client, seconds):
+    """回傳「單次呼叫有硬性逾時、且不自動重試」的 client。\n    Groq / OpenAI SDK 預設逾時 60 秒、失敗重試 2 次，一封信最壞可能卡數分鐘；\n    這裡改成 with_options(timeout=..., max_retries=0)。沒有 with_options 的假 client 原樣回傳。"""
+    wo = getattr(client, 'with_options', None)
+    if callable(wo):
+        try:
+            return wo(timeout=max(1.0, float(seconds)), max_retries=0)
+        except Exception:
+            return client
+    return client
 MAX_EMAIL_CHARS = 3000
 
 # 工具發現 → 風險分（0–100，再進入 analysis.calculate_risk_score 的固定權重融合）
@@ -174,7 +186,8 @@ def run_investigation(client, email_text, urls, sender='', headers=None,
             if time.monotonic() - started > timeout_s:
                 error = '調查逾時，使用目前已取得的證據'
                 break
-            resp = client.chat.completions.create(
+            remaining = timeout_s - (time.monotonic() - started)
+            resp = timed_client(client, min(LLM_CALL_TIMEOUT, remaining)).chat.completions.create(
                 model=model, messages=messages, tools=TOOL_SCHEMAS,
                 tool_choice='auto', temperature=0.1)
             msg = resp.choices[0].message
@@ -194,6 +207,10 @@ def run_investigation(client, email_text, urls, sender='', headers=None,
                 key = (name, json.dumps(args, sort_keys=True, ensure_ascii=False))
                 if key in ctx.seen_calls:
                     result = {'error': '重複呼叫，已略過', 'signals': []}
+                elif time.monotonic() - started > timeout_s:
+                    # 工具要走網路（RDAP / 跳轉），一輪多個工具可能超過總預算；超過就不再發出新的網路請求
+                    result = {'error': '調查逾時，略過此工具', 'signals': []}
+                    error = error or '調查逾時，使用目前已取得的證據'
                 else:
                     ctx.seen_calls.add(key)
                     result = _dispatch(name, args, ctx)
@@ -209,7 +226,7 @@ def run_investigation(client, email_text, urls, sender='', headers=None,
         if not finished:
             # 步數或時間用完：要求模型直接結案，不再呼叫工具
             messages.append({'role': 'user', 'content': '請根據目前證據直接輸出最終 JSON，不要再呼叫工具。'})
-            resp = client.chat.completions.create(
+            resp = timed_client(client, 6.0).chat.completions.create(
                 model=model, messages=messages, tools=TOOL_SCHEMAS,
                 tool_choice='none', temperature=0.1)
             final = _parse_final(resp.choices[0].message.content)
