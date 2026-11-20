@@ -226,7 +226,7 @@ def do_scan(token_data, scan_id, uid):
             html    = get_html(msg)
             text    = f"From: {sender}\nSubject: {subject}\nBody: {body}"
 
-            if is_system_report(sender, subject):
+            if is_system_report(sender, subject, msg.get('labelIds', [])):
                 skipped += 1
                 _scan_progress(scan_id, 'sk')
                 continue

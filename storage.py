@@ -1,5 +1,6 @@
 """SQLite persistence and visitor-scoped whitelist helpers."""
 import re
+from email.utils import parseaddr
 import secrets
 import sqlite3
 from flask import session
@@ -97,10 +98,26 @@ def whitelist_match(sender, uid=None):
 def is_whitelisted(sender, uid=None):
     return bool(whitelist_match(sender, uid)[1])
 
-def is_system_report(sender, subject):
-    if any(kw in subject for kw in SKIP_SUBJECTS): return True
-    if MY_EMAIL in sender and any(kw in subject for kw in ['釣魚','警告','偵測']): return True
-    return False
+def is_system_report(sender, subject, label_ids=()):
+    """辨識「本系統自己寄給自己的報告信」。
+
+    舊版只看主旨關鍵字，攻擊者在釣魚信主旨加「[正常]」就能繞過分析；
+    而且 MY_EMAIL 未設定時 `'' in sender` 恆為真。現在必須同時符合：
+      1. MY_EMAIL 已設定；
+      2. 寄件地址（解析後）與 MY_EMAIL 完全相同；
+      3. 該信帶有 Gmail 的 SENT 標籤（只有從本人帳號寄出的信才有，外部偽造的信不會有）；
+      4. 主旨含系統報告標記。
+    任何一項不符就照一般信件分析。
+    """
+    my = (MY_EMAIL or '').strip().lower()
+    if not my or 'SENT' not in (label_ids or ()):
+        return False
+    addr = parseaddr(sender or '')[1].strip().lower()
+    if addr != my:
+        return False
+    subject = subject or ''
+    return any(kw in subject for kw in SKIP_SUBJECTS) or \
+        any(kw in subject for kw in ['釣魚', '警告', '偵測'])
 
 def save_scan(scan_id, scan_time, total, high, med, low, wl, skipped, uid=''):
     conn = sqlite3.connect('phishing.db')

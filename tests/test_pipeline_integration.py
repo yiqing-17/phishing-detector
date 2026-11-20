@@ -77,7 +77,8 @@ def test_agent_failure_falls_back_to_three_layer_fusion():
     with mock.patch.object(analysis, 'groq_client', boom):
         report, *_ = analysis.full_pipeline(PHISH, sender='service@secure-account.example')
     assert report['agent_meta']['status'] == 'error'
-    assert report['fusion_formula'] == '規則 42.5% + ML 42.5% + HTML 15%'
+    # PHISH 是中文信 → ML 不適用，退回「規則 85% + HTML 15%」
+    assert report['fusion_formula'].startswith('規則 85% + HTML 15%')
 
 
 def test_no_groq_key_means_no_agent_and_pipeline_still_works():
@@ -96,11 +97,47 @@ def test_agent_never_lowers_the_score():
     assert report['score_validation']['consistent'] is True
 
 
-@pytest.mark.xfail(reason="已知問題：ML 在中文信上不可靠（訓練資料為英文），一般中文正常信會得到約 96% 釣魚機率，"
-                          "導致預估分數達 41 而啟動 Agent。修正方向：ML 詞彙覆蓋率不足時改為「未知」並重分配權重。",
-                   strict=False)
 def test_benign_chinese_mail_should_not_start_the_agent():
+    """中文信超出 ML 訓練分布：ML 視為未知、不計入分數，因此一般中文信不會啟動 Agent。"""
     client = FakeClient([_resp(FINAL)])
     with mock.patch.object(analysis, 'groq_client', client):
         report, *_ = analysis.full_pipeline(BENIGN_ZH, sender='friend@example.com')
     assert report['agent_meta']['triggered'] is False
+    assert report['analysis_layers']['ml']['reliable'] is False
+    assert report['analysis_layers']['ml']['weight'] == 0
+    assert report['risk_level'] == 'low'
+    assert report['risk_breakdown']['ml_used'] is False
+    assert report['score_validation']['consistent'] is True
+
+
+def test_english_mail_still_uses_ml():
+    with mock.patch.object(analysis, 'groq_client', None):
+        report, *_ = analysis.full_pipeline(BENIGN, sender='a@corp.com')
+    assert report['analysis_layers']['ml']['reliable'] is True
+    assert report['risk_breakdown']['ml_used'] is True
+
+
+@pytest.mark.parametrize('text,ok', [
+    ("Hi John, are we still meeting tomorrow for lunch? Let me know what time works for you.", True),
+    ("週末要不要一起聚餐？明天下午三點開會，請準時。", False),
+    ("From: a@b.com\nSubject: 聚餐\nBody: 這週六晚上要不要一起吃飯？ http://example.com/a/b/c/d", False),
+    ("ok", False),
+])
+def test_ml_reliability(text, ok):
+    assert analysis.ml_reliability(text)[0] is ok
+
+
+def test_unknown_ml_redistributes_weight_to_rules():
+    assert analysis.calculate_risk_score(12, None, 0, None) == 51      # 0.85 * 60
+    assert analysis.calculate_risk_score(10, None, 0, 100) == 50       # 0.70 * 50 + 0.15 * 100
+    assert analysis.calculate_risk_score(20, None, 13, None) == 100
+    bd = analysis.build_risk_breakdown(12, None, 0, None)
+    assert bd['ml_used'] is False and bd['rounded_final'] == 51
+
+
+def test_chinese_phishing_still_flagged_by_rules():
+    """ML 不適用時，明顯的中文釣魚信仍須被規則層抓到（不可全部放行）。"""
+    with mock.patch.object(analysis, 'groq_client', None):
+        report, *_ = analysis.full_pipeline(PHISH, sender='service@secure-account.example')
+    assert report['analysis_layers']['ml']['reliable'] is False
+    assert report['risk_level'] in ('medium', 'high')

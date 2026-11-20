@@ -1339,7 +1339,7 @@ mark.m[data-n="3"]{cursor:pointer;text-decoration:underline dotted;text-underlin
       <a class="btn" href="/login" data-key="s"><span>授權 Google 送檢</span><span class="key">S</span></a>
       <a class="btn o" href="/paste" data-key="p"><span>不想連接 Gmail？直接貼信送檢</span><span class="key">P</span></a>
     </div>
-    <p class="priv">只讀取信件（Gmail 唯讀權限），不會修改或刪除。掃描結束後伺服器不再保留授權憑證，可隨時到 Google 帳戶撤銷授權。信件內容只存在伺服器記憶體、不寫入資料庫，案件簿只保存統計數字。疑似可疑的信件會連同寄件者與主旨送到第三方 AI 服務 Groq 分析。</p>
+    <p class="priv">只讀取信件（Gmail 唯讀權限），不會修改或刪除。掃描結束後伺服器不再保留授權憑證，可隨時到 Google 帳戶撤銷授權。信件內容只存在伺服器記憶體、不寫入資料庫，案件簿只保存統計數字。風險達中等以上的信件，會把寄件者、主旨、完整內文與信中的連結清單送到第三方 AI 服務 Groq 分析（內文可能含個資，請自行評估）。</p>
   </div>
   <div class="docwrap" data-parallax="0.05">
     <div class="stamp" role="button" tabindex="0" aria-label="可疑 SUSPICIOUS 印章，重播標記動畫" title="點擊重播">可疑<small>SUSPICIOUS</small></div>

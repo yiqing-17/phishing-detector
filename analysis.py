@@ -319,7 +319,14 @@ def build_explainable_findings(rules, html_findings, spam_prob, report, agent_tr
                 'detail': f'{category}：{item}'
             })
 
-    if spam_prob >= 0.70:
+    if spam_prob is None:
+        findings.append({
+            'severity': 'low',
+            'source': 'ML 模型',
+            'title': 'ML 模型不適用於此信件',
+            'detail': '模型以英文語料訓練，此信件超出其可判斷範圍，已排除在分數之外，改由規則、HTML / URL 與 AI Agent 查證判斷。'
+        })
+    elif spam_prob >= 0.70:
         findings.append({
             'severity': 'high',
             'source': 'ML 模型',
@@ -433,7 +440,16 @@ def calculate_risk_score(rule_score, spam_prob, html_score, llm_score=None):
     """固定融合規則、ML、HTML 與 LLM，避免單一模型直接決定最終分數。"""
     rule_component = min(rule_score * 5, 100)
     html_component = min(html_score * 8, 100)
-    ml_component = max(0, min(float(spam_prob) * 100, 100))
+    # spam_prob 為 None 表示 ML 不適用（見 ml_reliability），其權重改給規則引擎。
+    ml_component = None if spam_prob is None else max(0, min(float(spam_prob) * 100, 100))
+
+    if ml_component is None:
+        components = [(0.70, rule_component), (0.15, html_component)]
+        if llm_score is not None:
+            components.append((0.15, max(0, min(float(llm_score), 100))))
+        else:
+            components = [(0.85, rule_component), (0.15, html_component)]
+        return int(round(sum(weight * value for weight, value in components)))
 
     components = [
         (0.35, rule_component),
@@ -457,22 +473,23 @@ def calculate_risk_score(rule_score, spam_prob, html_score, llm_score=None):
 
 def build_risk_breakdown(rule_score, spam_prob, html_score, llm_score=None):
     rule_component = min(max(float(rule_score), 0) * 5, 100)
-    ml_component = max(0, min(float(spam_prob) * 100, 100))
+    ml_na = spam_prob is None
+    ml_component = 0.0 if ml_na else max(0, min(float(spam_prob) * 100, 100))
     html_component = min(max(float(html_score), 0) * 8, 100)
 
     if llm_score is not None:
         llm_component = max(0, min(float(llm_score), 100))
         rows = [
-            ('規則引擎', rule_component, 35.0),
-            ('ML 模型', ml_component, 35.0),
+            ('規則引擎', rule_component, 70.0 if ml_na else 35.0),
+            ('ML 模型', ml_component, 0.0 if ml_na else 35.0),
             ('HTML / URL', html_component, 15.0),
             ('AI 深度分析', llm_component, 15.0),
         ]
     else:
         llm_component = None
         rows = [
-            ('規則引擎', rule_component, 42.5),
-            ('ML 模型', ml_component, 42.5),
+            ('規則引擎', rule_component, 85.0 if ml_na else 42.5),
+            ('ML 模型', ml_component, 0.0 if ml_na else 42.5),
             ('HTML / URL', html_component, 15.0),
         ]
 
@@ -490,6 +507,7 @@ def build_risk_breakdown(rule_score, spam_prob, html_score, llm_score=None):
         'raw_total': round(total, 2),
         'rounded_final': int(round(total)),
         'llm_used': llm_component is not None,
+        'ml_used': not ml_na,
         'thresholds': {'low': '< 40', 'medium': '40 - 69', 'high': '>= 70'}
     }
 
@@ -579,6 +597,37 @@ def _extract_urls(text, html=''):
     return out[:8]
 
 
+# ── ML 可靠度檢查 ─────────────────────────────────────────────
+# 模型以英文語料訓練。中文信的 TF-IDF 向量幾乎全零，模型只剩截距項，
+# 會對任何中文信輸出約 80–98% 的「釣魚機率」。這種輸出不是證據，所以
+# 超出訓練分布時把 ML 視為「未知」，不納入融合，權重重分配給其他層。
+ML_MAX_CJK_RATIO = 0.20     # 去除網址後，CJK 字元佔比超過此值 → 不可靠
+ML_MIN_KNOWN_TOKENS = 5     # 落在模型詞彙內的詞數低於此值 → 證據不足
+_URL_RE = re.compile(r'https?://\S+|www\.\S+', re.I)
+_LABEL_RE = re.compile(r'^(from|subject|body)\s*:', re.I | re.M)
+_CJK_RE = re.compile(r'[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uac00-\ud7af]')
+_LATIN_RE = re.compile(r'[A-Za-z]')
+
+
+def ml_reliability(text):
+    """回傳 (是否可靠, 原因, 統計)。只檢查輸入是否在模型訓練分布內。"""
+    cleaned = _LABEL_RE.sub(' ', _URL_RE.sub(' ', text or ''))
+    cjk = len(_CJK_RE.findall(cleaned))
+    latin = len(_LATIN_RE.findall(cleaned))
+    ratio = cjk / (cjk + latin) if (cjk + latin) else 0.0
+    known = 0
+    if vectorizer is not None:
+        vocab = vectorizer.vocabulary_
+        tok = vectorizer.build_tokenizer()
+        known = sum(1 for w in tok(cleaned) if w.lower() in vocab)
+    stats = {'cjk_ratio': round(ratio, 3), 'known_tokens': known}
+    if ratio > ML_MAX_CJK_RATIO:
+        return False, '信件以中文（非英文）為主，超出模型訓練語料範圍', stats
+    if known < ML_MIN_KNOWN_TOKENS:
+        return False, '信件中落在模型詞彙內的詞太少，證據不足', stats
+    return True, '', stats
+
+
 def full_pipeline(text, html='', headers=None, sender=''):
     rule_score, rules = rule_based_score(text)
 
@@ -590,6 +639,10 @@ def full_pipeline(text, html='', headers=None, sender=''):
         spam_prob = float(model.predict_proba(vec)[0][phishing_index])
     else:
         spam_prob = 0.0
+    ml_ok, ml_reason, ml_stats = ml_reliability(text)
+    ml_raw_prob = spam_prob
+    if not ml_ok:
+        spam_prob = None   # 未知：不納入融合，也不顯示成「正常」
 
     html_score, html_findings = (0, [])
     if html:
@@ -626,7 +679,7 @@ def full_pipeline(text, html='', headers=None, sender=''):
 
     # 保存各層的「原始證據」與「融合用分數」。
     rule_component = min(rule_score * 5, 100)
-    ml_component = max(0, min(float(spam_prob) * 100, 100))
+    ml_component = 0 if spam_prob is None else max(0, min(float(spam_prob) * 100, 100))
     html_component = min(html_score * 8, 100)
     llm_component = None if llm_score is None else max(0, min(float(llm_score), 100))
 
@@ -676,17 +729,22 @@ def full_pipeline(text, html='', headers=None, sender=''):
             'name': '規則引擎',
             'score': round(rule_component, 1),
             'raw_score': rule_score,
-            'weight': 42.5 if llm_score is None else 35,
+            'weight': (85 if llm_score is None else 70) if spam_prob is None else (42.5 if llm_score is None else 35),
             'status': '偵測到可疑規則' if rules else '未發現明顯規則異常',
             'findings': rules[:6]
         },
         'ml': {
             'name': 'ML 模型',
-            'score': round(ml_component, 1),
-            'probability': round(spam_prob * 100, 1),
-            'weight': 42.5 if llm_score is None else 35,
-            'status': '高度偏向釣魚信件' if spam_prob >= 0.7 else ('偏向釣魚信件' if spam_prob >= 0.3 else '偏向正常信件'),
+            'score': None if spam_prob is None else round(ml_component, 1),
+            'probability': None if spam_prob is None else round(spam_prob * 100, 1),
+            'weight': 0 if spam_prob is None else (42.5 if llm_score is None else 35),
+            'status': ('不適用：' + ml_reason) if spam_prob is None else (
+                '高度偏向釣魚信件' if spam_prob >= 0.7 else ('偏向釣魚信件' if spam_prob >= 0.3 else '偏向正常信件')),
+            'reliable': spam_prob is not None,
+            'coverage': ml_stats,
             'findings': [
+                '未納入融合（原始輸出 %.1f%% 不可作為證據）' % (ml_raw_prob * 100)
+            ] if spam_prob is None else [
                 f'釣魚信件機率：{spam_prob:.1%}'
             ]
         },
@@ -723,11 +781,18 @@ def full_pipeline(text, html='', headers=None, sender=''):
         'signals': (agent_result or {}).get('signals', []),
     }
 
-    report['fusion_formula'] = (
-        '規則 35% + ML 35% + HTML 15% + AI Agent 15%（Agent 只加分、不低於三層融合分數）'
-        if llm_score is not None
-        else '規則 42.5% + ML 42.5% + HTML 15%'
-    )
+    if spam_prob is None:
+        report['fusion_formula'] = (
+            '規則 70% + HTML 15% + AI Agent 15%（ML 不適用，權重移給規則；Agent 只加分、不低於預估分數）'
+            if llm_score is not None
+            else '規則 85% + HTML 15%（ML 不適用，權重移給規則）'
+        )
+    else:
+        report['fusion_formula'] = (
+            '規則 35% + ML 35% + HTML 15% + AI Agent 15%（Agent 只加分、不低於三層融合分數）'
+            if llm_score is not None
+            else '規則 42.5% + ML 42.5% + HTML 15%'
+        )
 
     return report, html_score, html_findings, rule_score, spam_prob
 

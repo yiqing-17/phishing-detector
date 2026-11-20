@@ -15,7 +15,7 @@ def build_analyzed_entry(sender, subject, body, report, html_score, rule_score, 
         'tags': report.get('suspicious_points', [])[:5],
         'scores': [
             ['規則引擎', f'{rule_score}分'],
-            ['ML 機率', f'{spam_prob:.1%}'],
+            ['ML 機率', 'N/A（不適用）' if spam_prob is None else f'{spam_prob:.1%}'],
             ['HTML', f'+{html_score}分'],
         ],
         'layers': report.get('analysis_layers', {}),
