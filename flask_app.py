@@ -5,8 +5,10 @@ import os
 import secrets
 import sqlite3
 import threading
+import time
 import uuid
 from datetime import datetime, timedelta
+from ratelimit import RateLimiter, client_ip
 from flask import Flask, Response, jsonify, redirect, render_template_string, request, session
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
@@ -70,6 +72,33 @@ if not FLASK_SECRET_KEY and BASE_URL.startswith('https://'):
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=365)
 _creds = {}     # uid -> Google 授權憑證（只存在伺服器記憶體，掃描結束即清除）
 _scans = {}     # scan_id -> 掃描結果（含 owner，只有擁有者能讀）
+_scan_born = {} # scan_id -> 建立時間；用來定期清掉舊結果，避免記憶體只增不減
+SCAN_TTL_S = 60 * 60
+SCAN_MAX = 200
+
+_limiter = RateLimiter()
+RATE_LIMITS = {'paste': (10, 3600), 'scan': (6, 3600)}   # 每個 IP 每小時次數（會消耗 Groq 額度的端點）
+
+
+def _prune_scans():
+    now = time.time()
+    for sid in [k for k, t in _scan_born.items() if now - t > SCAN_TTL_S]:
+        _scans.pop(sid, None); _scan_born.pop(sid, None)
+    while len(_scan_born) > SCAN_MAX:                 # 超過上限：丟掉最舊的
+        sid = min(_scan_born, key=_scan_born.get)
+        _scans.pop(sid, None); _scan_born.pop(sid, None)
+
+
+def _rate_limited(bucket):
+    """超過限制時回傳 429 Response，否則回傳 None。"""
+    limit, window = RATE_LIMITS[bucket]
+    ip = client_ip(request.remote_addr, request.headers.get('X-Forwarded-For', ''))
+    ok, wait = _limiter.allow((bucket, ip), limit, window)
+    if ok:
+        return None
+    return Response(f'請求太頻繁：此功能每小時最多 {limit} 次（會消耗第三方 AI 額度）。請 {wait} 秒後再試。',
+                    status=429, mimetype='text/plain; charset=utf-8', headers={'Retry-After': str(wait)})
+
 
 
 @app.after_request
@@ -283,7 +312,11 @@ def scan():
     uid = get_uid()
     token_data = _creds.get(uid)
     if not token_data: return redirect('/')
+    limited = _rate_limited('scan')
+    if limited: return limited
+    _prune_scans()
     scan_id = str(uuid.uuid4())[:8]
+    _scan_born[scan_id] = time.time()
     _scans[scan_id] = {'done': False, 'owner': uid}
     session['last_scan_id'] = scan_id
     threading.Thread(target=do_scan, args=(token_data, scan_id, uid)).start()
@@ -305,11 +338,14 @@ def paste_page():
 
 @app.route('/paste_analyze', methods=['POST'])
 def paste_analyze():
+    limited = _rate_limited('paste')
+    if limited: return limited
+    _prune_scans()
     uid = get_uid()
     sender  = request.form.get('sender', '').strip() or '(未提供寄件者)'
     subject = request.form.get('subject', '').strip() or '(無主旨)'
-    body    = request.form.get('body', '').strip()
-    html    = request.form.get('html', '').strip()
+    body    = request.form.get('body', '').strip()[:20000]      # 上限：控制 LLM 成本與延遲
+    html    = request.form.get('html', '').strip()[:200000]
 
     if not body:
         err = '<div class="err-box">請貼上郵件內文再送出。</div>'
@@ -335,6 +371,7 @@ def paste_analyze():
             low = 1
 
         scan_id = str(uuid.uuid4())[:8]
+        _scan_born[scan_id] = time.time()
         _scans[scan_id] = {
             'done': True,
             'owner': uid,
