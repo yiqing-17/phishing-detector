@@ -101,7 +101,8 @@ def analyze_url(url):
 
 URGENT_WORDS = [
     'urgent', 'immediately', 'expire', 'suspended', 'verify now', 'act now',
-    '立即', '緊急', '即將停用', '馬上', '限時', '暫停', '停用'
+    '立即', '緊急', '即將停用', '馬上', '限時', '暫停', '停用',
+    '逾期', '小時內', '今日內', '凍結', '鎖定', '否則',
 ]
 BAIT_WORDS = [
     'free', 'winner', 'won', 'prize', 'claim', 'lucky', 'reward', 'gift',
@@ -109,12 +110,29 @@ BAIT_WORDS = [
 ]
 PERSONAL_WORDS = [
     'password', 'credit card', 'bank account', 'pin',
-    '密碼', '帳號', '信用卡', '身分證', '帳戶'
+    '密碼', '帳號', '信用卡', '身分證', '帳戶',
+    '驗證碼', 'otp', '卡號', '背面三碼', '存摺', '出生日期'
 ]
 MONEY_WORDS = [
     '$', 'cash', 'money', 'transfer', 'wire', 'payment', 'invoice',
     '匯款', '轉帳', '付款', 'NT$', '退款'
 ]
+# 中文（台灣）常見詐騙話術：單一詞就是強訊號，每命中 +3
+ZH_SCAM_WORDS = [
+    '補繳', '運費', '關稅', '滯納金', '手續費', '分期付款', '解除分期', 'ATM',
+    '保證獲利', '零風險', '保證回本', '日領', '月入', '加入群組', 'Telegram',
+    '監管帳戶', '檢察官', '勿告知', '不方便講電話', '新帳戶', '帳戶已變更',
+    '點擊', '驗證身分', '重新驗證', '憑證', '異地登入', '盜刷', '洗錢',
+    '傳票', '強制執行', '入金', '免擔保', '預審',
+]
+# 弱詞：在正常信件（帳單、收據、訂單）裡也很常見，單獨出現不計分；
+# 必須同時有其他強訊號（連結、緊急語句、強詞）才計分，以降低誤報。
+WEAK_WORDS = {
+    '帳號', '帳戶', '信用卡', '付款', '退款', '$', 'nt$', 'payment', 'invoice',
+    'cash', 'money', '免費', 'free', 'gift', 'reward', 'claim', '領取', '補助', '恭喜',
+}
+# 否定／免責句（「本行不會要求您提供密碼」「不需要任何額外操作」）不應被當成索取個資。
+_NEG_RE = re.compile(r'(不會|不需要|不需|無需|不用|請勿將)[^。！？!?\n]*')
 
 
 def _kw_hit(word, text_lower):
@@ -133,37 +151,54 @@ def rule_based_score(text):
     score = 0
     triggered = []
     t = (text or '').lower()
+    t_kw = _NEG_RE.sub(' ', t)     # 關鍵字比對用：先移除否定／免責句
 
-    hits = [w for w in URGENT_WORDS if _kw_hit(w, t)]
-    if hits:
-        score += len(hits) * 2
-        triggered.append(f'緊急語句: {hits}')
+    urgent = [w for w in URGENT_WORDS if _kw_hit(w, t_kw)]
+    zh_scam = [w for w in ZH_SCAM_WORDS if _kw_hit(w, t_kw)]
 
     urls = re.findall(r'https?://[^\s<>"\']+', t)
+    url_score, url_notes = 0, []
     if urls:
-        score += min(3 + len(urls), 8)
-        triggered.append(f'含有連結: {urls[:2]}')
-
+        url_score += min(3 + len(urls), 8)
+        url_notes.append(f'含有連結: {urls[:2]}')
         for url in urls[:10]:
             url_findings = analyze_url(url)
             if url_findings:
-                score += min(len(url_findings) * 2, 8)
-                triggered.append(f'URL 風險: {url_findings[:4]}')
+                url_score += min(len(url_findings) * 2, 8)
+                url_notes.append(f'URL 風險: {url_findings[:4]}')
 
-    hits2 = [w for w in BAIT_WORDS if _kw_hit(w, t)]
+    def split(words):
+        hits = [w for w in words if _kw_hit(w, t_kw)]
+        return [w for w in hits if w.lower() not in WEAK_WORDS], [w for w in hits if w.lower() in WEAK_WORDS]
+
+    bait_s, bait_w = split(BAIT_WORDS)
+    pers_s, pers_w = split(PERSONAL_WORDS)
+    money_s, money_w = split(MONEY_WORDS)
+
+    # 有其他強訊號時，弱詞才算數
+    corroborated = bool(urls or urgent or zh_scam or bait_s or pers_s or money_s)
+
+    if urgent:
+        score += len(urgent) * 2
+        triggered.append(f'緊急語句: {urgent}')
+    if urls:
+        score += url_score
+        triggered.extend(url_notes)
+    hits2 = bait_s + (bait_w if corroborated else [])
     if hits2:
         score += len(hits2) * 2
         triggered.append(f'誘騙話術: {hits2}')
-
-    hits3 = [w for w in PERSONAL_WORDS if _kw_hit(w, t)]
+    hits3 = pers_s + (pers_w if corroborated else [])
     if hits3:
         score += len(hits3) * 3
         triggered.append(f'索取個資: {hits3}')
-
-    hits4 = [w for w in MONEY_WORDS if _kw_hit(w, t)]
+    hits4 = money_s + (money_w if corroborated else [])
     if hits4:
         score += len(hits4) * 2
         triggered.append(f'金錢相關: {hits4}')
+    if zh_scam:
+        score += len(zh_scam) * 3
+        triggered.append(f'詐騙話術: {zh_scam}')
 
     return score, triggered
 
@@ -174,6 +209,7 @@ RULE_KEYWORD_GROUPS = [
     ('R2', '誘騙話術', '以獎金、免費、退款等利益誘使點擊', BAIT_WORDS, '每命中 1 個詞 +2'),
     ('R3', '索取個資', '要求提供密碼、卡號、帳戶等敏感資料', PERSONAL_WORDS, '每命中 1 個詞 +3'),
     ('R4', '金錢相關', '涉及匯款、付款、轉帳等金流指示', MONEY_WORDS, '每命中 1 個詞 +2'),
+    ('R5', '詐騙話術', '補繳運費、解除分期、監管帳戶等台灣常見詐騙用語', ZH_SCAM_WORDS, '每命中 1 個詞 +3'),
 ]
 RULE_URL_ITEMS = [
     ('U1', 'URL 使用 IP 位址', '主機名稱為 IP 而非網域'),
