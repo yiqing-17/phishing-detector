@@ -1,9 +1,10 @@
 """Build the result records shared by Gmail scans and pasted messages."""
 
 from analysis import gen_ir, ir_download_fields
+from storage import create_incident
 
 
-def build_analyzed_entry(sender, subject, body, report, html_score, rule_score, spam_prob):
+def build_analyzed_entry(sender, subject, body, report, html_score, rule_score, spam_prob, uid=''):
     entry = {
         'level': report['risk_level'],
         'risk_score': report['risk_score'],
@@ -44,5 +45,7 @@ def build_analyzed_entry(sender, subject, body, report, html_score, rule_score, 
             'recovery': incident.get('recovery', ''),
             **ir_download_fields(incident, sender, subject),
         }
+        if uid:   # 有使用者身分才落地成可追蹤的事件（供狀態流轉）
+            create_incident(uid, entry['ir'])
 
     return entry

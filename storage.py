@@ -1,5 +1,7 @@
 """SQLite persistence and visitor-scoped whitelist helpers."""
+import json
 import re
+from datetime import datetime
 from email.utils import parseaddr
 import secrets
 import sqlite3
@@ -26,6 +28,13 @@ def init_db():
         (uid TEXT NOT NULL, domain TEXT NOT NULL, action TEXT NOT NULL, added_time TEXT,
          PRIMARY KEY (uid, domain))''')
     c.execute('CREATE TABLE IF NOT EXISTS app_meta (key TEXT PRIMARY KEY, value TEXT)')
+    c.execute('''CREATE TABLE IF NOT EXISTS incidents
+        (id TEXT PRIMARY KEY, uid TEXT NOT NULL, subject TEXT, sender TEXT, severity TEXT,
+         risk_score INTEGER, status TEXT NOT NULL, created_at TEXT, updated_at TEXT)''')
+    c.execute('''CREATE TABLE IF NOT EXISTS incident_events
+        (id INTEGER PRIMARY KEY AUTOINCREMENT, incident_id TEXT NOT NULL, ts TEXT, from_status TEXT,
+         to_status TEXT, note TEXT)''')
+    c.execute('CREATE INDEX IF NOT EXISTS idx_inc_uid ON incidents (uid, updated_at)')
     conn.commit()
     conn.close()
 
@@ -158,3 +167,100 @@ def get_history(uid=None):
     conn.close()
     return rows
 
+
+# ── 事件（Incident）生命週期 ─────────────────────────────────
+# Open → Triaged → Contained → Closed；任何未結案階段都可標為 False Positive；結案後可重開。
+# 結案（Closed / False Positive）必須填寫處理說明，確保每個事件都有可稽核的結論。
+INCIDENT_TRANSITIONS = {
+    'Open': ('Triaged', 'False Positive'),
+    'Triaged': ('Contained', 'False Positive'),
+    'Contained': ('Closed', 'False Positive'),
+    'False Positive': ('Open',),
+    'Closed': ('Open',),
+}
+NOTE_REQUIRED = ('Closed', 'False Positive', 'Open')   # 重開也要說明原因（Open 僅在重開時需要，見下）
+MAX_NOTE = 500
+
+
+def create_incident(uid, ir, db='phishing.db'):
+    """建立事件（同一 id 只建一次）。ir 為 result_builder 產生的 IR 摘要。"""
+    now = datetime.now().isoformat(timespec='seconds')
+    conn = sqlite3.connect(db)
+    c = conn.cursor()
+    c.execute('INSERT OR IGNORE INTO incidents (id, uid, subject, sender, severity, risk_score, status, created_at, updated_at)'
+              ' VALUES (?,?,?,?,?,?,?,?,?)',
+              (ir['id'], uid, (ir.get('email_subject') or '')[:120], (ir.get('email_sender') or '')[:120],
+               ir.get('severity', 'High'), int(ir.get('risk_score') or 0), 'Open', now, now))
+    if c.rowcount:
+        c.execute('INSERT INTO incident_events (incident_id, ts, from_status, to_status, note) VALUES (?,?,?,?,?)',
+                  (ir['id'], now, '', 'Open', '系統自動建立'))
+    conn.commit()
+    conn.close()
+
+
+def _row_to_incident(c, row):
+    inc = dict(zip(('id', 'subject', 'sender', 'severity', 'risk_score', 'status', 'created_at', 'updated_at'), row))
+    c.execute('SELECT ts, from_status, to_status, note FROM incident_events WHERE incident_id=? ORDER BY id', (inc['id'],))
+    inc['events'] = [dict(zip(('ts', 'from', 'to', 'note'), r)) for r in c.fetchall()]
+    inc['allowed_next'] = list(INCIDENT_TRANSITIONS.get(inc['status'], ()))
+    # 處理時效：建立 → 首次分流（MTTA）、建立 → 最近一次結案（MTTR）
+    def secs(a, b):
+        try:
+            return int((datetime.fromisoformat(b) - datetime.fromisoformat(a)).total_seconds())
+        except (TypeError, ValueError):
+            return None
+    tri = next((e['ts'] for e in inc['events'] if e['to'] == 'Triaged'), None)
+    clo = next((e['ts'] for e in reversed(inc['events']) if e['to'] in ('Closed', 'False Positive')), None)
+    inc['time_to_triage_s'] = secs(inc['created_at'], tri) if tri else None
+    inc['time_to_resolve_s'] = secs(inc['created_at'], clo) if clo and inc['status'] in ('Closed', 'False Positive') else None
+    return inc
+
+
+_COLS = 'id, subject, sender, severity, risk_score, status, created_at, updated_at'
+
+
+def get_incident(uid, incident_id, db='phishing.db'):
+    conn = sqlite3.connect(db)
+    c = conn.cursor()
+    c.execute(f'SELECT {_COLS} FROM incidents WHERE id=? AND uid=?', (incident_id, uid))
+    row = c.fetchone()
+    inc = _row_to_incident(c, row) if row else None
+    conn.close()
+    return inc
+
+
+def list_incidents(uid, db='phishing.db'):
+    conn = sqlite3.connect(db)
+    c = conn.cursor()
+    c.execute(f'SELECT {_COLS} FROM incidents WHERE uid=? ORDER BY updated_at DESC LIMIT 100', (uid,))
+    rows = c.fetchall()
+    out = [_row_to_incident(c, r) for r in rows]
+    conn.close()
+    return out
+
+
+def transition_incident(uid, incident_id, new_status, note='', db='phishing.db'):
+    """回傳 (ok, error_message, incident)。只能操作自己的事件，且必須符合狀態機。"""
+    note = (note or '').strip()[:MAX_NOTE]
+    inc = get_incident(uid, incident_id, db)
+    if not inc:
+        return False, '找不到這個事件', None
+    cur = inc['status']
+    if new_status not in INCIDENT_TRANSITIONS.get(cur, ()):
+        return False, f'不能從 {cur} 直接改為 {new_status}', inc
+    needs_note = new_status in ('Closed', 'False Positive') or cur in ('Closed', 'False Positive')
+    if needs_note and len(note) < 5:
+        return False, '結案、判定誤報或重開事件時，請填寫至少 5 個字的處理說明', inc
+    now = datetime.now().isoformat(timespec='seconds')
+    conn = sqlite3.connect(db)
+    c = conn.cursor()
+    c.execute('UPDATE incidents SET status=?, updated_at=? WHERE id=? AND uid=? AND status=?',
+              (new_status, now, incident_id, uid, cur))
+    if c.rowcount != 1:      # 併發：狀態已被改動
+        conn.close()
+        return False, '事件狀態已變更，請重新整理', get_incident(uid, incident_id, db)
+    c.execute('INSERT INTO incident_events (incident_id, ts, from_status, to_status, note) VALUES (?,?,?,?,?)',
+              (incident_id, now, cur, new_status, note))
+    conn.commit()
+    conn.close()
+    return True, '', get_incident(uid, incident_id, db)

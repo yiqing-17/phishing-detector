@@ -2,6 +2,7 @@
 import gzip
 import json
 import os
+import re
 import secrets
 import sqlite3
 import threading
@@ -19,7 +20,7 @@ from config import (
     SCOPES, DEFAULT_WHITELIST,
 )
 from storage import (
-    get_history, get_uid, get_whitelist, get_whitelist_rows, init_db,
+    get_history, get_uid, get_whitelist, get_whitelist_rows, init_db, list_incidents, transition_incident,
     is_system_report, is_whitelisted, normalize_whitelist_domain,
     save_scan, whitelist_match, whitelist_verdict,
 )
@@ -275,7 +276,7 @@ def do_scan(token_data, scan_id, uid):
                 text, html, headers=get_agent_headers(msg), sender=sender,
                 wl_note={'verdict': verdict, 'domain': wl_dom, 'hit': wl_hit, 'floor': 40})
             entry = build_analyzed_entry(
-                sender, subject, body, report, html_score, rule_score, spam_prob
+                sender, subject, body, report, html_score, rule_score, spam_prob, uid=uid
             )
 
             if report['risk_level'] == 'high':
@@ -360,7 +361,7 @@ def paste_analyze():
             text, html, sender=sender,
             wl_note={'verdict': 'unverified', 'domain': wl_domain, 'hit': wl_hit, 'floor': 0} if wl_hit else None)
         entry = build_analyzed_entry(
-            sender, subject, body, report, html_score, rule_score, spam_prob
+            sender, subject, body, report, html_score, rule_score, spam_prob, uid=uid
         )
         high = med = low = wl = 0
         if report['risk_level'] == 'high':
@@ -486,6 +487,20 @@ def whitelist_check():
 def whitelist_page():
     domains = get_whitelist_rows()
     return render_template_string(WHITELIST_HTML, domains=domains, count=len(domains))
+
+@app.route('/incidents')
+def incidents_list():
+    return jsonify({'success': True, 'incidents': list_incidents(get_uid())})
+
+@app.route('/incident/<incident_id>/transition', methods=['POST'])
+def incident_transition(incident_id):
+    if not request.is_json:      # 只收 JSON：跨站表單無法送出，搭配 SameSite=Lax 防 CSRF
+        return jsonify({'success': False, 'error': '需要 JSON 請求'}), 415
+    if not re.fullmatch(r'IR-\d{8}-[0-9A-F]{6}', incident_id or ''):
+        return jsonify({'success': False, 'error': '事件編號格式不正確'}), 400
+    data = request.get_json(silent=True) or {}
+    ok, err, inc = transition_incident(get_uid(), incident_id, str(data.get('status', '')), str(data.get('note', '')))
+    return jsonify({'success': ok, 'error': err, 'incident': inc}), (200 if ok else 400)
 
 @app.route('/whitelist/add', methods=['POST'])
 def whitelist_add():

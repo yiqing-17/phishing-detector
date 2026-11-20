@@ -13,7 +13,7 @@ COMMON_CSS = """<!DOCTYPE html>
 html.sxin::after{content:"";position:fixed;inset:0;z-index:9999;background:#141414;pointer-events:none;animation:sxaOutRes .5s cubic-bezier(.7,0,.2,1) .06s forwards}
 @keyframes sxaOutRes{from{clip-path:inset(0)}to{clip-path:inset(0 0 0 100%)}}
 @media (prefers-reduced-motion: reduce){html.sxin::after{display:none}}
-</style>
+.irflow{margin-top:14px;padding:12px;border:1px dashed var(--line,#999)}.irfl-h{display:flex;gap:14px;flex-wrap:wrap;align-items:center}.irfl-h span{opacity:.7;font-size:.85em}.irfl-note{width:100%;box-sizing:border-box;margin:10px 0 6px;padding:8px}.irfl-b{display:flex;gap:8px;flex-wrap:wrap}.irfl-msg{color:#b3261e;min-height:1.2em;margin-top:6px}.irfl-ev{margin:8px 0 0;padding-left:1.2em;font-size:.85em;opacity:.85}</style>
 <meta property="og:type" content="website">
 <meta property="og:title" content="phishing-detector">
 <meta property="og:description" content="授權 Gmail 或直接貼信，四層分析逐層比對，找出可疑信件。">
@@ -1411,15 +1411,24 @@ mark.m[data-n="3"]{cursor:pointer;text-decoration:underline dotted;text-underlin
 
 <section class="sec" id="metrics"><div class="wrap">
   <div class="ftab"><mark>FILE 04</mark><span>model report</span></div>
-  <h2>ML 模型<span class="hl">測試結果</span></h2>
-  <div class="mt-ds">資料集　Phishing Email Dataset，清理後 82,077 筆（訓練 65,661 / 測試 16,416）</div>
+  <h2>ML 層<span class="hl">英文資料集</span>測試結果</h2>
+  <div class="mt-ds">資料集　Phishing Email Dataset（英文），清理後 82,077 筆（訓練 65,661 / 測試 16,416）。僅以「完全相同文字」去重，來源間的近似重複可能使數字偏高；此模型不適用中文信件，中文信件由規則引擎判斷。</div>
   <div class="mt4 bigstats">
     <div class="bs"><span class="k">Accuracy</span><b><span class="cu" data-to="98.41">98.41</span><i>%</i></b><span class="bb" style="--w:98.41%"></span></div>
     <div class="bs"><span class="k">Precision</span><b><span class="cu" data-to="98.28">98.28</span><i>%</i></b><span class="bb" style="--w:98.28%"></span></div>
     <div class="bs"><span class="k">Recall</span><b><span class="cu" data-to="98.68">98.68</span><i>%</i></b><span class="bb" style="--w:98.68%"></span></div>
     <div class="bs"><span class="k">F1</span><b><span class="cu" data-to="98.48">98.48</span><i>%</i></b><span class="bb" style="--w:98.48%"></span></div>
   </div>
-  <p class="note">以上僅為第 2 層 ML 模型在測試資料上的表現，不代表整體四層系統在真實信箱中的準確率。</p>
+  <p class="note">以上僅為第 2 層 ML 模型在<b>英文</b>測試資料上的表現，不代表整體四層系統在真實信箱中的準確率。</p>
+  <h3 style="margin-top:28px">整體系統・中文實測（不含 Agent）</h3>
+  <div class="mt-ds">自建合成中文信件，門檻 40。第一列為主測試集（n=50）；第二列為「困難樣本」（n=32：帶官方連結的正常信、無連結的詐騙），該集只評估、不調參。</div>
+  <div class="mt4 bigstats">
+    <div class="bs"><span class="k">主測試集 Recall</span><b>88<i>%</i></b><span class="bb" style="--w:88%"></span></div>
+    <div class="bs"><span class="k">主測試集 誤報率</span><b>0<i>%</i></b><span class="bb" style="--w:0%"></span></div>
+    <div class="bs"><span class="k">困難樣本 Recall</span><b>50<i>%</i></b><span class="bb" style="--w:50%"></span></div>
+    <div class="bs"><span class="k">困難樣本 誤報率</span><b>40<i>%</i></b><span class="bb" style="--w:40%"></span></div>
+  </div>
+  <p class="note">樣本數小、皆為人工撰寫，信賴區間很寬；完整方法、限制與重現指令見 repo 的 eval/RESULTS.md。</p>
 </div></section>
 
 <section class="clear"><div class="wrap">
@@ -2568,6 +2577,44 @@ function escapeHtml(value) {
 }
 
 
+/* ── IR 事件狀態流轉：後端為唯一真相，前端只負責顯示與送出 ── */
+function irRenderFlow(box, inc) {
+  var h = '<div class="irfl-h"><b>目前狀態：' + escapeHtml(inc.status) + '</b>';
+  if (inc.time_to_triage_s != null) h += '<span>分流耗時 ' + inc.time_to_triage_s + ' 秒</span>';
+  if (inc.time_to_resolve_s != null) h += '<span>結案耗時 ' + inc.time_to_resolve_s + ' 秒</span>';
+  h += '</div>';
+  if (inc.allowed_next && inc.allowed_next.length) {
+    h += '<input class="irfl-note" maxlength="500" placeholder="處理說明（結案／誤報／重開時必填，至少 5 字）">' +
+      '<div class="irfl-b">' + inc.allowed_next.map(function (st) {
+        return '<button type="button" class="ir-dl-btn" data-st="' + escapeHtml(st) + '">→ ' + escapeHtml(st) + '</button>';
+      }).join('') + '</div>';
+  }
+  h += '<div class="irfl-msg" aria-live="polite"></div><ol class="irfl-ev">' + (inc.events || []).map(function (e) {
+    return '<li>' + escapeHtml((e.ts || '').replace('T', ' ')) + '　' + escapeHtml(e.from ? e.from + ' → ' : '') + escapeHtml(e.to) +
+      (e.note ? '：' + escapeHtml(e.note) : '') + '</li>';
+  }).join('') + '</ol>';
+  box.innerHTML = h;
+  box.querySelectorAll('button[data-st]').forEach(function (b) {
+    b.addEventListener('click', function () { irTransition(box, b.getAttribute('data-st')); });
+  });
+}
+function irLoadFlow(box) {
+  fetch('/incidents', { credentials: 'same-origin' }).then(function (r) { return r.json(); }).then(function (d) {
+    var inc = (d.incidents || []).filter(function (x) { return x.id === box.getAttribute('data-id'); })[0];
+    if (inc) irRenderFlow(box, inc); else box.innerHTML = '';
+  }).catch(function () { box.innerHTML = ''; });
+}
+function irTransition(box, status) {
+  var note = (box.querySelector('.irfl-note') || {}).value || '';
+  fetch('/incident/' + encodeURIComponent(box.getAttribute('data-id')) + '/transition', {
+    method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status: status, note: note })
+  }).then(function (r) { return r.json(); }).then(function (d) {
+    if (d.incident) irRenderFlow(box, d.incident);
+    if (!d.success) { var m = box.querySelector('.irfl-msg'); if (m) m.textContent = d.error || '更新失敗'; }
+  }).catch(function () { var m = box.querySelector('.irfl-msg'); if (m) m.textContent = '網路錯誤，請稍後再試'; });
+}
+function irInitFlows() { document.querySelectorAll('.irflow').forEach(irLoadFlow); }
 function downloadIR(idx, fmt) {
   const d = emailData[idx];
   if (!d || !d.ir) return;
@@ -2933,11 +2980,13 @@ function showDetail(idx, element) {
       (ir.actions && ir.actions.length ? '<ul>' + ir.actions.map(function (a) { return '<li>' + escapeHtml(a) + '</li>'; }).join('') + '</ul>' : '') +
       '<div class="irmeta"><span>Risk ' + escapeHtml(String(ir.risk_score == null ? '—' : ir.risk_score)) + '/100</span><span>Created ' + escapeHtml(ir.created_at || '—') + '</span></div></div>' +
       '<div class="ir3"><div><b>隔離 Containment</b><p>' + escapeHtml(ir.containment || '—') + '</p></div><div><b>驗證 Verification</b><p>' + escapeHtml(ir.verification || '—') + '</p></div><div><b>復原 Recovery</b><p>' + escapeHtml(ir.recovery || '—') + '</p></div></div>' +
-      '<div class="irn">Status = Open 代表此事件<b>已建立、尚待人員處理</b>；本系統只負責產生處置建議，不會自動通知他人或關閉事件，處理完成後由資安人員自行結案（Closed）。</div>' +
+      '<div class="irn">事件流程：Open → Triaged → Contained → Closed（也可標為 False Positive）。本系統只產生處置建議並記錄每次狀態變更，<b>不會自動通知他人、也不會自動結案</b>；結案需填寫處理說明。</div>' +
+      '<div class="irflow" id="irflow-' + escapeHtml(ir.id) + '" data-id="' + escapeHtml(ir.id) + '"></div>' +
       '<div class="irdl"><button class="ir-dl-btn" onclick="downloadIR(' + idx + ',&quot;txt&quot;)">下載 IR 報告 (.txt)</button><button class="ir-dl-btn" onclick="downloadIR(' + idx + ',&quot;json&quot;)">下載 (.json)</button></div></div>';
   }
 
   panel.innerHTML = html.replace('<div class="sh" style="margin-top:2.2rem;display:none"></div>', '');
+  irInitFlows();
   /* 標記與批註互相連動 */
   const marks = panel.querySelectorAll('mark.m'), notes = panel.querySelectorAll('.notes li');
   function tog(n, on) { notes.forEach(function (li) { if (li.getAttribute('data-n') === n) li.classList.toggle('on', on); }); }
