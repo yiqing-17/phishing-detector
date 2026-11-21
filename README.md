@@ -67,7 +67,7 @@ export FLASK_SECRET_KEY=$(python -c "import secrets;print(secrets.token_hex(32))
 export GROQ_API_KEY=...            # 選填：沒有就只跑規則 + ML（Agent 與 IR 文字會降級）
 export GOOGLE_CLIENT_ID=... GOOGLE_CLIENT_SECRET=...   # 選填：Gmail 掃描
 python flask_app.py                # 或 gunicorn flask_app:app
-python -m pytest tests -q          # 89 項
+python -m pytest tests -q          # 101 項
 ```
 
 重新訓練 ML：把 Phishing Email Dataset 放到 `dataset/phishing_email.csv`，執行 `python train_phishing_model.py`。
