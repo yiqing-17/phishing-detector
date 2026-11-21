@@ -225,8 +225,8 @@ def callback():
         }
         return redirect('/scan')
     except Exception as e:
-        import traceback
-        detail = traceback.format_exc()
+        app.logger.exception('OAuth callback failed')
+        detail = f'{type(e).__name__}: {str(e)[:300]}'
         return render_error('Google Gmail 授權失敗', '請確認 Google OAuth 的重新導向 URI、Client ID / Secret 與 Gmail API 設定。', detail), 500
 
 def _scan_progress(scan_id, level):
@@ -288,10 +288,11 @@ def do_scan(token_data, scan_id, uid):
                 agent_left -= 1
             if report['agent_meta'].get('skipped_reason'):
                 agent_skipped += 1
+            use_ir_llm = ir_left > 0
             entry = build_analyzed_entry(
-                sender, subject, body, report, html_score, rule_score, spam_prob, uid=uid, use_llm=ir_left > 0
+                sender, subject, body, report, html_score, rule_score, spam_prob, uid=uid, use_llm=use_ir_llm
             )
-            if int(report.get('risk_score') or 0) >= 85:
+            if entry.get('ir') and use_ir_llm:   # 每個高風險事件單用掉一次 LLM 額度（不分 70–84 或 85 以上）
                 ir_left -= 1
             print(f"[scan {scan_id}] {len(all_emails)+1}/{inbox_count} {time.monotonic()-t_mail:.1f}s "
                   f"agent={report['agent_meta']['status']} risk={report.get('risk_score')} verdict={verdict}", flush=True)
@@ -322,8 +323,8 @@ def do_scan(token_data, scan_id, uid):
             'scan_seconds': round(time.monotonic() - t_scan, 1)
         }
     except Exception as e:
-        import traceback
-        _scans[scan_id] = {'owner': uid, 'done': True, 'error': traceback.format_exc()}
+        app.logger.exception('scan %s failed', scan_id)   # 完整 traceback 只寫入伺服器日誌
+        _scans[scan_id] = {'owner': uid, 'done': True, 'error': f'{type(e).__name__}: {str(e)[:300]}'}
     finally:
         _creds.pop(uid, None)   # 掃描結束就清除授權憑證，不長期留在伺服器記憶體
 
@@ -403,8 +404,8 @@ def paste_analyze():
         save_scan(scan_id, scan_time, 1, ['x'] * high, ['x'] * med, ['x'] * low, wl, 0, uid)
         return redirect(f'/result/{scan_id}')
     except Exception:
-        import traceback
-        err = f'<div class="err-box"><pre>{traceback.format_exc()}</pre></div>'
+        app.logger.exception('paste_analyze failed')   # 完整 traceback 只寫入伺服器日誌，不回傳給使用者
+        err = '<div class="err-box">分析時發生錯誤，請稍後再試；若持續發生，請縮短內容後重送。</div>'
         return render_paste_page(error=err, rule_keyword_groups=RULE_KEYWORD_GROUPS)
 
 @app.route('/result/<scan_id>')
@@ -605,8 +606,10 @@ def run_system_self_test():
         <div style="display:none">hidden</div>
     </body></html>'''
     html_score, html_findings = analyze_html(sample_html)
+    cats = {c for c, _ in html_findings}
     add('HTML 風險分析', html_score > 0 and len(html_findings) >= 3,
         f'score={html_score}, findings={len(html_findings)}')
+    add('HTML 隱藏元素規則（H4）', '隱藏元素' in cats, f'categories={sorted(cats)}')
 
     # 5. 白名單
     normalized = normalize_whitelist_domain('https://Example.COM/path')

@@ -470,7 +470,7 @@ def analyze_html(html_content):
         findings.append(('像素追蹤', trackers[:2]))
         score += min(len(trackers) * 2, 8)
 
-    hidden = soup.find_all(style=re.compile(r'display\\s*:\\s*none|visibility\\s*:\\s*hidden', re.I))
+    hidden = soup.find_all(style=re.compile(r'display\s*:\s*none|visibility\s*:\s*hidden', re.I))
     if hidden:
         findings.append(('隱藏元素', [f'{len(hidden)} 個']))
         score += 3

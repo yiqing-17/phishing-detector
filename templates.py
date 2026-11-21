@@ -1339,7 +1339,7 @@ mark.m[data-n="3"]{cursor:pointer;text-decoration:underline dotted;text-underlin
       <a class="btn" href="/login" data-key="s"><span>授權 Google 送檢</span><span class="key">S</span></a>
       <a class="btn o" href="/paste" data-key="p"><span>不想連接 Gmail？直接貼信送檢</span><span class="key">P</span></a>
     </div>
-    <p class="priv">只讀取信件（Gmail 唯讀權限），不會修改或刪除。掃描結束後伺服器不再保留授權憑證，可隨時到 Google 帳戶撤銷授權。信件內容只存在伺服器記憶體、不寫入資料庫，案件簿只保存統計數字。風險達中等以上的信件，會把寄件者、主旨、完整內文與信中的連結清單送到第三方 AI 服務 Groq 分析（內文可能含個資，請自行評估）。</p>
+    <p class="priv">只讀取信件（Gmail 唯讀權限），不會修改或刪除。掃描結束後伺服器不再保留授權憑證，可隨時到 Google 帳戶撤銷授權。信件內容只存在伺服器記憶體（約 1 小時後清除）、不寫入資料庫；案件簿保存統計數字，高風險信的事件單會保存寄件者、主旨（各 120 字內）與處理紀錄。預估風險達中等以上的信件（每次掃描最多 6 封），會把寄件者、主旨、內文前 3,000 字與信中的連結清單送到第三方 AI 服務 Groq 分析，伺服器也會對信中連結發出標頭請求並查詢 rdap.org 的網域註冊資料（內文可能含個資，請自行評估）。</p>
   </div>
   <div class="docwrap" data-parallax="0.05">
     <div class="stamp" role="button" tabindex="0" aria-label="可疑 SUSPICIOUS 印章，重播標記動畫" title="點擊重播">可疑<small>SUSPICIOUS</small></div>
@@ -2084,7 +2084,7 @@ let pmCur = 0;
 function setPm(raw) {
  const norm = Math.min(raw * 5, 100), el = document.getElementById('pmv'), from = pmCur;
  document.getElementById('pm').style.width = norm + '%'; pmCur = raw;
- PD.tween(from, raw, 300, function (x) { if (pmCur === raw) el.textContent = '規則分數 ' + Math.round(x) + ' → 正規化 ' + Math.min(Math.round(x) * 5, 100) + ' / 100（僅 R1–R5）'; });
+ PD.tween(from, raw, 300, function (x) { if (pmCur === raw) el.textContent = '規則分數 ' + Math.round(x) + ' → 正規化 ' + Math.min(Math.round(x) * 5, 100) + ' / 100（僅 R1–R6）'; });
 }
 /* ── .eml 解析（純前端，不上傳） ── */
 function dec(u8, cs) { try { return new TextDecoder(cs || 'utf-8').decode(u8); } catch (e) { return new TextDecoder('utf-8').decode(u8); } }
@@ -2302,7 +2302,7 @@ document.addEventListener('DOMContentLoaded', function () {
   <aside class="dz-side">
     <div class="ftab"><mark>FILE</mark><span>paste</span></div>
     <h1 class="pg-title"><span class="hl">貼上郵件，直接送檢</span></h1>
-    <p class="pg-sub">不需要 Google 帳號授權，將郵件的寄件者、主旨與內文貼上即可，系統會以相同的三層式（規則引擎 + ML + HTML / URL + AI）架構進行分析。</p>
+    <p class="pg-sub">不需要 Google 帳號授權，將郵件的寄件者、主旨與內文貼上即可，系統會以相同的四層式（規則引擎 + ML + HTML / URL + AI Agent）架構進行分析。</p>
     <form method="GET" action="/paste" class="sample-form">
       <div class="lb" style="font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.08em;margin-top:1.8rem">快速調閱測試信件</div>
       <div class="sr">
@@ -2335,12 +2335,12 @@ document.addEventListener('DOMContentLoaded', function () {
         <div class="fh">在大部分信箱可透過「顯示原始郵件 / 檢視原始碼」取得 HTML 內容。</div></div>
       </details>
       <div class="act"><button class="submit-btn" type="submit">送檢</button><label class="sample-btn emlbtn">調閱 .eml 檔<input type="file" id="emlf" accept=".eml,message/rfc822" hidden></label><span>送出後會進行完整的四層分析</span></div>
-      <p class="pnote">貼上的內容只存在伺服器記憶體、不寫入資料庫；疑似可疑時，寄件者、主旨與內文會送到第三方 AI 服務 Groq 分析。請勿貼上密碼或其他敏感資料。</p>
+      <p class="pnote">貼上的內容只存在伺服器記憶體、不寫入資料庫；預估風險達中等以上時，寄件者、主旨、內文前 3,000 字與連結清單會送到第三方 AI 服務 Groq 分析。請勿貼上密碼或其他敏感資料。</p>
     </form>
     <div class="pv">
       <div class="lb"><span>預檢標記（即時）</span><em id="pv-stat"></em></div>
       <div class="lgd" id="lgd"></div>
- <div class="pm"><span class="tk"><i id="pm"></i></span><span id="pmv">規則分數 0 → 正規化 0 / 100（僅 R1–R5）</span></div>
+ <div class="pm"><span class="tk"><i id="pm"></i></span><span id="pmv">規則分數 0 → 正規化 0 / 100（僅 R1–R6）</span></div>
  <div id="pv"></div>
       <div class="nt">這只是規則引擎關鍵字與連結的前端預覽，送出後才會進行完整的四層分析。</div>
     </div>
@@ -3430,7 +3430,7 @@ RULES_HTML = COMMON_CSS + """
 .hits li[data-g] span::before{content:"";display:inline-block;width:.65rem;height:.65rem;margin-right:.45rem;border:1px solid #141414;background:#ffc3dc}
 .hits li[data-g="1"] span::before{background:#ffe58a}.hits li[data-g="2"] span::before{background:#bfe0ff}.hits li[data-g="3"] span::before{background:#c5ecd2}
 @media (prefers-reduced-motion: reduce){.card.open .ex{animation:none}}
-/* 結構規則（R5/R6、U、H）標題帶分組色：只有顏色，沿用詞庫四色 */
+/* 結構規則（R6/R7、U、H）標題帶分組色：只有顏色，沿用詞庫四色 */
 :is(#kwcards,#url + .cards,#html + .cards) .card[data-cg="0"]{--cc:#ffb6d5}
 :is(#kwcards,#url + .cards,#html + .cards) .card[data-cg="1"]{--cc:#ffe58a}
 :is(#kwcards,#url + .cards,#html + .cards) .card[data-cg="2"]{--cc:#bfe0ff}
@@ -3452,7 +3452,7 @@ RULES_HTML = COMMON_CSS + """
 </div>
 <div class="br">
     <div class="nums">
-      <div data-bar="max"><b>{{ kw_total }}</b><span>關鍵字（4 類）</span></div>
+      <div data-bar="max"><b>{{ kw_total }}</b><span>關鍵字（5 類）</span></div>
       <div data-bar="max"><b>{{ url_items|length }}</b><span>URL 結構規則</span></div>
       <div data-bar="max"><b>{{ html_items|length }}</b><span>HTML 結構規則</span></div>
       <div><b>{{ whitelist_count }}</b><span>白名單網域</span></div>
@@ -3462,14 +3462,14 @@ RULES_HTML = COMMON_CSS + """
 </aside>
     <nav class="idx" id="idx" aria-label="規則索引">
       <a href="#try"><em>00</em><span>試試看</span></a>
-      <a href="#kw"><em>01</em><span>關鍵字規則 R1–R6</span></a>
+      <a href="#kw"><em>01</em><span>關鍵字規則 R1–R7</span></a>
       <a href="#url"><em>02</em><span>URL 結構 U1–U8</span></a>
       <a href="#html"><em>03</em><span>HTML 結構 H1–H7</span></a>
       <a href="#fuse"><em>04</em><span>融合與分級</span></a>
     </nav>
   <main class="dz-main">
     <div class="sh" id="try"><span class="n">00</span><h2>試試看</h2>
-      <p>貼上一段文字，命中的關鍵字會被螢光筆標出，並依下方 R1–R5 的計分方式估算。僅為前端示意，不含 URL / HTML 結構規則、ML 與 AI 判讀，實際結果以後端為準。</p></div>
+      <p>貼上一段文字，命中的關鍵字會被螢光筆標出，並依下方 R1–R6 的計分方式估算。僅為前端示意，不含 URL / HTML 結構規則、ML 與 AI 判讀，實際結果以後端為準。</p></div>
     <div class="play">
       <div class="in">
         <div class="lb">輸入文字</div>
@@ -3493,12 +3493,12 @@ RULES_HTML = COMMON_CSS + """
       <article class="card"><span class="st red">{{ pts }}</span><div class="rid">{{ rid }}</div><h3>{{ name }}</h3><p>{{ meaning }}</p>
         <div class="kws">{% for w in words %}<span>{{ w }}</span>{% endfor %}</div></article>
     {% endfor %}
-      <article class="card"><span class="st red">+min(3 + 連結數, 8)</span><div class="rid">R5</div><h3>含有連結</h3><p>郵件內文出現 http(s) 網址</p><div class="kws"><span>https?://…</span></div></article>
-      <article class="card"><span class="st red">每個網址 +min(2×命中數, 8)</span><div class="rid">R6</div><h3>URL 風險</h3><p>對內文每個網址（最多 10 個）套用 U1–U8</p><div class="kws"><span>U1 – U8</span></div></article>
+      <article class="card"><span class="st red">+min(3 + 連結數, 8)</span><div class="rid">R6</div><h3>含有連結</h3><p>郵件內文出現 http(s) 網址</p><div class="kws"><span>https?://…</span></div></article>
+      <article class="card"><span class="st red">每個網址 +min(2×命中數, 8)</span><div class="rid">R7</div><h3>URL 風險</h3><p>對內文每個網址（最多 10 個）套用 U1–U8</p><div class="kws"><span>U1 – U8</span></div></article>
     </div>
     <p class="note2">規則分數會正規化為 <b>min(原始分數 × 5, 100)</b> 後再進入融合。</p>
 
-    <div class="sh" id="url"><span class="n">02</span><h2>URL 結構規則 U1–U8</h2><p>只解析網址字串，不連線、不開啟目標網站。</p></div>
+    <div class="sh" id="url"><span class="n">02</span><h2>URL 結構規則 U1–U8</h2><p>U1–U8 只解析網址字串，不連線、不開啟目標網站（第四層 Agent 的 expand_url 工具另有 SSRF 防護，見下方說明）。</p></div>
     <div class="cards">
     {% for rid, name, cond in url_items %}
       <article class="card"><div class="rid">{{ rid }}</div><h3>{{ name }}</h3><p>{{ cond }}</p></article>
@@ -3515,13 +3515,14 @@ RULES_HTML = COMMON_CSS + """
 
     <div class="sh" id="fuse"><span class="n">04</span><h2>融合與分級</h2><p>各層分數依固定權重融合；寄件網域命中<a href="/whitelist" style="color:#141414;text-decoration:underline">白名單</a>者，需通過 Gmail 的 DMARC 驗證才會略過分析（防止偽造寄件者）。</p></div>
     <div class="fz">
-      <div class="box"><h3>有 AI 判讀</h3>
-        <div class="seg"><i class="a" style="flex:35">規則 35%</i><i class="b" style="flex:35">ML 35%</i><i class="c" style="flex:15">HTML/URL 15%</i><i class="d" style="flex:15">AI 15%</i></div>
-        <p>rule_score ≥ 4、ML 機率 ≥ 0.30、html_score ≥ 4 任一成立才呼叫 AI。</p></div>
-      <div class="box"><h3>無 AI 判讀</h3>
+      <div class="box"><h3>Agent 已啟動</h3>
+        <div class="seg"><i class="a" style="flex:35">規則 35%</i><i class="b" style="flex:35">ML 35%</i><i class="c" style="flex:15">HTML/URL 15%</i><i class="d" style="flex:15">Agent 15%</i></div>
+        <p>規則＋ML＋HTML 的預估分數 ≥ 40 才啟動調查 Agent。Agent 分數來自工具回傳的訊號（不採 LLM 自己給的分數），只加分、不會讓最終分數低於預估分數。</p></div>
+      <div class="box"><h3>Agent 未啟動</h3>
         <div class="seg"><i class="a" style="flex:42.5">規則 42.5%</i><i class="b" style="flex:42.5">ML 42.5%</i><i class="c" style="flex:15">HTML/URL 15%</i></div>
-        <p>AI 未觸發或失敗時自動改用。</p></div>
+        <p>未達門檻、每次掃描的 Agent 額度用完或調查失敗時改用。</p></div>
     </div>
+    <p class="note2">ML 僅適用英文信：信件以中文為主或落在模型詞彙內的詞太少時，ML 不納入融合、權重移給規則引擎（規則 70% + HTML 15% + Agent 15%；未啟動 Agent 時為規則 85% + HTML 15%）。</p>
     <div class="box" style="margin-top:1.4rem;border:1px solid #141414;background:#fff;padding:1rem 1.1rem 1.15rem">
       <h3 style="font-size:1rem;font-weight:700">風險等級</h3>
       <div class="scale" style="margin-top:.7rem"><i class="lo">Low &lt; 40</i><i class="md">Medium 40–69</i><i class="hi">High ≥ 70</i></div>
@@ -3557,14 +3558,14 @@ function run(){
     var li=document.createElement('li'),a=document.createElement('span'),b=document.createElement('small');
     a.textContent=grp[0]+' '+grp[1];b.textContent=Object.keys(hit[g]).join('、')+'　+'+pts;li.setAttribute('data-g',g);li.appendChild(a);li.appendChild(b);ul.appendChild(li);});
   if(links){var p=Math.min(3+links,8);raw+=p;var li2=document.createElement('li'),a2=document.createElement('span'),b2=document.createElement('small');
-    a2.textContent='R5 含有連結';b2.textContent=links+' 個連結　+'+p;li2.appendChild(a2);li2.appendChild(b2);ul.appendChild(li2);}
+    a2.textContent='R6 含有連結';b2.textContent=links+' 個連結　+'+p;li2.appendChild(a2);li2.appendChild(b2);ul.appendChild(li2);}
   if(!ul.children.length){var e=document.createElement('li');e.textContent='沒有命中任何規則';ul.appendChild(e);}
   var norm=Math.min(raw*5,100);
   cnt('raw',raw);cnt('norm',norm);document.getElementById('mt').style.width=norm+'%';
 }
 document.addEventListener('DOMContentLoaded',function(){
   document.getElementById('pt').addEventListener('input',run);run();
-  var EX={R1:'您的帳戶將於 24 小時內停用，請立即處理。',R2:'恭喜您中獎，免費領取限量禮品，並可申請退款。',R3:'請回覆您的帳號、密碼與信用卡號以完成驗證。',R4:'請立即匯款或轉帳，付款後我們將為您處理。'};
+  var EX={R1:'您的帳戶將於 24 小時內停用，請立即處理。',R2:'恭喜您中獎，免費領取限量禮品，並可申請退款。',R3:'請回覆您的帳號、密碼與信用卡號以完成驗證。',R4:'請立即匯款或轉帳，付款後我們將為您處理。',R5:'您的包裹需補繳運費，請加入群組並依指示入金。'};
  function hlGroup(text,gi){
   var low=text.toLowerCase(),frag=document.createDocumentFragment(),buf='',i=0,k,f,ws=WORDS.filter(function(w){return w[1]===gi;});
   function fl(){if(buf){frag.appendChild(document.createTextNode(buf));buf='';}}
@@ -3582,8 +3583,8 @@ document.addEventListener('DOMContentLoaded',function(){
   if(scroll)document.getElementById('try').scrollIntoView({behavior:PD.RM?'auto':'smooth'});
  }
  var EXS={
-  R5:'請點擊 <mark>https://example.com/verify</mark> 完成驗證。',
-  R6:'http://<mark>192.168.4.7</mark>/<mark>login</mark>',
+  R6:'請點擊 <mark>https://example.com/verify</mark> 完成驗證。',
+  R7:'http://<mark>192.168.4.7</mark>/<mark>login</mark>',
   U1:'http://<mark>203.0.113.7</mark>/pay',
   U2:'http://google.com<mark>@</mark>evil.example/',
   U3:'http://<mark>xn--</mark>pple-43d.example/',
@@ -3600,7 +3601,7 @@ document.addEventListener('DOMContentLoaded',function(){
   H6:'&lt;input <mark>type="password"</mark>&gt;',
   H7:'Your <mark>Microsoft</mark> account needs attention.'
  };
- var CG={R5:2,R6:2,U1:2,U2:1,U3:2,U4:2,U5:1,U6:2,U7:1,U8:0,H1:2,H2:1,H3:1,H4:1,H5:0,H6:0,H7:3};
+ var CG={R6:2,R7:2,U1:2,U2:1,U3:2,U4:2,U5:1,U6:2,U7:1,U8:0,H1:2,H2:1,H3:1,H4:1,H5:0,H6:0,H7:3};
  var cards=PD.all('#kwcards .card');
  PD.all('.dz-main .cards .card').forEach(function(c){
   var rid=(c.querySelector('.rid')||{}).textContent,gi=-1;
