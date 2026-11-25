@@ -7,3 +7,8 @@ credentials.json
 client_secret*.json
 dataset/
 .venv/
+eval/real_pending.jsonl
+eval/real_label_sheet.csv
+eval/dataset_real.jsonl
+*.eml
+*.mbox
