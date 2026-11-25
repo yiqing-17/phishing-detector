@@ -45,6 +45,13 @@ groq_client = Groq(api_key=GROQ_API_KEY) if (GROQ_API_KEY and Groq is not None) 
 print('OK - 模型就緒' if GROQ_API_KEY else 'WARNING - Groq API Key 未設定，將跳過 LLM 深度分析')
 
 # ── 分析函式 ─────────────────────────────────────────────────
+OFFICIAL_ACCOUNT_HOSTS = frozenset({
+    'accounts.google.com', 'myaccount.google.com',
+    'appleid.apple.com', 'account.apple.com',
+    'login.microsoftonline.com', 'login.live.com', 'account.microsoft.com',
+})
+
+
 def analyze_url(url):
     """分析 URL 結構，不連線、不開啟目標網站。"""
     from urllib.parse import urlparse
@@ -90,7 +97,10 @@ def analyze_url(url):
             'login', 'verify', 'secure', 'update', 'account',
             'password', 'signin', 'confirm', 'wallet'
         ]
-        if any(w in (host + parsed.path).lower() for w in suspicious_words):
+        # 官方帳號／登入端點本來就叫 accounts、login：以 https 且主機名完全相符才豁免，
+        # 不做子字串或後綴比對（避免 accounts.google.com.evil.top 之類的偽冒通過）。
+        official = parsed.scheme == 'https' and host in OFFICIAL_ACCOUNT_HOSTS
+        if not official and any(w in (host + parsed.path).lower() for w in suspicious_words):
             findings.append('URL 含有登入或驗證誘導字樣')
 
     except Exception:
@@ -179,9 +189,11 @@ def rule_based_score(text):
     if urls:
         url_score += min(3 + len(urls), 8)
         url_notes.append(f'含有連結: {urls[:2]}')
+        seen_findings = set()   # 同一種 URL 問題重複出現在多個連結，只算一次證據
         for url in urls[:10]:
-            url_findings = analyze_url(url)
+            url_findings = [f for f in analyze_url(url) if f not in seen_findings]
             if url_findings:
+                seen_findings.update(url_findings)
                 url_score += min(len(url_findings) * 2, 8)
                 url_notes.append(f'URL 風險: {url_findings[:4]}')
 
