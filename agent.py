@@ -101,7 +101,7 @@ SYSTEM_PROMPT = (
     'arguments must come from URLs/domains found in the email or from earlier tool results.\n'
     'A tool result of "unknown" or "unavailable" means no information, not safety. '
     'Passing SPF/DKIM/DMARC only proves who sent the mail, not that it is benign.\n'
-    'When finished, reply with ONLY this JSON (no tool call): '
+    'When finished, reply with ONLY this JSON as plain message text. Do NOT call any tool named JSON or any tool not listed: '
     '{"category":"釣魚信件/詐騙簡訊/正常信件/商業詐騙","suspicious_points":["繁體中文要點"],'
     '"explanation":"繁體中文2-3句，只引用工具實際查到的事實","recommended_action":"繁體中文建議"}'
 )
@@ -167,6 +167,34 @@ def _assistant_dict(msg):
     return d
 
 
+def _failed_generation(exc):
+    """從 Groq 的 400 錯誤取出模型原本想輸出的內容（failed_generation）。"""
+    body = getattr(exc, 'body', None)
+    if isinstance(body, dict):
+        err = body.get('error', body)
+        if isinstance(err, dict) and err.get('failed_generation'):
+            return str(err['failed_generation'])
+    return ''
+
+
+def _recover_final(exc):
+    """gpt-oss 偶爾把最終 JSON 當成名為 "JSON" 的工具呼叫，Groq 因此回 400。
+    若 failed_generation 本身就是合法的結案 JSON，直接採用，不丟掉已完成的調查。"""
+    try:
+        data = json.loads(_failed_generation(exc))
+    except (ValueError, TypeError):
+        return None
+    if isinstance(data, dict) and isinstance(data.get('arguments'), dict):
+        data = data['arguments']
+    if isinstance(data, dict) and ('explanation' in data or 'category' in data):
+        return _parse_final(json.dumps(data, ensure_ascii=False))
+    return None
+
+
+def _is_bad_request(exc):
+    return getattr(exc, 'status_code', None) == 400
+
+
 def run_investigation(client, email_text, urls, sender='', headers=None,
                       model=MODEL, max_steps=MAX_STEPS, timeout_s=TOTAL_TIMEOUT):
     """執行調查。回傳 dict：trace / signals / agent_score / final / status / error。"""
@@ -180,6 +208,7 @@ def run_investigation(client, email_text, urls, sender='', headers=None,
     )
     messages = [{'role': 'system', 'content': SYSTEM_PROMPT}, {'role': 'user', 'content': wrapped}]
     final, error, finished = None, '', False
+    bad_requests = 0
 
     try:
         for step in range(1, max_steps + 1):
@@ -187,9 +216,25 @@ def run_investigation(client, email_text, urls, sender='', headers=None,
                 error = '調查逾時，使用目前已取得的證據'
                 break
             remaining = timeout_s - (time.monotonic() - started)
-            resp = timed_client(client, min(LLM_CALL_TIMEOUT, remaining)).chat.completions.create(
-                model=model, messages=messages, tools=TOOL_SCHEMAS,
-                tool_choice='auto', temperature=0.1)
+            try:
+                resp = timed_client(client, min(LLM_CALL_TIMEOUT, remaining)).chat.completions.create(
+                    model=model, messages=messages, tools=TOOL_SCHEMAS,
+                    tool_choice='auto', temperature=0.1)
+            except Exception as e:  # noqa: BLE001
+                if not _is_bad_request(e):
+                    raise
+                recovered = _recover_final(e)
+                if recovered:
+                    final, finished = recovered, True
+                    break
+                bad_requests += 1
+                if bad_requests > 1:
+                    raise
+                # 模型輸出無法解析：提醒格式後重試一次，不放棄整個調查
+                messages.append({'role': 'user', 'content': (
+                    '上一則輸出格式錯誤。請只使用提供的工具，或直接以純文字輸出最終 JSON；'
+                    '不要呼叫名為 JSON 的工具，也不要輸出其他說明文字。')})
+                continue
             msg = resp.choices[0].message
             if not getattr(msg, 'tool_calls', None):
                 final = _parse_final(msg.content)
