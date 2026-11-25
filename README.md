@@ -62,12 +62,13 @@ Agent 的消融實驗與真實 LLM 的注入抵抗力需要網路與 API key，�
 ## 快速開始
 
 ```bash
+# 建議 Python 3.12；依賴已鎖版本（scikit-learn 須與 models/*.joblib 一致）
 pip install -r requirements.txt -r requirements-dev.txt
 export FLASK_SECRET_KEY=$(python -c "import secrets;print(secrets.token_hex(32))")
 export GROQ_API_KEY=...            # 選填：沒有就只跑規則 + ML（Agent 與 IR 文字會降級）
 export GOOGLE_CLIENT_ID=... GOOGLE_CLIENT_SECRET=...   # 選填：Gmail 掃描
 python flask_app.py                # 或 gunicorn flask_app:app
-python -m pytest tests -q          # 108 項
+python -m pytest tests -q          # 108 項（CI：.github/workflows/ci.yml）
 ```
 
 重新訓練 ML：把 Phishing Email Dataset 放到 `dataset/phishing_email.csv`，執行 `python train_phishing_model.py`。
@@ -115,7 +116,7 @@ agent.py / agent_tools.py   調查 Agent 與 5 個工具（含 SSRF 防護）
 analysis.py                 規則、ML、融合、IR 產生、LLM 輸出消毒
 storage.py                  SQLite：掃描紀錄、個人白名單、事件單與狀態機
 result_builder.py           組裝結果與事件單
-flask_app.py / templates.py 網頁與 API
+flask_app.py / templates/    網頁與 API；templates/ 依頁面拆成 home、paste、result… 各模組，共用 CSS 在 _base.py
 eval/                       資料集、評估與實驗腳本
 tests/                      單元與整合測試
 ```
@@ -128,3 +129,10 @@ tests/                      單元與整合測試
 - 品牌清單與 `registrable_domain` 為簡化版（未用 Public Suffix List）；未處理附件與 QR code。
 - IR 狀態流轉為人工操作；不會對信箱做隔離／刪除（刻意維持唯讀授權）。
 - Gmail 掃描為逐封串行；每次掃描最多讓 `AGENT_PER_SCAN`（6）封啟動 Agent、`IR_LLM_PER_SCAN`（3）封用 LLM 產生事件單文字，其餘只做規則／ML／HTML 分析。單次 LLM 呼叫硬上限 8 秒、不自動重試。Render 日誌會逐封印出耗時，可用來定位瓶頸。
+
+## 授權與資料來源
+
+- **程式碼**：MIT License，見 [`LICENSE`](LICENSE)。
+- **ML 訓練資料**：Kaggle「Phishing Email Dataset」（Naser Abdullah Alam 整理，授權 **CC BY-SA 4.0**），彙整 Enron、Ling、CEAS_08、Nazario、Nigerian Fraud、SpamAssassin 六組語料；建置方式見 Al-Subaiey 等人，arXiv:2405.11619。本 repo **不附原始資料集**（`dataset/` 已列入 `.gitignore`），只附訓練後的模型檔 `models/*.joblib`。資料集授權對衍生模型的適用範圍並非一目了然，若要對外散布或商用，請自行確認。
+- **中文評估集**（`eval/dataset_zh*.jsonl`）：為人工撰寫的合成信件；困難樣本集由 AI 助理（Claude）協助撰寫，詳見 `eval/RESULTS.md`。
+- **第三方服務**：Groq API（LLM）、Google Gmail API（唯讀）、RDAP（網域註冊資料）。
