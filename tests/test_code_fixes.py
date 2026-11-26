@@ -8,9 +8,28 @@ from ratelimit import RateLimiter
 
 
 def test_h4_hidden_element_is_detected():
-    html = '<div style="display:none">x</div><span style="visibility : hidden">y</span>'
+    # 弱訊號需有強訊號（此處為含誘導字樣的可疑網域連結）佐證才計分
+    html = ('<a href="https://secure-login.evil.top/verify">go</a>'
+            '<div style="display:none">x</div><span style="visibility : hidden">y</span>')
     score, findings = analysis.analyze_html(html)
-    assert ('隱藏元素', ['2 個']) in findings and score >= 3
+    assert ('隱藏元素', ['2 個']) in findings
+    strong_only, _ = analysis.analyze_html('<a href="https://secure-login.evil.top/verify">go</a>')
+    assert score - strong_only == 3
+
+
+def test_weak_html_signals_alone_are_not_scored():
+    # 合法電子報常見：隱藏預覽文字、1px 追蹤圖、品牌字樣 → 單獨出現不應計分也不應列為風險
+    html = ('<div style="display:none">preview</div>'
+            '<img src="https://t.example.com/p.gif" width="1" height="1">'
+            '<p>Your Google order has shipped</p>')
+    score, findings = analysis.analyze_html(html)
+    assert score == 0 and findings == []
+
+
+def test_repeated_html_url_finding_counts_once():
+    one = '<a href="https://shop.example.com/account/a">a</a>'
+    many = ''.join(f'<a href="https://shop.example.com/account/{c}">x</a>' for c in 'abcdef')
+    assert analysis.analyze_html(many)[0] == analysis.analyze_html(one)[0]
 
 
 def test_h4_not_triggered_by_visible_style():

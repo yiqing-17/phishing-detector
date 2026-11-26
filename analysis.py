@@ -257,13 +257,13 @@ RULE_URL_ITEMS = [
     ('U8', '登入／驗證誘導字樣', 'login、verify、secure、update、account、password、signin、confirm、wallet'),
 ]
 RULE_HTML_ITEMS = [
-    ('H1', '網址結構風險', '連結 href 觸發 U1–U8 任一項', '每個連結 +3×命中數（上限 10）'),
+    ('H1', '網址結構風險', '連結 href 觸發 U1–U8 任一項', '每個連結 +3×命中數（上限 10）；同一種問題整封信只算一次'),
     ('H2', '偽裝連結', '連結顯示文字的網域與實際 href 網域不同', '+6'),
-    ('H3', '像素追蹤', '寬或高為 0 / 1 的圖片', '每個 +2（上限 8）'),
-    ('H4', '隱藏元素', 'style 含 display:none 或 visibility:hidden', '+3'),
+    ('H3', '像素追蹤', '寬或高為 0 / 1 的圖片', '每個 +2（上限 8）；需同時出現 H1／H2／H5／H6 才計分'),
+    ('H4', '隱藏元素', 'style 含 display:none 或 visibility:hidden', '+3；需同時出現 H1／H2／H5／H6 才計分'),
     ('H5', '表單元素', '含 <form>', '+3'),
     ('H6', '密碼輸入欄位', '含 type="password" 的 <input>', '+5'),
-    ('H7', '品牌偵測', '內文出現 paypal / microsoft / apple / amazon / facebook / netflix / google', '+2'),
+    ('H7', '品牌偵測', '內文出現 paypal / microsoft / apple / amazon / facebook / netflix / google', '+2；需同時出現 H1／H2／H5／H6 才計分'),
 ]
 
 
@@ -446,16 +446,20 @@ def build_explainable_findings(rules, html_findings, spam_prob, report, agent_tr
 
 def analyze_html(html_content):
     findings = []
-    score = 0
+    score = 0          # 強訊號：與釣魚頁面直接相關
+    weak_score = 0     # 弱訊號：合法行銷信也很常見，需有強訊號佐證才計分
+    weak_findings = []
     soup = BeautifulSoup(html_content, 'html.parser')
 
     links = soup.find_all('a', href=True)
+    seen_url_findings = set()   # 同一種 URL 問題出現在多個連結，只算一次證據
     for link in links:
         href = link.get('href', '')
         text_label = link.get_text(' ', strip=True)
 
-        url_findings = analyze_url(href)
+        url_findings = [f for f in analyze_url(href) if f not in seen_url_findings]
         if url_findings:
+            seen_url_findings.update(url_findings)
             score += min(len(url_findings) * 3, 10)
             findings.append(('URL 結構風險', url_findings[:4]))
 
@@ -479,13 +483,13 @@ def analyze_html(html_content):
         or str(img.get('height', '')).lower() in ['1', '0']
     ]
     if trackers:
-        findings.append(('像素追蹤', trackers[:2]))
-        score += min(len(trackers) * 2, 8)
+        weak_findings.append(('像素追蹤', trackers[:2]))
+        weak_score += min(len(trackers) * 2, 8)
 
     hidden = soup.find_all(style=re.compile(r'display\s*:\s*none|visibility\s*:\s*hidden', re.I))
     if hidden:
-        findings.append(('隱藏元素', [f'{len(hidden)} 個']))
-        score += 3
+        weak_findings.append(('隱藏元素', [f'{len(hidden)} 個']))
+        weak_score += 3
 
     forms = soup.find_all('form')
     password_inputs = soup.find_all('input', attrs={'type': re.compile(r'password', re.I)})
@@ -501,8 +505,14 @@ def analyze_html(html_content):
         if b in soup.get_text(' ').lower()
     ]
     if found_brands:
-        findings.append(('品牌偵測', [', '.join(found_brands)]))
-        score += 2
+        weak_findings.append(('品牌偵測', [', '.join(found_brands)]))
+        weak_score += 2
+
+    # 弱訊號（像素追蹤、隱藏元素、品牌字樣）單獨出現多半是正常的電子報／通知信；
+    # 只有同時出現強訊號（危險連結、偽裝連結、表單、密碼欄位）才計分。
+    if score > 0:
+        score += weak_score
+        findings.extend(weak_findings)
 
     return score, findings
 
